@@ -29,9 +29,24 @@ public class KartStateManager : MonoBehaviour
 		if(controls != null) controls.Disable(); // Disable existing controls
 		controls = new PlayerControls();
 		controls.Enable();
+
+		state = KartState.DRIVING;
 		
 		/* Active state changes - Player inputs (make requests) */
-		state = KartState.DRIVING;
+		controls.Gameplay.Drift.performed += action => { 
+			if(state == KartState.DRIVING) 
+			{
+				state = KartState.DRIFTING;
+				GetComponent<KartController>().driftAngle = transform.forward;
+			}
+		};
+
+		controls.Gameplay.Drift.canceled += action => { 
+			if(state == KartState.DRIFTING)
+			{
+				state = KartState.DRIVING;
+			}	
+		};
 
     }
 

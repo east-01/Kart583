@@ -44,6 +44,15 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Drift"",
+                    ""type"": ""Button"",
+                    ""id"": ""7327ce7e-2487-4c33-90d8-219f6145de58"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -112,6 +121,28 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""action"": ""Throttle"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c5d23983-3103-4341-9a17-1bdb1867f8fc"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Drift"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""630de95e-0fd0-4375-aa74-3f49822c502f"",
+                    ""path"": ""<Keyboard>/shift"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Drift"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -122,6 +153,7 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         m_Gameplay = asset.FindActionMap("Gameplay", throwIfNotFound: true);
         m_Gameplay_Turn = m_Gameplay.FindAction("Turn", throwIfNotFound: true);
         m_Gameplay_Throttle = m_Gameplay.FindAction("Throttle", throwIfNotFound: true);
+        m_Gameplay_Drift = m_Gameplay.FindAction("Drift", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -183,12 +215,14 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     private IGameplayActions m_GameplayActionsCallbackInterface;
     private readonly InputAction m_Gameplay_Turn;
     private readonly InputAction m_Gameplay_Throttle;
+    private readonly InputAction m_Gameplay_Drift;
     public struct GameplayActions
     {
         private @PlayerControls m_Wrapper;
         public GameplayActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @Turn => m_Wrapper.m_Gameplay_Turn;
         public InputAction @Throttle => m_Wrapper.m_Gameplay_Throttle;
+        public InputAction @Drift => m_Wrapper.m_Gameplay_Drift;
         public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -204,6 +238,9 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Throttle.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnThrottle;
                 @Throttle.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnThrottle;
                 @Throttle.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnThrottle;
+                @Drift.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnDrift;
+                @Drift.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnDrift;
+                @Drift.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnDrift;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
@@ -214,6 +251,9 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Throttle.started += instance.OnThrottle;
                 @Throttle.performed += instance.OnThrottle;
                 @Throttle.canceled += instance.OnThrottle;
+                @Drift.started += instance.OnDrift;
+                @Drift.performed += instance.OnDrift;
+                @Drift.canceled += instance.OnDrift;
             }
         }
     }
@@ -222,5 +262,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     {
         void OnTurn(InputAction.CallbackContext context);
         void OnThrottle(InputAction.CallbackContext context);
+        void OnDrift(InputAction.CallbackContext context);
     }
 }

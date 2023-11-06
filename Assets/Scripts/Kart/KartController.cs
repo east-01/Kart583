@@ -19,6 +19,8 @@ public class KartController : MonoBehaviour
 	[SerializeField]
 	private float velocity;
 
+	public Vector3 driftAngle;
+
     private void Start()
     {
 		if(controls != null) controls.Disable(); // Disable existing controls
@@ -49,6 +51,9 @@ public class KartController : MonoBehaviour
 				rotationInput = turn.x * (velocity / maxSpeed);
 				break;
 			case KartState.DRIFTING:
+
+
+
 				break;
 			case KartState.REVERSING:
 				break;
