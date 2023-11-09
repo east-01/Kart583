@@ -17,8 +17,9 @@ public class KartStateManager : MonoBehaviour
 		get { return _state; } 
 		private set { 
 			// Triggered state change, possibly throw an event
-			GetComponent<KartController>().StateChanged(value);
+			print("setting: " + value);
 			_state = value; 
+			GetComponent<KartController>().StateChanged(value);
 		} 
 	}
 

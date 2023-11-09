@@ -3,18 +3,23 @@ using System;
 
 public class KartController : MonoBehaviour
 {
-	public float maxSpeed = 5f;
-    public float acceleration = 10f;
-	public float passiveDeceleration = 1f;
+	[Header("Speed")]
+	public float maxSpeed = 20f;
+    public float acceleration = 5f;
+	public float passiveDeceleration = 3.5f;
 
-	public float rotationSpeed = 5f;
+	[Header("Turning")]
+	public float kartTurnSpeed = 2f;
+	public AnimationCurve kartTurnPower;
+	public float steeringWheelTurnSpeed = 5f;
 
 	private PlayerControls controls;
     private Rigidbody rb;
 	private KartStateManager stateMgr;
 	private KartState state { get { return stateMgr.state; } }
 
-	// Runtime variables	
+	/* !! Runtime variable */
+	[Header("Runtime variables")]
 	private Vector3 _velocity;
 	private Vector3 velocity
 	{
@@ -24,14 +29,14 @@ public class KartController : MonoBehaviour
 			if(value.magnitude > 0) velocityNormal = value.normalized;
 		}
 	}
-	/** A variable keeping track of the normal of velocity */
-	private Vector3 velocityNormal;
-
-	[SerializeField]
-	private float angularMomentum;
+	[SerializeField] private float velocityMagnitude;
+	private Vector3 velocityNormal; // Keeps track of the normal of the velocity
 
 	private float speed { get { return velocity.magnitude; } }
 	private float speedRatio { get { return speed/maxSpeed; } }
+
+	/** A [-1, 1] range float indicating the amount the steering wheel is turned and the direction. */
+	private float steeringWheelDirection;
 	
 	private Vector3 driftDirection;
 	public Vector3 driftAngle;
@@ -51,15 +56,23 @@ public class KartController : MonoBehaviour
 
     private void Update()
     {
-
-		//print("speed: " + speed + ", speedRatio: " + speedRatio);
+		velocityMagnitude = velocity.magnitude;
 
 		/* DEBUG VISUALIZATION CODE */
 		//Debug.DrawRay(transform.position, velocity * 10, Color.red, 1f);
 
 		Vector2 turn = controls.Gameplay.Turn.ReadValue<Vector2>();
+		if(turn.magnitude <= 0.1f) turn = Vector2.zero;
 		Vector3 turn3 = new Vector3(turn.x, 0, turn.y);
 		float throttle = controls.Gameplay.Throttle.ReadValue<float>();
+
+		if(Mathf.Abs(turn.x) > 0) { 
+			steeringWheelDirection += (Mathf.Sign(turn.x) != steeringWheelDirection ? 2f : 1) * steeringWheelTurnSpeed * turn.x * Time.deltaTime;
+			steeringWheelDirection = Mathf.Clamp(steeringWheelDirection, -1, 1);
+		} else { 
+			steeringWheelDirection = Mathf.Lerp(steeringWheelDirection, 0, (steeringWheelTurnSpeed*2f) * (1+speedRatio) * Time.deltaTime);
+			if(Mathf.Abs(steeringWheelDirection) <= 0.01) steeringWheelDirection = 0;
+		}
 
 		switch(state) { 
 			case KartState.DRIVING:	
@@ -74,28 +87,13 @@ public class KartController : MonoBehaviour
 				}
 
 				// Rotation
-				float theta = rotationSpeed * TurnFunction(0.1f, 0.3f, 0.5f, speedRatio) * turn.x * Time.deltaTime;
-				print("theta: " + theta);
-				if(Mathf.Abs(theta) > 0.0001f) {
-					// Theta is still changing, do not decay momentum
-					if(Mathf.Sign(theta) != Mathf.Sign(angularMomentum)) { 
-						float ratio = angularMomentum/rotationSpeed;
-						float mult = (ratio*ratio);
-						print("multipluer: " + mult);
-						theta *= mult;					
-					}
-					angularMomentum += theta;
-					angularMomentum = Mathf.Clamp(angularMomentum, -rotationSpeed, rotationSpeed);
-				} else { 
-					// Theta is no longer changing, decay momentum
-					angularMomentum = Mathf.Lerp(angularMomentum, 0, 1-speedRatio);
-					//int sign = (int)Mathf.Sign(angularMomentum);
-					//angularMomentum -= Time.deltaTime*sign;
-					//if(Mathf.Sign(angularMomentum) != sign) angularMomentum = 0;
-				}
+				float theta = kartTurnSpeed * steeringWheelDirection * Time.deltaTime;
+				theta *= kartTurnPower.Evaluate(speedRatio);
 				velocity = RotateVectorAroundAxis(velocity, Vector3.up, theta);
+                velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
 
-				transform.forward = velocityNormal;
+				// Make transform's forward follow velocity
+				if(velocityNormal != Vector3.zero) transform.forward = velocityNormal;
 				break;
 			case KartState.DRIFTING:
 				
@@ -105,23 +103,28 @@ public class KartController : MonoBehaviour
 				break;
 		}
     
-        rb.MovePosition(rb.position + velocity);
+		// Handle upwards velocity, we're letting Rigidbody use it's default gravity for downwards velocity.
+		float yComp = Math.Max(velocity.y, 0); // We shouldn't have negative vertical velocity.
+		if(yComp > 0) { 
+			yComp -= 3*Time.deltaTime;
+		}
+		velocity = new Vector3(velocity.x, yComp, velocity.z);
+
+        rb.MovePosition(rb.position + velocity*Time.deltaTime);
 		if(rb.position.y < 0) {
 			rb.MovePosition(new Vector3(0, 3, 0));	
-			angularMomentum = 0;
+			steeringWheelDirection = 0;
 		}
-
-		//float rotation = rotationInput * rotationSpeed * TurnFunction(0.1f, 0.3f, 0.5f, speedRatio) * Time.deltaTime;
-  //      Quaternion deltaRotation = Quaternion.Euler(0f, rotation, 0f);
-  //      rb.MoveRotation(rb.rotation * deltaRotation);			
 		
 	}
 
 	/** The callback from KartStateManager indicating when we've changed state.
 	 *  Thrown immediately before the state changes, newState is the state we're changing to. */
-	public void StateChanged(KartState newState) { 
+	public void StateChanged(KartState newState) 
+	{ 
 		driftAngle = Vector3.zero;
-
+		print("state changed from " + state + " to " + newState);
+		if(controls == null) return;
 		Vector2 turn = controls.Gameplay.Turn.ReadValue<Vector2>();
 		switch(newState) { 
 			case KartState.DRIVING:
@@ -129,6 +132,8 @@ public class KartController : MonoBehaviour
 				break;
 			case KartState.DRIFTING:
 				driftAngle = transform.forward + new Vector3(turn.x, 0, turn.y);
+				velocity = new Vector3(velocity.x, 200, velocity.y);
+				print("velocity.y="+velocity.y);
 				break;
 			case KartState.REVERSING:
 				break;
@@ -137,33 +142,10 @@ public class KartController : MonoBehaviour
 		}
 	}
 
-	/** Gets turn power percentage from a speed percentage.
-		See desmos: https://www.desmos.com/calculator/tmojijx91i 
-		
-		In interval [a, b] you will get max turn power percentage.
-		'c' is the turn power percentage at max speed.
-		Outside the interval you will get a sloped value. See desmos. */
-	public float TurnFunction(float a, float b, float c, float x) { 
-		if(a >= b) throw new ArgumentException("a (" + a + ") must be less than b (" + b + ")");
-		x = Mathf.Clamp01(x);
-		if(x < a) { 
-			return x/a;
-		} else if(x > b) { 
-			return -(c*(x-1))/(1-b) + c;
-		} else { 
-			return 1;	
-		}
-	}
-
 	public Vector3 RotateVectorAroundAxis(Vector3 inputVector, Vector3 rotationAxis, float angleRadians)
     {
-        // Ensure the rotation axis is normalized
         rotationAxis = rotationAxis.normalized;
-
-        // Calculate the rotation using Quaternion
         Quaternion rotation = Quaternion.AngleAxis(angleRadians * Mathf.Rad2Deg, rotationAxis);
-
-        // Rotate the vector using the calculated rotation
         return rotation * inputVector;
     }
 
