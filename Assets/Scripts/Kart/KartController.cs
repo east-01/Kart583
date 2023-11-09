@@ -19,6 +19,7 @@ public class KartController : MonoBehaviour
 	public float steeringWheelTurnSpeed = 5f;
 
 	/* !! Runtime variable */
+	[Header("Runtime variables")]
 	private PlayerControls controls;
     private Rigidbody rb;
 	private KartStateManager stateMgr;
@@ -119,8 +120,8 @@ public class KartController : MonoBehaviour
 					kartForward.y = 0;
 					kartForward = RotateVectorAroundAxis(kartForward, Vector3.up, 3*steeringWheelDirection);
 					transform.forward = kartForward;
-					
-				}
+				}					
+
 				break;
 			case KartState.REVERSING:
 				break;
