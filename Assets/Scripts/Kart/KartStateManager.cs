@@ -15,7 +15,7 @@ public class KartStateManager : MonoBehaviour
 	[SerializeField] 
 	public KartState state { 
 		get { return _state; } 
-		private set { 
+		set { 
 			// Triggered state change, possibly throw an event
 			print("setting: " + value);
 			_state = value; 
@@ -39,7 +39,7 @@ public class KartStateManager : MonoBehaviour
 			if(state == KartState.DRIVING) 
 			{
 				state = KartState.DRIFTING;
-				GetComponent<KartController>().driftAngle = transform.forward;
+				//GetComponent<KartController>().driftAngle = transform.forward;
 			}
 		};
 
@@ -60,6 +60,7 @@ public class KartStateManager : MonoBehaviour
 		/* Passive state changes */
 
     }
+
 }
 
 public enum KartState

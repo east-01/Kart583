@@ -1,8 +1,13 @@
 using UnityEngine;
 using System;
+using Unity.VisualScripting;
 
 public class KartController : MonoBehaviour
 {
+
+	[Header("Controls")]
+	public float controllerDeadzone = 0.1f;
+
 	[Header("Speed")]
 	public float maxSpeed = 20f;
     public float acceleration = 5f;
@@ -13,13 +18,15 @@ public class KartController : MonoBehaviour
 	public AnimationCurve kartTurnPower;
 	public float steeringWheelTurnSpeed = 5f;
 
+	/* !! Runtime variable */
+	[Header("Runtime variables")]
 	private PlayerControls controls;
     private Rigidbody rb;
 	private KartStateManager stateMgr;
-	private KartState state { get { return stateMgr.state; } }
+	private KartState state { 
+		get { return stateMgr.state; } 
+	}
 
-	/* !! Runtime variable */
-	[Header("Runtime variables")]
 	private Vector3 _velocity;
 	private Vector3 velocity
 	{
@@ -38,8 +45,7 @@ public class KartController : MonoBehaviour
 	/** A [-1, 1] range float indicating the amount the steering wheel is turned and the direction. */
 	private float steeringWheelDirection;
 	
-	private Vector3 driftDirection;
-	public Vector3 driftAngle;
+	private int driftDirection; // Indicates if we're in a left/right drift
 
     private void Start()
     {
@@ -62,7 +68,7 @@ public class KartController : MonoBehaviour
 		//Debug.DrawRay(transform.position, velocity * 10, Color.red, 1f);
 
 		Vector2 turn = controls.Gameplay.Turn.ReadValue<Vector2>();
-		if(turn.magnitude <= 0.1f) turn = Vector2.zero;
+		if(turn.magnitude <= controllerDeadzone) turn = Vector2.zero;
 		Vector3 turn3 = new Vector3(turn.x, 0, turn.y);
 		float throttle = controls.Gameplay.Throttle.ReadValue<float>();
 
@@ -76,28 +82,36 @@ public class KartController : MonoBehaviour
 
 		switch(state) { 
 			case KartState.DRIVING:	
+			case KartState.DRIFTING:
 				if(throttle > 0) {
-					//velocity = Vector3.ClampMagnitude(velocity + velocity.normalized * throttle * acceleration * Time.deltaTime, maxSpeed);
 					velocity += transform.forward.normalized * throttle * acceleration * Time.deltaTime;
-                    velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
+					if(speed > maxSpeed) {
+						Vector3 vel = velocity;
+						float y = vel.y;
+						vel.y = 0;
+						vel = Vector3.ClampMagnitude(vel, maxSpeed);
+						vel.y = y;
+						velocity = vel;
+					}
 				} else {
 					// Shorten velocity vector by the passive deceleration rate. TODO: Add brakes
 					velocity = Vector3.Lerp(velocity, Vector3.zero, passiveDeceleration*Time.deltaTime);
-					if(velocity.magnitude < 0.00001f) velocity = Vector3.zero;
+					if(velocity.magnitude < 0.001f) velocity = Vector3.zero;
 				}
 
 				// Rotation
 				float theta = kartTurnSpeed * steeringWheelDirection * Time.deltaTime;
 				theta *= kartTurnPower.Evaluate(speedRatio);
+				if(state == KartState.DRIFTING) theta *= Mathf.Sign(driftDirection) == Mathf.Sign(steeringWheelDirection) ? 2 : 0.3f;
+
 				velocity = RotateVectorAroundAxis(velocity, Vector3.up, theta);
-                velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
 
 				// Make transform's forward follow velocity
-				if(velocityNormal != Vector3.zero) transform.forward = velocityNormal;
-				break;
-			case KartState.DRIFTING:
-				
-				transform.forward = driftDirection + turn3;
+				if(velocityNormal != Vector3.zero) {
+					Vector3 kartForward = velocityNormal;
+					kartForward.y = 0;
+					transform.forward = kartForward;
+				}
 				break;
 			case KartState.REVERSING:
 				break;
@@ -122,7 +136,7 @@ public class KartController : MonoBehaviour
 	 *  Thrown immediately before the state changes, newState is the state we're changing to. */
 	public void StateChanged(KartState newState) 
 	{ 
-		driftAngle = Vector3.zero;
+		//driftAngle = Vector3.zero;
 		print("state changed from " + state + " to " + newState);
 		if(controls == null) return;
 		Vector2 turn = controls.Gameplay.Turn.ReadValue<Vector2>();
@@ -131,9 +145,14 @@ public class KartController : MonoBehaviour
 				if(velocity.magnitude > 0) transform.forward = velocity;
 				break;
 			case KartState.DRIFTING:
-				driftAngle = transform.forward + new Vector3(turn.x, 0, turn.y);
-				velocity = new Vector3(velocity.x, 200, velocity.y);
-				print("velocity.y="+velocity.y);
+				velocity = new Vector3(velocity.x, 5, velocity.z);
+
+				if(Mathf.Abs(turn.x) < controllerDeadzone) {
+					GetComponent<KartStateManager>().state = KartState.DRIVING;
+					return;
+				}
+
+				driftDirection = (int)Mathf.Sign(turn.x);
 				break;
 			case KartState.REVERSING:
 				break;
