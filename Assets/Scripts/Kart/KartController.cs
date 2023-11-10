@@ -87,7 +87,7 @@ public class KartController : MonoBehaviour
 			case KartState.DRIVING:	
 			case KartState.DRIFTING:
 				if(throttle > 0) {
-					velocity += transform.forward.normalized * throttle * acceleration * Time.deltaTime;
+					velocity += velocityNormal * throttle * acceleration * Time.deltaTime;
 					if(speed > maxSpeed) {
 						Vector3 vel = velocity;
 						float y = vel.y;
@@ -102,7 +102,7 @@ public class KartController : MonoBehaviour
 					if(velocity.magnitude < 0.001f) velocity = Vector3.zero;
 				}
 
-				// Rotation
+				// Turning
 				float theta = kartTurnSpeed * steeringWheelDirection * Time.deltaTime;
 				theta *= kartTurnPower.Evaluate(speedRatio);
 				if(state == KartState.DRIFTING) theta *= Mathf.Sign(driftDirection) == Mathf.Sign(steeringWheelDirection) ? 2 : 0.3f;
@@ -118,7 +118,7 @@ public class KartController : MonoBehaviour
 				} else if(state == KartState.DRIFTING) { 
 					Vector3 kartForward = velocityNormal;
 					kartForward.y = 0;
-					kartForward = RotateVectorAroundAxis(kartForward, Vector3.up, 3*steeringWheelDirection);
+					kartForward = RotateVectorAroundAxis(kartForward, Vector3.up, 0.5f*steeringWheelDirection);
 					transform.forward = kartForward;
 				}					
 
