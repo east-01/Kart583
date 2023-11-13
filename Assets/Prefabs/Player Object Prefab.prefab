@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 2192613701664119061}
   - component: {fileID: 8455540368074242070}
   - component: {fileID: 475118304644588544}
+  - component: {fileID: 8911959532021985603}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -194,6 +195,22 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: fb9cd52a-7c48-4d21-b374-2ae50f7f062e
     m_ActionName: Gameplay/Join[/Keyboard/anyKey]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 8455540368074242070}
+        m_TargetAssemblyTypeName: KartController, Assembly-CSharp
+        m_MethodName: OnBoost
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 884edfb8-efd3-4ca1-a6d2-d5358fb7fbed
+    m_ActionName: Gameplay/Boost[/Keyboard/space]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Gameplay
@@ -213,6 +230,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controllerDeadzone: 0.1
   maxSpeed: 35
+  maxBoostSpeed: 30
   acceleration: 30
   kartTurnSpeed: 2
   kartTurnPower:
@@ -267,10 +285,20 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   steeringWheelTurnSpeed: 5
+  driftTurnDirectionMatchRange: {x: 1.5, y: 2}
+  driftTurnDirectionDifferRange: {x: -0.2, y: 0.35}
+  driftAge: 4
   driftAngleMin: 0.225
   driftAngleMax: 0.4
-  driftAge: 4
-  grounded: 0
+  driftVerticalVelocity: 3
+  ageWeight:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxBoost: 3
+  passiveBoostDrain: 3
 --- !u!114 &475118304644588544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -284,6 +312,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _state: 0
+--- !u!114 &8911959532021985603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4948144199981059219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48c9527d87df46a4592f9ad0ad1be9f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5339357157879514136
 GameObject:
   m_ObjectHideFlags: 0

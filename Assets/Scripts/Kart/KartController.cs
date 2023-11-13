@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using Unity.VisualScripting;
 using UnityEngine.InputSystem;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 /**
  * Kart Controller by Ethan Mullen
@@ -10,31 +11,44 @@ using UnityEngine.InputSystem;
 public class KartController : MonoBehaviour
 {
 
+	/* ### Settings variables ### */
 	[Header("Controls")]
 	public float controllerDeadzone = 0.1f;
 
 	[Header("Speed")]
 	public float maxSpeed = 20f;
+	public float maxBoostSpeed = 30f;
     public float acceleration = 5f;
 
 	[Header("Turning")]
 	public float kartTurnSpeed = 2f;
 	public AnimationCurve kartTurnPower;
 	public float steeringWheelTurnSpeed = 5f;
-	public float driftAngleMin = 0.225f;
-	public float driftAngleMax = 0.4f;
+
+	public Vector2 driftTurnDirectionMatchRange = new(1.5f, 2f);
+	public Vector2 driftTurnDirectionDifferRange = new(-0.2f, 0.35f);
 
 	[Header("Drift")]
 	/** The time (in seconds) that it takes for a drift to reach its age.
 	 *  Drift performance worsens as it reaches its age. */
 	public float driftAge = 4f;
+	public float driftAngleMin = 0.225f;
+	public float driftAngleMax = 0.4f;
 
-	/* !! Runtime variable */
+	public float driftEngageSpeed { get { return 0.25f * maxSpeed; } }
+	public float driftVerticalVelocity = 3f;
+
+	[Header("Boost")]
+	public AnimationCurve ageWeight;
+	public float maxBoost = 3f; // Boost will be time in seconds
+	public float passiveBoostDrain = 3f;
+
+	/* ### Runtime variable ### */
 	private KartStateManager stateMgr;
 	private Rigidbody rb;
 	private KartState state { get { return stateMgr.state; } }
 
-	// Input
+	/* Input variables */
 	private Vector2 turn;
 	private float throttle;
 
@@ -42,17 +56,19 @@ public class KartController : MonoBehaviour
 	public Vector3 kartForward { 
 		get { 
 			foreach(Vector3 forwardVector in new Vector3[] { rb != null ? rb.velocity : Vector3.zero, transform.forward }) { 
-				if(Math.Abs(forwardVector.x) > 0.1f || Math.Abs(forwardVector.z) > 0.1f)  // Using '== 0' here causes glitching
+				if(Math.Abs(forwardVector.x) > kartForwardCutoff || Math.Abs(forwardVector.z) > kartForwardCutoff)  // Using '== 0' here causes glitching
 					return forwardVector.normalized;
 			}
 			return Vector3.forward;
 		}	
 	}
+	private float kartForwardCutoff = 0.1f;
 
 	/** The velocity magnitude tangential to the up vector */
 	private float trackSpeed { get { return new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude; } }
 	private float speedRatio { get { return trackSpeed/maxSpeed; } }
 
+	public bool steeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	/** A [-1, 1] range float indicating the amount the steering wheel is turned and the direction. */
 	public float steeringWheelDirection { get; private set; }
 	public bool steeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }
@@ -61,7 +77,9 @@ public class KartController : MonoBehaviour
 	private float driftTheta;
 	private float driftThetaTarget;
 
-	[SerializeField] 
+	private float boostAmount;
+	public bool boosting { get; private set; }
+	
 	private bool grounded; // Stores last update's grounded status
 	private float airtime;
 
@@ -84,11 +102,11 @@ public class KartController : MonoBehaviour
 
 		// Steering wheel direction modification
 		if(Mathf.Abs(turn.x) > 0) { 
-			steeringWheelDirection += (Mathf.Sign(turn.x) != steeringWheelDirection ? 2f : 1) * steeringWheelTurnSpeed * turn.x * Time.deltaTime;
+			steeringWheelDirection += (!steeringWheelMatchesTurn ? 2f : 1f) * steeringWheelTurnSpeed * turn.x * Time.deltaTime;
 			steeringWheelDirection = Mathf.Clamp(steeringWheelDirection, -1, 1);
 		} else { 
 			steeringWheelDirection = Mathf.Lerp(steeringWheelDirection, 0, (steeringWheelTurnSpeed*2f) * (1+speedRatio) * Time.deltaTime);
-			if(Mathf.Abs(steeringWheelDirection) <= 0.01) 
+			if(Mathf.Abs(steeringWheelDirection) <= controllerDeadzone) 
 				steeringWheelDirection = 0;
 		}
 		
@@ -96,6 +114,10 @@ public class KartController : MonoBehaviour
 		// Use airtime to ensure we maintain drift direction during small falls.
 		if(state == KartState.DRIFTING && airtime > 0.05f) 
 			driftDirection = (int)Mathf.Sign(turn.x);
+
+		// Modify boost
+		if(boostAmount > 0) boostAmount -= Time.deltaTime * (boosting ? 1f : passiveBoostDrain);	
+		if(boostAmount < 0) boostAmount = 0;
 
 		// Make transform's forward follow velocity
 		Vector3 kartForward = this.kartForward; // Default kartForward for state DRIVING
@@ -139,7 +161,9 @@ public class KartController : MonoBehaviour
 		theta *= kartTurnPower.Evaluate(speedRatio);
 		if(state == KartState.DRIFTING) {
 			float driftAgeRatio = stateMgr.timeInState/driftAge;
-			theta *= steeringWheelMatchesDrift ? 2 - driftAgeRatio : 0.3f - 0.3f*driftAgeRatio;
+			theta *= steeringWheelMatchesDrift ? 
+				Mathf.Lerp(driftTurnDirectionMatchRange.x, driftTurnDirectionMatchRange.y, 1-driftAgeRatio) :
+				Mathf.Lerp(driftTurnDirectionDifferRange.x, driftTurnDirectionDifferRange.y, 1-driftAgeRatio);
 		}
 		if(!grounded) theta /= 3;
 
@@ -162,8 +186,8 @@ public class KartController : MonoBehaviour
 				break;
 			case KartState.DRIFTING:
 				float speedBefore = trackSpeed;
-				rb.AddForce(Vector3.up * 3f, ForceMode.VelocityChange);
-				if(speedBefore <= 0.1f * maxSpeed) stateMgr.state = KartState.DRIVING;
+				rb.AddForce(Vector3.up * driftVerticalVelocity, ForceMode.VelocityChange);
+				if(speedBefore <= driftEngageSpeed) stateMgr.state = KartState.DRIVING;
 				break;
 			case KartState.REVERSING:
 				break;
@@ -196,6 +220,15 @@ public class KartController : MonoBehaviour
 	public void OnThrottle(InputAction.CallbackContext context) 
 	{ 
 		throttle = context.ReadValue<float>();
+	}
+
+	public void OnBoost(InputAction.CallbackContext context) { 
+		if(context.performed && !boosting && boostAmount > 0) { 
+			boosting = true;
+		} else if(context.canceled) { 
+			if(boosting) boostAmount = 0;
+			boosting = false;
+		}
 	}
 
 }
