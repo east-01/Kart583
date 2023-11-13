@@ -1,7 +1,12 @@
 using UnityEngine;
 using System;
 using Unity.VisualScripting;
+using UnityEngine.InputSystem;
 
+/**
+ * Kart Controller by Ethan Mullen
+ * 
+ */
 public class KartController : MonoBehaviour
 {
 
@@ -11,156 +16,154 @@ public class KartController : MonoBehaviour
 	[Header("Speed")]
 	public float maxSpeed = 20f;
     public float acceleration = 5f;
-	public float passiveDeceleration = 3.5f;
 
 	[Header("Turning")]
 	public float kartTurnSpeed = 2f;
 	public AnimationCurve kartTurnPower;
 	public float steeringWheelTurnSpeed = 5f;
+	public float driftAngleMin = 0.225f;
+	public float driftAngleMax = 0.4f;
+
+	[Header("Drift")]
+	/** The time (in seconds) that it takes for a drift to reach its age.
+	 *  Drift performance worsens as it reaches its age. */
+	public float driftAge = 4f;
 
 	/* !! Runtime variable */
-	[Header("Runtime variables")]
-	private PlayerControls controls;
-    private Rigidbody rb;
 	private KartStateManager stateMgr;
-	private KartState state { 
-		get { return stateMgr.state; } 
+	private Rigidbody rb;
+	private KartState state { get { return stateMgr.state; } }
+
+	// Input
+	private Vector2 turn;
+	private float throttle;
+
+	// Velocity/Speed
+	public Vector3 kartForward { 
+		get { 
+			foreach(Vector3 forwardVector in new Vector3[] { rb != null ? rb.velocity : Vector3.zero, transform.forward }) { 
+				if(Math.Abs(forwardVector.x) > 0.1f || Math.Abs(forwardVector.z) > 0.1f)  // Using '== 0' here causes glitching
+					return forwardVector.normalized;
+			}
+			return Vector3.forward;
+		}	
 	}
 
-	private Vector3 _velocity;
-	private Vector3 velocity
-	{
-		get { return _velocity; }
-		set { 
-			_velocity = value; 
-			if(value.magnitude > 0) velocityNormal = value.normalized;
-		}
-	}
-	[Header("Runtime variables")]
-	[SerializeField] private float velocityMagnitude;
-	private Vector3 velocityNormal; // Keeps track of the normal of the velocity
-
-	private float speed { get { return velocity.magnitude; } }
-	private float speedRatio { get { return speed/maxSpeed; } }
+	/** The velocity magnitude tangential to the up vector */
+	private float trackSpeed { get { return new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude; } }
+	private float speedRatio { get { return trackSpeed/maxSpeed; } }
 
 	/** A [-1, 1] range float indicating the amount the steering wheel is turned and the direction. */
-	private float steeringWheelDirection;
-	
-	private int driftDirection; // Indicates if we're in a left/right drift
-	[SerializeField] private bool isGrounded;
+	public float steeringWheelDirection { get; private set; }
+	public bool steeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }
+
+	public int driftDirection { get; private set; } // Indicates if we're in a left/right drift
+	private float driftTheta;
+	private float driftThetaTarget;
+
+	[SerializeField] 
+	private bool grounded; // Stores last update's grounded status
+	private float airtime;
 
     private void Start()
     {
-		if(controls != null) controls.Disable(); // Disable existing controls
-		controls = new PlayerControls();
-		controls.Enable();
-
-        rb = GetComponent<Rigidbody>();
+		rb = GetComponent<Rigidbody>();
 		stateMgr = GetComponent<KartStateManager>();
-
-		velocityNormal = transform.forward.normalized;
-
     }
 
     private void Update()
     {
-		velocityMagnitude = velocity.magnitude;
-		isGrounded = Grounded();
+		bool grounded = Grounded();
+		if(grounded) { 
+			airtime = 0;
+		} else { 
+			if(this.grounded) airtime = 0;
+			airtime += Time.deltaTime;	
+		}
+		this.grounded = grounded;
 
-		/* DEBUG VISUALIZATION CODE */
-		//Debug.DrawRay(transform.position, velocity * 10, Color.red, 1f);
-
-		Vector2 turn = controls.Gameplay.Turn.ReadValue<Vector2>();
-		if(turn.magnitude <= controllerDeadzone) turn = Vector2.zero;
-		Vector3 turn3 = new Vector3(turn.x, 0, turn.y);
-		float throttle = controls.Gameplay.Throttle.ReadValue<float>();
-
+		// Steering wheel direction modification
 		if(Mathf.Abs(turn.x) > 0) { 
 			steeringWheelDirection += (Mathf.Sign(turn.x) != steeringWheelDirection ? 2f : 1) * steeringWheelTurnSpeed * turn.x * Time.deltaTime;
 			steeringWheelDirection = Mathf.Clamp(steeringWheelDirection, -1, 1);
 		} else { 
 			steeringWheelDirection = Mathf.Lerp(steeringWheelDirection, 0, (steeringWheelTurnSpeed*2f) * (1+speedRatio) * Time.deltaTime);
-			if(Mathf.Abs(steeringWheelDirection) <= 0.01) steeringWheelDirection = 0;
-		}
-
-		switch(state) { 
-			case KartState.DRIVING:	
-			case KartState.DRIFTING:
-				if(throttle > 0) {
-					velocity += velocityNormal * throttle * acceleration * Time.deltaTime;
-					if(speed > maxSpeed) {
-						Vector3 vel = velocity;
-						float y = vel.y;
-						vel.y = 0;
-						vel = Vector3.ClampMagnitude(vel, maxSpeed);
-						vel.y = y;
-						velocity = vel;
-					}
-				} else {
-					// Shorten velocity vector by the passive deceleration rate. TODO: Add brakes
-					velocity = Vector3.Lerp(velocity, Vector3.zero, passiveDeceleration*Time.deltaTime);
-					if(velocity.magnitude < 0.001f) velocity = Vector3.zero;
-				}
-
-				// Turning
-				float theta = kartTurnSpeed * steeringWheelDirection * Time.deltaTime;
-				theta *= kartTurnPower.Evaluate(speedRatio);
-				if(state == KartState.DRIFTING) theta *= Mathf.Sign(driftDirection) == Mathf.Sign(steeringWheelDirection) ? 2 : 0.3f;
-				if(!Grounded()) theta /= 3;
-
-				velocity = RotateVectorAroundAxis(velocity, Vector3.up, theta);
-
-				// Make transform's forward follow velocity
-				if(velocityNormal != Vector3.zero && state == KartState.DRIVING) {
-					Vector3 kartForward = velocityNormal;
-					kartForward.y = 0;
-					transform.forward = kartForward;
-				} else if(state == KartState.DRIFTING) { 
-					Vector3 kartForward = velocityNormal;
-					kartForward.y = 0;
-					kartForward = RotateVectorAroundAxis(kartForward, Vector3.up, 0.5f*steeringWheelDirection);
-					transform.forward = kartForward;
-				}					
-
-				break;
-			case KartState.REVERSING:
-				break;
-		}
-    
-		// Handle upwards velocity, we're letting Rigidbody use it's default gravity for downwards velocity.
-		float yComp = Math.Max(velocity.y, 0); // We shouldn't have negative vertical velocity.
-		if(yComp > 0) { 
-			yComp += Physics.gravity.y*Time.deltaTime;
-		}
-		velocity = new Vector3(velocity.x, yComp, velocity.z);
-
-        rb.MovePosition(rb.position + velocity*Time.deltaTime);
-		if(rb.position.y < 0) {
-			rb.MovePosition(new Vector3(0, 3, 0));	
-			steeringWheelDirection = 0;
+			if(Mathf.Abs(steeringWheelDirection) <= 0.01) 
+				steeringWheelDirection = 0;
 		}
 		
+		// If we're drifting and airborne, change drift direction to match joystick
+		// Use airtime to ensure we maintain drift direction during small falls.
+		if(state == KartState.DRIFTING && airtime > 0.05f) 
+			driftDirection = (int)Mathf.Sign(turn.x);
+
+		// Make transform's forward follow velocity
+		Vector3 kartForward = this.kartForward; // Default kartForward for state DRIVING
+		kartForward.y = 0;
+
+		if(state == KartState.DRIFTING) { 
+			driftThetaTarget = Mathf.Sign(driftDirection)*driftAngleMin;
+			if(steeringWheelMatchesDrift) 
+				driftThetaTarget += steeringWheelDirection*(driftAngleMax-driftAngleMin);
+		}			
+		driftTheta = Mathf.Lerp(driftTheta, driftThetaTarget, 20*Time.deltaTime);
+
+		kartForward = RotateVectorAroundAxis(kartForward, Vector3.up, driftTheta);
+		if(kartForward.normalized.magnitude > 0) transform.forward = kartForward.normalized;
+	}
+
+	private void FixedUpdate() 
+	{
+		HandleVelocity();
+	}
+
+	//https://www.reddit.com/r/Unity3D/comments/psukm1/know_the_difference_between_forcemodes_a_little/
+	/** Takes the state of input and state manager and adds forces to the Rigidbody */
+	public void HandleVelocity() 
+	{ 
+		driftThetaTarget = 0;
+
+		// Forward force application
+		if(throttle > 0) {
+			Vector3 throttleForce = kartForward * throttle * acceleration;
+			if((rb.velocity + throttleForce*Time.fixedDeltaTime).magnitude <= maxSpeed) { 
+				rb.AddForce(throttleForce, ForceMode.Acceleration);			
+			} else { 
+				Vector3 targetVelocity = (rb.velocity + throttleForce*Time.fixedDeltaTime).normalized*maxSpeed;
+				rb.AddForce(targetVelocity-rb.velocity, ForceMode.VelocityChange);
+			}
+		}
+
+		// Turning
+		float theta = kartTurnSpeed * steeringWheelDirection * Time.fixedDeltaTime;
+		theta *= kartTurnPower.Evaluate(speedRatio);
+		if(state == KartState.DRIFTING) {
+			float driftAgeRatio = stateMgr.timeInState/driftAge;
+			theta *= steeringWheelMatchesDrift ? 2 - driftAgeRatio : 0.3f - 0.3f*driftAgeRatio;
+		}
+		if(!grounded) theta /= 3;
+
+		if(theta != 0) {
+			/* Turn method #2: Rotate the velocity vector around the axis by theta, then add the difference
+					to the velocity. This should rotate the vector without changing velocity. */
+			rb.AddForce(RotateVectorAroundAxis(rb.velocity, Vector3.up, theta)-rb.velocity, ForceMode.VelocityChange);
+		}
 	}
 
 	/** The callback from KartStateManager indicating when we've changed state.
 	 *  Thrown immediately before the state changes, newState is the state we're changing to. */
 	public void StateChanged(KartState newState) 
 	{ 
-		if(controls == null) return;
-		Vector2 turn = controls.Gameplay.Turn.ReadValue<Vector2>();
+		if(newState != KartState.DRIFTING) driftDirection = 0;
+
 		switch(newState) { 
 			case KartState.DRIVING:
-				if(velocity.magnitude > 0) transform.forward = velocity;
+				if(rb.velocity.magnitude > 0) transform.forward = rb.velocity;
 				break;
 			case KartState.DRIFTING:
-				velocity = new Vector3(velocity.x, 3f, velocity.z);
-
-				if(Mathf.Abs(turn.x) < controllerDeadzone) {
-					GetComponent<KartStateManager>().state = KartState.DRIVING;
-					return;
-				}
-
-				driftDirection = (int)Mathf.Sign(turn.x);
+				float speedBefore = trackSpeed;
+				rb.AddForce(Vector3.up * 3f, ForceMode.VelocityChange);
+				if(speedBefore <= 0.1f * maxSpeed) stateMgr.state = KartState.DRIVING;
 				break;
 			case KartState.REVERSING:
 				break;
@@ -176,10 +179,23 @@ public class KartController : MonoBehaviour
         return rotation * inputVector;
     }
 
-	public bool Grounded() { 
+	public bool Grounded() 
+	{ 
 		float distance = 0.05f;
-		Vector3 raycastOrigin = new Vector3(transform.position.x, GetComponent<BoxCollider>().bounds.min.y+0.001f, transform.position.z);
+		Vector3 raycastOrigin = new(transform.position.x, GetComponent<BoxCollider>().bounds.min.y+0.001f, transform.position.z);
 		return Physics.Raycast(raycastOrigin, Vector3.down, distance);
+	}
+
+	/* Input Events */
+	public void OnTurn(InputAction.CallbackContext context) 
+	{ 
+		turn = context.ReadValue<Vector2>();
+		if(turn.magnitude <= controllerDeadzone) turn = Vector2.zero;
+	}
+
+	public void OnThrottle(InputAction.CallbackContext context) 
+	{ 
+		throttle = context.ReadValue<float>();
 	}
 
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /** Manages the kart's state by two ways: 
       1. Active state changes: The state is changed by player
@@ -11,54 +12,59 @@ using UnityEngine;
 public class KartStateManager : MonoBehaviour
 {
 
-	private KartState _state;
+	public float timeInState { get; private set; }
+
 	[SerializeField] 
+	private KartState _state;
 	public KartState state { 
 		get { return _state; } 
 		set { 
 			// Triggered state change, possibly throw an event
 			_state = value; 
+			timeInState = 0;
 			GetComponent<KartController>().StateChanged(value);
 		} 
 	}
 
-	private PlayerControls controls;
+	private KartController kc;
 
     void Start()
     {
         
-		if(controls != null) controls.Disable(); // Disable existing controls
-		controls = new PlayerControls();
-		controls.Enable();
+		kc = GetComponent<KartController>();
 
 		state = KartState.DRIVING;
 		
 		/* Active state changes - Player inputs (make requests) */
-		controls.Gameplay.Drift.performed += action => { 
-			if(state == KartState.DRIVING) 
-			{
-				state = KartState.DRIFTING;
-				//GetComponent<KartController>().driftAngle = transform.forward;
-			}
-		};
-
-		controls.Gameplay.Drift.canceled += action => { 
-			if(state == KartState.DRIFTING)
-			{
-				state = KartState.DRIVING;
-			}	
-		};
 
     }
 
-    void FixedUpdate()
+    void Update()
     {
-        
+     
+		timeInState += Time.deltaTime;
+
 		/* Active state changes - Recieve requests */
 
 		/* Passive state changes */
-
+		if(state == KartState.DRIFTING && kc.Grounded() && kc.driftDirection == 0 && timeInState >= 0.15f) { 
+			state = KartState.DRIVING;
+		}
     }
+
+	public void OnDrift(InputAction.CallbackContext context) { 
+		if(context.performed) { 
+			if(state == KartState.DRIVING && kc.Grounded()) 
+			{
+				state = KartState.DRIFTING;
+			}
+		} else if(context.canceled) { 
+			if(state == KartState.DRIFTING)
+			{
+				state = KartState.DRIVING;
+			}				
+		}
+	}
 
 }
 
