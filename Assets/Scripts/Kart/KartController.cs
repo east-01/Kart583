@@ -39,9 +39,11 @@ public class KartController : MonoBehaviour
 	public float driftVerticalVelocity = 3f;
 
 	[Header("Boost")]
-	public AnimationCurve ageWeight;
+	public float requiredBoostPercentage = 0.3f;
 	public float maxBoost = 3f; // Boost will be time in seconds
+	public float boostGain = 1f;
 	public float passiveBoostDrain = 3f;
+	public float activeBoostDrain = 1.75f;
 
 	/* ### Runtime variable ### */
 	private KartStateManager stateMgr;
@@ -65,8 +67,12 @@ public class KartController : MonoBehaviour
 	private float kartForwardCutoff = 0.1f;
 
 	/** The velocity magnitude tangential to the up vector */
-	private float trackSpeed { get { return new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude; } }
-	private float speedRatio { get { return trackSpeed/maxSpeed; } }
+	public float trackSpeed { get { 
+		if(rb == null) rb = GetComponent<Rigidbody>(); 
+		return new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude; 
+	} }
+	public float currentMaxSpeed { get { return activelyBoosting ? maxBoostSpeed : maxSpeed; } }
+	private float speedRatio { get { return trackSpeed/currentMaxSpeed; } }
 
 	public bool steeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	/** A [-1, 1] range float indicating the amount the steering wheel is turned and the direction. */
@@ -76,10 +82,14 @@ public class KartController : MonoBehaviour
 	public int driftDirection { get; private set; } // Indicates if we're in a left/right drift
 	private float driftTheta;
 	private float driftThetaTarget;
+	[Header("Runtime fields")]
+	public bool driftParticles; // True if driftparticles should be showing
 
-	private float boostAmount;
+	public float boostAmount { get; private set; }
 	public bool boosting { get; private set; }
-	
+	public bool activelyBoosting { get { return boosting && boostAmount > 0;} }
+	private bool lastActivelyBoosting;
+
 	private bool grounded; // Stores last update's grounded status
 	private float airtime;
 
@@ -99,6 +109,7 @@ public class KartController : MonoBehaviour
 			airtime += Time.deltaTime;	
 		}
 		this.grounded = grounded;
+		this.driftParticles = airtime <= 0.05f && state == KartState.DRIFTING && driftDirection != 0;
 
 		// Steering wheel direction modification
 		if(Mathf.Abs(turn.x) > 0) { 
@@ -112,12 +123,18 @@ public class KartController : MonoBehaviour
 		
 		// If we're drifting and airborne, change drift direction to match joystick
 		// Use airtime to ensure we maintain drift direction during small falls.
-		if(state == KartState.DRIFTING && airtime > 0.05f) 
+		if(state == KartState.DRIFTING && airtime > 0.05f) { 
 			driftDirection = (int)Mathf.Sign(turn.x);
+		}
 
-		// Modify boost
-		if(boostAmount > 0) boostAmount -= Time.deltaTime * (boosting ? 1f : passiveBoostDrain);	
-		if(boostAmount < 0) boostAmount = 0;
+		// Boosting
+		if(activelyBoosting) {
+			boostAmount = Mathf.Max(boostAmount - activeBoostDrain*Time.deltaTime, 0); 
+		} else if(driftParticles) {
+			boostAmount += boostGain*Time.deltaTime;
+		} else { 
+			boostAmount = Mathf.Max(boostAmount - passiveBoostDrain*Time.deltaTime, 0);									
+		}
 
 		// Make transform's forward follow velocity
 		Vector3 kartForward = this.kartForward; // Default kartForward for state DRIVING
@@ -137,6 +154,7 @@ public class KartController : MonoBehaviour
 	private void FixedUpdate() 
 	{
 		HandleVelocity();
+		lastActivelyBoosting = activelyBoosting;
 	}
 
 	//https://www.reddit.com/r/Unity3D/comments/psukm1/know_the_difference_between_forcemodes_a_little/
@@ -146,12 +164,23 @@ public class KartController : MonoBehaviour
 		driftThetaTarget = 0;
 
 		// Forward force application
+
+
+		Vector3 throttleForce = kartForward * throttle * acceleration;
+
+		if(activelyBoosting && !lastActivelyBoosting) {
+			throttleForce *= 10;
+			if(throttleForce.magnitude == 0) throttleForce = kartForward.normalized;
+			// Make velocity == maxVelocity
+			Vector3 targetVelocity = (rb.velocity + throttleForce*Time.fixedDeltaTime).normalized*currentMaxSpeed;
+			rb.AddForce(targetVelocity-rb.velocity, ForceMode.VelocityChange);
+		}
+
 		if(throttle > 0) {
-			Vector3 throttleForce = kartForward * throttle * acceleration;
-			if((rb.velocity + throttleForce*Time.fixedDeltaTime).magnitude <= maxSpeed) { 
+			if((rb.velocity + throttleForce*Time.fixedDeltaTime).magnitude <= currentMaxSpeed) { 
 				rb.AddForce(throttleForce, ForceMode.Acceleration);			
 			} else { 
-				Vector3 targetVelocity = (rb.velocity + throttleForce*Time.fixedDeltaTime).normalized*maxSpeed;
+				Vector3 targetVelocity = (rb.velocity + throttleForce*Time.fixedDeltaTime).normalized*currentMaxSpeed;
 				rb.AddForce(targetVelocity-rb.velocity, ForceMode.VelocityChange);
 			}
 		}
@@ -223,8 +252,9 @@ public class KartController : MonoBehaviour
 	}
 
 	public void OnBoost(InputAction.CallbackContext context) { 
-		if(context.performed && !boosting && boostAmount > 0) { 
+		if(context.performed && !boosting && (boostAmount/maxBoost) >= requiredBoostPercentage) { 
 			boosting = true;
+			stateMgr.state = KartState.DRIVING;
 		} else if(context.canceled) { 
 			if(boosting) boostAmount = 0;
 			boosting = false;

@@ -55,7 +55,7 @@ public class KartStateManager : MonoBehaviour
 
 	public void OnDrift(InputAction.CallbackContext context) { 
 		if(context.performed) { 
-			if(state == KartState.DRIVING && kc.Grounded()) 
+			if(state == KartState.DRIVING && kc.Grounded() && !kc.activelyBoosting) 
 			{
 				state = KartState.DRIFTING;
 			}
