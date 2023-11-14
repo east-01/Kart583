@@ -9,10 +9,25 @@ public class StrictFollow : MonoBehaviour
 	public float distance = 5f;
 	public float height = 3f;
 
+	public float fov = 65;
+	public float displayFov { get; private set; }
+	public float fovInterpolationFactor = 3f;
+
     void Update()
     {
+
+		float fov = this.fov;
+		KartController kc = subject.GetComponent<KartController>();
+		if(kc != null && kc.isActiveAndEnabled && kc.trackSpeed > 0 && kc.boosting && kc.boostAmount > 0) {
+			fov *= 1.3f;
+		}
+
+		displayFov = Mathf.Lerp(displayFov, fov, fovInterpolationFactor*Time.deltaTime);
+		GetComponent<Camera>().fieldOfView = displayFov;
+
 		transform.position = GetTargetPosition();
 		transform.LookAt(subject.position);
+
     }
 
 	public Vector3 GetTargetPosition() 
