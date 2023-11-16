@@ -18,7 +18,7 @@ public class StrictFollow : MonoBehaviour
 
 		float fov = this.fov;
 		KartController kc = subject.GetComponent<KartController>();
-		if(kc != null && kc.isActiveAndEnabled && kc.trackSpeed > 0 && kc.boosting && kc.boostAmount > 0) {
+		if(kc != null && kc.isActiveAndEnabled && kc.TrackSpeed > 0 && kc.IsBoosting() && kc.GetBoostAmount() > 0) {
 			fov *= 1.3f;
 		}
 
