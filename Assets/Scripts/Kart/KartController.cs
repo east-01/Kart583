@@ -49,8 +49,6 @@ public class KartController : MonoBehaviour
 	public float passiveBoostDrain = 3f;
 	public float activeBoostDrain = 1.75f;
 
-	public BoxCollider frontBumper;
-
 	/* ### Runtime variable ### */
 	private KartStateManager stateMgr;
 	private Rigidbody rb;
@@ -135,9 +133,9 @@ public class KartController : MonoBehaviour
 		// Boosting
 		if(ActivelyBoosting) {
 			boostAmount = Mathf.Max(boostAmount - activeBoostDrain*Time.deltaTime, 0); 
-			throttle = 1f;
 		} else if(driftParticles && SteeringWheelMatchesDrift) {
 			boostAmount += boostGain*Time.deltaTime;
+			if(boostAmount > maxBoost) boostAmount = maxBoost;
 		} else { 
 			boostAmount = Mathf.Max(boostAmount - passiveBoostDrain*Time.deltaTime, 0);									
 		}
@@ -158,6 +156,9 @@ public class KartController : MonoBehaviour
 		if(CanChangeForward && kartForwardCandidate.magnitude > 0) { 
 			kartForward = rb.velocity.normalized*momentum;	
 		}
+		if(timeSinceLastCollision < crashStateLength) { 
+			kartForward = transform.forward;
+		}
 		
 		Vector3 transformForward = kartForward; // Default kartForward for state DRIVING
 		transformForward.y = 0;
@@ -166,15 +167,13 @@ public class KartController : MonoBehaviour
 			transform.forward = transformForward.normalized; // Use TrackSpeed > 1.15f to stop randomly turning at slow speeds
 
 		/** Crash state */
-		if(timeSinceLastCollision + Time.deltaTime >= crashStateLength && timeSinceLastCollision < crashStateLength) { 
+		if(timeSinceLastCollision + Time.fixedDeltaTime >= crashStateLength && timeSinceLastCollision < crashStateLength) { 
 			// Reached end of crash state, make kart forward match velocity
-			//kartForward = transform.forward;
-			//Vector3 targetVelocity = kartForward*momentum*rb.velocity.magnitude;
-			//rb.AddForce(targetVelocity-rb.velocity, ForceMode.VelocityChange);
-			rb.freezeRotation = false;
+			kartForward = transform.forward;
+			Vector3 targetVelocity = kartForward*momentum*rb.velocity.magnitude;
+			rb.AddForce(targetVelocity-rb.velocity, ForceMode.VelocityChange);
 		}
-		this.timeSinceLastCollision += Time.deltaTime;
-
+		this.timeSinceLastCollision += Time.fixedDeltaTime;
 
 		HandleVelocity();
 
@@ -187,6 +186,9 @@ public class KartController : MonoBehaviour
 	public void HandleVelocity() 
 	{ 
 		driftThetaTarget = 0;
+
+		float throttle = this.throttle;
+		if(ActivelyBoosting) throttle = 1f;
 
 		/* Forward force application */
 		Vector3 throttleForce = kartForward * throttle * acceleration;
@@ -267,41 +269,7 @@ public class KartController : MonoBehaviour
 			}
 		}
 
-		if(wasGroundCollision) return;
-
-		stateMgr.state = KartState.DRIVING;
-		if(timeSinceLastCollision < crashStateLength) return; 
-
-		Vector3 initialVel = rb.velocity;
-		Vector3 vel = rb.velocity;
-		for(int i = 0; i < collision.contactCount; i++) { 
-			Vector3 normal = collision.GetContact(i).normal;
-			float dot = Vector3.Dot(rb.velocity.normalized, normal);
-			if(dot <= -0.4) { 
-				vel = Vector3.zero;
-				break;
-			} else { 
-				vel	= RemoveComponent(vel, normal);
-				Debug.DrawRay(collision.GetContact(i).point, normal, Color.blue, 5f);
-			}
-		}
-
-		if(vel.magnitude < inputDeadzone) {
-			timeSinceLastCollision = 0;
-			vel = Vector3.zero;
-		}
-
-		rb.velocity = Vector3.Lerp(rb.velocity, vel, 0.05f);
-		rb.angularVelocity = Vector3.zero;
-		rb.freezeRotation = true;
-
-		kartForward = vel.normalized;
-		transform.forward = vel.normalized;
-
-		Debug.DrawRay(transform.position, initialVel, Color.red, 5f);
-		Debug.DrawRay(transform.position, vel, Color.yellow, 5f);
-
-		if(vel.magnitude > 0) transform.forward = vel.normalized;
+		if(!wasGroundCollision) timeSinceLastCollision = 0f;
 
 	}
 
