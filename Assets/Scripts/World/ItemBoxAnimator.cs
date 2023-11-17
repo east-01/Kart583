@@ -23,6 +23,8 @@ public class ItemBoxAnimator : MonoBehaviour
     {
 		transform.position = initialPosition + Vector3.up*height*heightAnimation.Evaluate(AnimationProgress);
 		lifetime += Time.deltaTime;		
+
+		 transform.Rotate(Vector3.up, Time.deltaTime);
     }
 
 	private void OnTriggerEnter(Collider other)
