@@ -20,6 +20,7 @@ public class Waypoints : MonoBehaviour
             Gizmos.DrawLine(transform.GetChild(i).position, transform.GetChild(i + 1).position);
         }
 
+        //Draw final line back to the first waypoint
         Gizmos.DrawLine(transform.GetChild(transform.childCount - 1).position, transform.GetChild(0).position);
     }
 
