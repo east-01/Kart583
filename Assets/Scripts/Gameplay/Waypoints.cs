@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -37,6 +38,22 @@ public class Waypoints : MonoBehaviour
         } else
         {
             return transform.GetChild(0);
+        }
+    }
+
+    public (Transform, Transform, Transform) ThreeWPLookAhead(Transform currentWaypoint)
+    {
+        if (currentWaypoint == null)
+        {
+            return (transform.GetChild(0), transform.GetChild(1), transform.GetChild(2));
+        }
+
+        if (currentWaypoint.GetSiblingIndex() < transform.childCount - 1)
+        {
+            return (transform.GetChild(currentWaypoint.GetSiblingIndex() + 1), transform.GetChild(currentWaypoint.GetSiblingIndex() + 2), transform.GetChild(currentWaypoint.GetSiblingIndex() + 3));
+        } else
+        {
+            return (transform.GetChild(0), transform.GetChild(1), transform.GetChild(2));
         }
     }
 }
