@@ -468,8 +468,10 @@ GameObject:
   - component: {fileID: 7864526478430369124}
   - component: {fileID: 4999665241806540357}
   - component: {fileID: 2192613701664119061}
+  - component: {fileID: 6584293344106103623}
   - component: {fileID: 8455540368074242070}
   - component: {fileID: 475118304644588544}
+  - component: {fileID: 1237969164997158040}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -603,8 +605,8 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8455540368074242070}
-        m_TargetAssemblyTypeName: KartController, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnTurn
         m_Mode: 0
         m_Arguments:
@@ -619,8 +621,8 @@ MonoBehaviour:
     m_ActionName: Gameplay/Turn[/XInputControllerWindows/leftStick,/Keyboard/a,/Keyboard/d]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8455540368074242070}
-        m_TargetAssemblyTypeName: KartController, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnThrottle
         m_Mode: 0
         m_Arguments:
@@ -635,8 +637,8 @@ MonoBehaviour:
     m_ActionName: Gameplay/Throttle[/XInputControllerWindows/rightTrigger,/Keyboard/w]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 475118304644588544}
-        m_TargetAssemblyTypeName: KartStateManager, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnDrift
         m_Mode: 0
         m_Arguments:
@@ -655,8 +657,8 @@ MonoBehaviour:
     m_ActionName: Gameplay/Join[/Keyboard/anyKey]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8455540368074242070}
-        m_TargetAssemblyTypeName: KartController, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnBoost
         m_Mode: 0
         m_Arguments:
@@ -671,8 +673,8 @@ MonoBehaviour:
     m_ActionName: Gameplay/Boost[/Keyboard/space]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8455540368074242070}
-        m_TargetAssemblyTypeName: KartController, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnReverse
         m_Mode: 0
         m_Arguments:
@@ -690,6 +692,18 @@ MonoBehaviour:
   m_DefaultActionMap: Gameplay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 283636494426046530}
+--- !u!114 &6584293344106103623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4948144199981059219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d5bc62db68b2ac42a6c4ca6e6c4b9b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &8455540368074242070
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -773,7 +787,6 @@ MonoBehaviour:
   boostGain: 1
   passiveBoostDrain: 3
   activeBoostDrain: 1.75
-  frontBumper: {fileID: 0}
   kartForward: {x: 0, y: 0, z: 0}
   driftParticles: 0
 --- !u!114 &475118304644588544
@@ -789,6 +802,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _state: 0
+--- !u!114 &1237969164997158040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4948144199981059219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5e3df2f0ea4da944a86a7e686a20570, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  waypoints: {fileID: 0}
 --- !u!1 &5339357157879514136
 GameObject:
   m_ObjectHideFlags: 0

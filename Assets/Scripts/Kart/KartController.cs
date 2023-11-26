@@ -1,12 +1,9 @@
 using UnityEngine;
 using System;
-using Unity.VisualScripting;
-using UnityEngine.InputSystem;
-using System.Runtime.InteropServices.WindowsRuntime;
+// Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
  * Kart Controller by Ethan Mullen
- * 
  */
 public class KartController : MonoBehaviour
 {
@@ -89,7 +86,9 @@ public class KartController : MonoBehaviour
 		rb = GetComponent<Rigidbody>();
 		stateMgr = GetComponent<KartStateManager>();
 
-		kartForward = Vector3.forward;
+		// TODO: Make kart spawn at a spawn position and face a certain direction
+		kartForward = new Vector3(1, 0, 0); 
+		transform.forward = kartForward;
     }
 
     private void Update()
@@ -299,27 +298,35 @@ public class KartController : MonoBehaviour
 		return Physics.Raycast(raycastOrigin, Vector3.down, distance);
 	}
 
-	/* Input Events */
-	public void OnTurn(InputAction.CallbackContext context) 
-	{ 
-		turn = context.ReadValue<Vector2>();
-		if(turn.magnitude <= inputDeadzone) turn = Vector2.zero;
+	/* Input */
+	public void SetTurnInput(Vector2 turn) {
+		this.turn = turn;
+		if(turn.magnitude <= inputDeadzone) this.turn = Vector2.zero;
 	}
 
-	public void OnThrottle(InputAction.CallbackContext context) 
-	{ 
-		throttle = context.ReadValue<float>();
+	public void SetThrottleInput(float throttle) {
+		this.throttle = throttle;
 	}
 
-	public void OnReverse(InputAction.CallbackContext context) { 
-		throttle = -context.ReadValue<float>();	
+	public void SetReverseInput(float reverse) {
+		this.throttle = -reverse;
 	}
 
-	public void OnBoost(InputAction.CallbackContext context) { 
-		if(context.performed && !boosting && (boostAmount/maxBoost) >= requiredBoostPercentage) { 
+	public void SetDriftInput(bool buttonDown) {
+		if(buttonDown) { 
+			if(state == KartState.DRIVING && Grounded() && !ActivelyBoosting) 
+				stateMgr.state = KartState.DRIFTING;
+		} else { 
+			if(state == KartState.DRIFTING)
+				stateMgr.state = KartState.DRIVING;
+		}
+	}
+
+	public void SetBoostInput(bool buttonDown) {
+		if(buttonDown && !boosting && (boostAmount/maxBoost) >= requiredBoostPercentage) { 
 			boosting = true;
 			stateMgr.state = KartState.DRIVING;
-		} else if(context.canceled) { 
+		} else if(!buttonDown) { 
 			if(boosting) boostAmount = 0;
 			boosting = false;
 		}

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class Waypoints : MonoBehaviour
@@ -41,6 +42,10 @@ public class Waypoints : MonoBehaviour
         }
     }
 
+    public Transform GetWaypointFromIndex(int index) {
+        return transform.GetChild(Mathf.Clamp(index, 0, transform.childCount));
+    }
+
     public (Transform, Transform, Transform) ThreeWPLookAhead(Transform currentWaypoint)
     {
         if (currentWaypoint == null)
@@ -56,4 +61,6 @@ public class Waypoints : MonoBehaviour
             return (transform.GetChild(0), transform.GetChild(1), transform.GetChild(2));
         }
     }
+
+    public int Count { get { return transform.childCount;} }
 }
