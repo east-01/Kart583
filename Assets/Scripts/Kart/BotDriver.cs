@@ -19,6 +19,7 @@ public class BotDriver : MonoBehaviour
 
     void Update() 
     {
+
         if(kc.Grounded()) {
             kc.SetThrottleInput(throttle);
         } else {
@@ -29,6 +30,12 @@ public class BotDriver : MonoBehaviour
         Vector3 directionToWaypoint = (pt.GetNextWaypoint().position-transform.position).normalized;
         directionToWaypoint.y = 0;
         kc.SetTurnInput((forward-directionToWaypoint).normalized);
+
+        // Debug code
+        Debug.DrawRay(transform.position, directionToWaypoint, Color.red);
+        Debug.DrawRay(transform.position, forward, Color.blue);        
+        // End debug code
+
     }
 
 }
