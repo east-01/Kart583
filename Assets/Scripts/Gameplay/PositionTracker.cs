@@ -40,6 +40,7 @@ public class PositionTracker : MonoBehaviour
         lapCompletion = GetLapCompletion();
     }
 
+    public int GetWaypointIndex() { return waypointIndex; }
     public Transform GetCurrentWaypoint() { return waypoints.GetWaypointFromIndex(waypointIndex); }
     public Transform GetNextWaypoint() 
     {
