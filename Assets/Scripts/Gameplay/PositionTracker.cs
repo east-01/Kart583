@@ -40,6 +40,7 @@ public class PositionTracker : MonoBehaviour
         lapCompletion = GetLapCompletion();
     }
 
+    public Waypoints GetWaypoints() { return waypoints; }
     public int GetWaypointIndex() { return waypointIndex; }
     public Transform GetCurrentWaypoint() { return waypoints.GetWaypointFromIndex(waypointIndex); }
     public Transform GetNextWaypoint() 
@@ -48,6 +49,8 @@ public class PositionTracker : MonoBehaviour
         if(idx >= waypoints.Count) idx = 0;
         return waypoints.GetWaypointFromIndex(idx);
     }
+
+    public BoxCollider GetNextWaypointCollider() { return GetNextWaypoint().GetComponent<BoxCollider>(); }
 
     public float GetLapCompletion() 
     {

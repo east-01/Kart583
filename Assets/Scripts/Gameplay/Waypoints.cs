@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Waypoints : MonoBehaviour
@@ -42,8 +43,45 @@ public class Waypoints : MonoBehaviour
         }
     }
 
-    public Transform GetWaypointFromIndex(int index) {
+    public Transform GetNextWaypoint(int currentIndex) 
+    {
+        currentIndex += 1;
+        if(currentIndex >= transform.childCount) currentIndex = 0;
+        return GetWaypointFromIndex(currentIndex);
+    }
+
+    public Transform GetPreviousWaypoint(int currentIndex) 
+    {
+        currentIndex -= 1;
+        if(currentIndex < 0) currentIndex = transform.childCount-1;
+        return GetWaypointFromIndex(currentIndex);
+    }
+
+    public Transform GetWaypointFromIndex(int index) 
+    {
         return transform.GetChild(Mathf.Clamp(index, 0, transform.childCount));
+    }
+
+    public float GetTurnAmount(int waypointIndex) 
+    {
+        Transform currentWaypoint = GetWaypointFromIndex(waypointIndex);
+        Vector3 a = (currentWaypoint.position - GetPreviousWaypoint(waypointIndex).position).normalized;
+        a.y = 0;
+        Vector3 b = (GetNextWaypoint(waypointIndex).position - currentWaypoint.position).normalized;
+        b.y = 0;
+        return Vector3.Cross(a, b).y;
+    }
+
+    public float GetTurnFactor(int currentWaypointIndex, int lookAheadAmount) 
+    {
+        float accumulator = 0;
+        for(int i = 0; i < lookAheadAmount; i++) {
+            accumulator += GetTurnAmount(currentWaypointIndex);
+
+            currentWaypointIndex += 1;
+            if(currentWaypointIndex >= transform.childCount) currentWaypointIndex = 0;
+        }
+        return accumulator;
     }
 
     public (Transform, Transform, Transform) ThreeWPLookAhead(Transform currentWaypoint)

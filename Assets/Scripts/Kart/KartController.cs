@@ -299,11 +299,13 @@ public class KartController : MonoBehaviour
 	}
 
 	/* Input */
+	public Vector2 GetTurnInput() { return turn; }
 	public void SetTurnInput(Vector2 turn) {
 		this.turn = turn;
 		if(turn.magnitude <= inputDeadzone) this.turn = Vector2.zero;
 	}
 
+	public float GetThrottleInput() { return throttle; }
 	public void SetThrottleInput(float throttle) {
 		this.throttle = throttle;
 	}
@@ -312,6 +314,7 @@ public class KartController : MonoBehaviour
 		this.throttle = -reverse;
 	}
 
+	public bool IsDrifting() { return state == KartState.DRIFTING; }
 	public void SetDriftInput(bool buttonDown) {
 		if(buttonDown) { 
 			if(state == KartState.DRIVING && Grounded() && !ActivelyBoosting) 
