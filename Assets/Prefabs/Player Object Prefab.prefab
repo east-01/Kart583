@@ -218,7 +218,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: -25, y: 25}
-  m_SizeDelta: {x: 300, y: 100}
+  m_SizeDelta: {x: 700, y: 400}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &1333125567592386320
 CanvasRenderer:
@@ -275,8 +275,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 30
-  m_fontSizeBase: 30
+  m_fontSize: 60
+  m_fontSizeBase: 60
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -329,6 +329,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3943590d4aaf05c4cb2f5a2d2b200f99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  kartController: {fileID: 8455540368074242070}
   value: 0
   interpolationFactor: 10
   colors:
@@ -383,7 +384,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 0.35
-      value: 1.75
+      value: 1.5
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -392,7 +393,7 @@ MonoBehaviour:
       outWeight: 0
     - serializedVersion: 3
       time: 1
-      value: 3
+      value: 2.25
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -402,6 +403,57 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  appearCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: -3.1688697
+      outSlope: -3.1688697
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.05529225
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  fadeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 1.1523433
+      outSlope: 1.1523433
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.07740916
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  minHeight: -200
+  maxHeight: 25
+  animationTime: 0.25
 --- !u!1 &4948144199981059219
 GameObject:
   m_ObjectHideFlags: 0
@@ -416,9 +468,10 @@ GameObject:
   - component: {fileID: 7864526478430369124}
   - component: {fileID: 4999665241806540357}
   - component: {fileID: 2192613701664119061}
+  - component: {fileID: 6584293344106103623}
   - component: {fileID: 8455540368074242070}
   - component: {fileID: 475118304644588544}
-  - component: {fileID: 8911959532021985603}
+  - component: {fileID: 1237969164997158040}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -522,9 +575,9 @@ Rigidbody:
   m_AngularDrag: 0
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 2
   m_Constraints: 0
-  m_CollisionDetection: 1
+  m_CollisionDetection: 2
 --- !u!114 &2192613701664119061
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -552,8 +605,8 @@ MonoBehaviour:
   m_ActionEvents:
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8455540368074242070}
-        m_TargetAssemblyTypeName: KartController, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnTurn
         m_Mode: 0
         m_Arguments:
@@ -568,8 +621,8 @@ MonoBehaviour:
     m_ActionName: Gameplay/Turn[/XInputControllerWindows/leftStick,/Keyboard/a,/Keyboard/d]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8455540368074242070}
-        m_TargetAssemblyTypeName: KartController, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnThrottle
         m_Mode: 0
         m_Arguments:
@@ -584,8 +637,8 @@ MonoBehaviour:
     m_ActionName: Gameplay/Throttle[/XInputControllerWindows/rightTrigger,/Keyboard/w]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 475118304644588544}
-        m_TargetAssemblyTypeName: KartStateManager, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnDrift
         m_Mode: 0
         m_Arguments:
@@ -604,8 +657,8 @@ MonoBehaviour:
     m_ActionName: Gameplay/Join[/Keyboard/anyKey]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8455540368074242070}
-        m_TargetAssemblyTypeName: KartController, Assembly-CSharp
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
         m_MethodName: OnBoost
         m_Mode: 0
         m_Arguments:
@@ -618,11 +671,39 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 884edfb8-efd3-4ca1-a6d2-d5358fb7fbed
     m_ActionName: Gameplay/Boost[/Keyboard/space]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 6584293344106103623}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
+        m_MethodName: OnReverse
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 4f816a71-e251-44fa-af9a-46d7e08d3842
+    m_ActionName: Gameplay/Reverse[/XInputControllerWindows/buttonEast,/Keyboard/s]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Gameplay
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 283636494426046530}
+--- !u!114 &6584293344106103623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4948144199981059219}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d5bc62db68b2ac42a6c4ca6e6c4b9b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &8455540368074242070
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -635,7 +716,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca6fbd7bd4e532d49a4003c6b0e25c65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controllerDeadzone: 0.1
+  inputDeadzone: 0.1
+  crashStateLength: 0.075
   maxSpeed: 35
   maxBoostSpeed: 45
   acceleration: 30
@@ -697,12 +779,15 @@ MonoBehaviour:
   driftAge: 4
   driftAngleMin: 0.225
   driftAngleMax: 0.4
+  driftHopSpeedPercent: 0.1
+  driftEngageSpeedPercent: 0.4
   driftVerticalVelocity: 3
   requiredBoostPercentage: 0.3
   maxBoost: 2
   boostGain: 1
   passiveBoostDrain: 3
   activeBoostDrain: 1.75
+  kartForward: {x: 0, y: 0, z: 0}
   driftParticles: 0
 --- !u!114 &475118304644588544
 MonoBehaviour:
@@ -717,7 +802,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _state: 0
---- !u!114 &8911959532021985603
+--- !u!114 &1237969164997158040
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -726,10 +811,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 4948144199981059219}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 48c9527d87df46a4592f9ad0ad1be9f9, type: 3}
+  m_Script: {fileID: 11500000, guid: b5e3df2f0ea4da944a86a7e686a20570, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boostDisplay: {fileID: 5703770293095212903}
+  waypoints: {fileID: 0}
 --- !u!1 &5339357157879514136
 GameObject:
   m_ObjectHideFlags: 0
@@ -905,7 +990,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 2
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1920, y: 1080}

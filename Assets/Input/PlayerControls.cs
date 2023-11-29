@@ -46,6 +46,15 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""Reverse"",
+                    ""type"": ""Button"",
+                    ""id"": ""4f816a71-e251-44fa-af9a-46d7e08d3842"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""Drift"",
                     ""type"": ""Button"",
                     ""id"": ""7327ce7e-2487-4c33-90d8-219f6145de58"",
@@ -55,18 +64,18 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Join"",
+                    ""name"": ""Boost"",
                     ""type"": ""Button"",
-                    ""id"": ""fb9cd52a-7c48-4d21-b374-2ae50f7f062e"",
+                    ""id"": ""884edfb8-efd3-4ca1-a6d2-d5358fb7fbed"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Boost"",
+                    ""name"": ""Join"",
                     ""type"": ""Button"",
-                    ""id"": ""884edfb8-efd3-4ca1-a6d2-d5358fb7fbed"",
+                    ""id"": ""fb9cd52a-7c48-4d21-b374-2ae50f7f062e"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
@@ -164,17 +173,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""89e110c2-dded-469f-843f-2d73c790ddf9"",
-                    ""path"": ""<Keyboard>/anyKey"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Join"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""3da1e954-260e-4481-9652-46e4959f6e82"",
                     ""path"": ""<Gamepad>/buttonSouth"",
                     ""interactions"": """",
@@ -186,8 +184,41 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""2da6d587-87c8-4de7-bca3-edb7e0602bd4"",
-                    ""path"": ""<Keyboard>/space"",
+                    ""id"": ""89e110c2-dded-469f-843f-2d73c790ddf9"",
+                    ""path"": ""<Keyboard>/anyKey"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Join"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""d070e7d7-bc75-4bcb-8d20-7adcf0d544e3"",
+                    ""path"": ""<Gamepad>/buttonEast"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reverse"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e6af5596-cf97-426f-8568-9fb698c1a325"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Reverse"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""dc1454d2-b5f9-4a06-9abe-c6a6f9db2dfc"",
+                    ""path"": ""<Gamepad>/buttonWest"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -197,8 +228,8 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""dc1454d2-b5f9-4a06-9abe-c6a6f9db2dfc"",
-                    ""path"": ""<Gamepad>/buttonWest"",
+                    ""id"": ""2da6d587-87c8-4de7-bca3-edb7e0602bd4"",
+                    ""path"": ""<Keyboard>/space"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -215,9 +246,10 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         m_Gameplay = asset.FindActionMap("Gameplay", throwIfNotFound: true);
         m_Gameplay_Turn = m_Gameplay.FindAction("Turn", throwIfNotFound: true);
         m_Gameplay_Throttle = m_Gameplay.FindAction("Throttle", throwIfNotFound: true);
+        m_Gameplay_Reverse = m_Gameplay.FindAction("Reverse", throwIfNotFound: true);
         m_Gameplay_Drift = m_Gameplay.FindAction("Drift", throwIfNotFound: true);
-        m_Gameplay_Join = m_Gameplay.FindAction("Join", throwIfNotFound: true);
         m_Gameplay_Boost = m_Gameplay.FindAction("Boost", throwIfNotFound: true);
+        m_Gameplay_Join = m_Gameplay.FindAction("Join", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -279,18 +311,20 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     private IGameplayActions m_GameplayActionsCallbackInterface;
     private readonly InputAction m_Gameplay_Turn;
     private readonly InputAction m_Gameplay_Throttle;
+    private readonly InputAction m_Gameplay_Reverse;
     private readonly InputAction m_Gameplay_Drift;
-    private readonly InputAction m_Gameplay_Join;
     private readonly InputAction m_Gameplay_Boost;
+    private readonly InputAction m_Gameplay_Join;
     public struct GameplayActions
     {
         private @PlayerControls m_Wrapper;
         public GameplayActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @Turn => m_Wrapper.m_Gameplay_Turn;
         public InputAction @Throttle => m_Wrapper.m_Gameplay_Throttle;
+        public InputAction @Reverse => m_Wrapper.m_Gameplay_Reverse;
         public InputAction @Drift => m_Wrapper.m_Gameplay_Drift;
-        public InputAction @Join => m_Wrapper.m_Gameplay_Join;
         public InputAction @Boost => m_Wrapper.m_Gameplay_Boost;
+        public InputAction @Join => m_Wrapper.m_Gameplay_Join;
         public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -306,15 +340,18 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Throttle.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnThrottle;
                 @Throttle.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnThrottle;
                 @Throttle.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnThrottle;
+                @Reverse.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnReverse;
+                @Reverse.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnReverse;
+                @Reverse.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnReverse;
                 @Drift.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnDrift;
                 @Drift.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnDrift;
                 @Drift.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnDrift;
-                @Join.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
-                @Join.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
-                @Join.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
                 @Boost.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnBoost;
                 @Boost.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnBoost;
                 @Boost.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnBoost;
+                @Join.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
+                @Join.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
+                @Join.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
@@ -325,15 +362,18 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Throttle.started += instance.OnThrottle;
                 @Throttle.performed += instance.OnThrottle;
                 @Throttle.canceled += instance.OnThrottle;
+                @Reverse.started += instance.OnReverse;
+                @Reverse.performed += instance.OnReverse;
+                @Reverse.canceled += instance.OnReverse;
                 @Drift.started += instance.OnDrift;
                 @Drift.performed += instance.OnDrift;
                 @Drift.canceled += instance.OnDrift;
-                @Join.started += instance.OnJoin;
-                @Join.performed += instance.OnJoin;
-                @Join.canceled += instance.OnJoin;
                 @Boost.started += instance.OnBoost;
                 @Boost.performed += instance.OnBoost;
                 @Boost.canceled += instance.OnBoost;
+                @Join.started += instance.OnJoin;
+                @Join.performed += instance.OnJoin;
+                @Join.canceled += instance.OnJoin;
             }
         }
     }
@@ -342,8 +382,9 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     {
         void OnTurn(InputAction.CallbackContext context);
         void OnThrottle(InputAction.CallbackContext context);
+        void OnReverse(InputAction.CallbackContext context);
         void OnDrift(InputAction.CallbackContext context);
-        void OnJoin(InputAction.CallbackContext context);
         void OnBoost(InputAction.CallbackContext context);
+        void OnJoin(InputAction.CallbackContext context);
     }
 }
