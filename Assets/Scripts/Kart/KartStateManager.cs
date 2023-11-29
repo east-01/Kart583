@@ -53,6 +53,20 @@ public class KartStateManager : MonoBehaviour
 
     }
 
+	public void OnDrift(InputAction.CallbackContext context) { 
+		if(context.performed) { 
+			if(state == KartState.DRIVING && kc.Grounded() && !kc.ActivelyBoosting) 
+			{
+				state = KartState.DRIFTING;
+			}
+		} else if(context.canceled) { 
+			if(state == KartState.DRIFTING)
+			{
+				state = KartState.DRIVING;
+			}				
+		}
+	}
+
 }
 
 public enum KartState
