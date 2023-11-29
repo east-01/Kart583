@@ -83,7 +83,9 @@ public class Waypoints : MonoBehaviour
         }
         return accumulator;
     }
+    
 
+    //Inundated code replaced by GetTurnFactor
     public (Transform, Transform, Transform) ThreeWPLookAhead(Transform currentWaypoint)
     {
         if (currentWaypoint == null)
