@@ -143,12 +143,14 @@ public class BotDriver : MonoBehaviour
         int sign_turnFactor = (int)Mathf.Sign(turnFactor);
         int sign_dirToWaypoint = (int)Mathf.Sign(waypoints.GetSmartTurnFactor(kc.kartForward, checkpointIndex, 0));
         bool tooFarWrongDirection = sign_turnFactor != sign_dirToWaypoint && Mathf.Abs(dot) < 0.5;
-        print("sign(turnfactor): " + Mathf.Sign(turnFactor) + ", sign(dirToWaypoint): " + sign_dirToWaypoint + ", driftDir: " + kc.driftDirection + ", dot: " + Mathf.Abs(dot) + ", result: " + tooFarWrongDirection);
+
+        // print("sign(turnfactor): " + Mathf.Sign(turnFactor) + ", sign(dirToWaypoint): " + sign_dirToWaypoint + ", driftDir: " + kc.driftDirection + ", dot: " + Mathf.Abs(dot) + ", result: " + tooFarWrongDirection);
+
         driftInput = !stuck && kc.CanEngageDrift && Math.Abs(waypoints.GetTurnFactor(checkpointIndex, turnFactorCount)) > tfThresholdDrift;
         if(!kc.IsDrifting() && driftInput) DriftEngaged();
         kc.SetDriftInput(driftInput);
 
-        boostInput = turnFactor < tfThresholdThrottle && kc.BoostRatio >= kc.requiredBoostPercentage;
+        boostInput = kc.ActivelyBoosting || (turnFactor < tfThresholdThrottle && kc.BoostRatio >= kc.requiredBoostPercentage);
         kc.SetBoostInput(boostInput);
 
         // Debug code
