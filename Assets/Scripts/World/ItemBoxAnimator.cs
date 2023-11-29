@@ -13,7 +13,7 @@ public class ItemBoxAnimator : MonoBehaviour
 	public float cooldownTime = 1.5f;
 
 	public GameObject powerupTexture;
-	public GameObject itemLight;
+	public GameObject light;
 	public ParticleSystem particles;
 
 	private MeshRenderer meshRenderer;
@@ -48,8 +48,8 @@ public class ItemBoxAnimator : MonoBehaviour
 	private void OnTriggerEnter(Collider other)
 	{
 		if(cooldownTime > 0) { 
-			KartManager pm = other.GetComponent<KartManager>();
-			bool awardedItem = pm != null && pm.HitItemBox(other.gameObject);
+			PlayerManager pm = GetComponent<PlayerManager>();
+			bool awardedItem = pm != null && pm.HitItemBox(gameObject);
 
 			Show(false);
 			
@@ -64,7 +64,7 @@ public class ItemBoxAnimator : MonoBehaviour
 
 		meshRenderer.enabled = show;
 		powerupTexture.SetActive(show);
-		itemLight.SetActive(show);
+		light.SetActive(show);
 	}
 
 	public float AnimationProgress { get { return (lifetime%animationLength)/animationLength; } }

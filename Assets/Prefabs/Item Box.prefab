@@ -235,7 +235,7 @@ MonoBehaviour:
   animationLength: 2
   cooldownTime: 1
   powerupTexture: {fileID: 1405864081819899416}
-  itemLight: {fileID: 3274890967880343986}
+  light: {fileID: 3274890967880343986}
   particles: {fileID: 2302429325881077720}
 --- !u!1 &3274890967880343986
 GameObject:
