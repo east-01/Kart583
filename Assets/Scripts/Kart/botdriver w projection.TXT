@@ -7,27 +7,19 @@ public class BotDriver : MonoBehaviour
     /** Dot product == 1 when vectors match, Dot product == 0 when vectors are orthogonal */
     [Header("Bot Settings")]
     public AnimationCurve dotProductToTurn;
-    public AnimationCurve dotProductToDriftTurn;
     public AnimationCurve turnFactorToThrottle;
+    public AnimationCurve AddtlThrottleByVelocityRatio;
     public AnimationCurve dtpToTargetWaypointWeight;
     public float tfThresholdCalcFrequency = 0.33f;
 
     private PositionTracker pt;
     private KartController kc;
 
-    private float secondClock;
-
     /* ----- Machine learnable fields ---- */
-    [Header("ML Fields")] public int turnFactorCount = 4;
+    [Header("ML Fields")] public int turnFactorCount = 3;
     public float tfThresholdSingleBrake = 0.8f;
     public float tfThresholdSingleDrift = 0.5f;
-    public float tfThresholdSingleThrottle = 0.1f;
-
-    /* ------- Inputs to controller ------ */
-    [Header("Input"), SerializeField] private Vector2 turnInput;
-    [SerializeField] private float throttleInput;
-    [SerializeField] private bool driftInput;
-    [SerializeField] private bool boostInput;
+    public float tfThresholdSingleThrottle = 0.3f;
 
     /* ----- Fields used in Update() ----- */
     [Header("Bot Brain"), SerializeField] private int checkpointIndex;
@@ -35,29 +27,29 @@ public class BotDriver : MonoBehaviour
     [SerializeField] private float turnAmount, turnFactor;
 
     [SerializeField] private Vector3 targetPosition;
-    private Vector3 forward;
+    [SerializeField] private Vector3 forward;
     [SerializeField] private Vector3 directionToTarget;
 
-    [SerializeField] private float dot, cross;
+    [SerializeField] private float dot, dotToNext, cross;
 
+    [SerializeField] private bool isFacingTarget;
     [SerializeField] private int turnLR;
     [SerializeField] private float turnValue;
-    [SerializeField] private String throttleState;
-    [SerializeField] private float averageTrackSpeed;
-    private int averageTrackSpeedCount;
-    private readonly int averageTrackSpeedCountLimit = 10;
-
-    [SerializeField] private bool stuck;
-
     // Turn Factor Thresholds
     [SerializeField] private float tfThresholdMax;      // The highest a turn factor can be
     [SerializeField] private float tfThresholdBrake;    // Highest level, bot will slam on brakes to make a turn
     [SerializeField] private float tfThresholdDrift;    // Medium level, bot will drift to make turn and maintain speed
     [SerializeField] private float tfThresholdThrottle; // Lowest level, bot will ease throttle slightly to make turn
-    private float tfThresholdCalcTime;
+    [SerializeField] private float tfThresholdCalcTime;
 
+    // Inputs to controller
+    [SerializeField] private Vector2 turnInput;
+    [SerializeField] private float throttleInput;
+    [SerializeField] private bool driftInput;
+    [SerializeField] private String throttleState;
+
+    private RaycastHit? kfwiHit;
     /* ----------------------------------- */
-
 
     void Start()
     {
@@ -65,7 +57,6 @@ public class BotDriver : MonoBehaviour
         kc = GetComponent<KartController>();
 
         checkpointIndex = -1;
-        secondClock = 1;
 
         DetermineTurnFactorThresholds();
     }
@@ -73,7 +64,6 @@ public class BotDriver : MonoBehaviour
     void Update() 
     {
 
-        // Threshold calculations
         if(tfThresholdCalcTime > 0) {
             tfThresholdCalcTime -= Time.deltaTime;
             if(tfThresholdCalcTime <= 0) {
@@ -82,74 +72,48 @@ public class BotDriver : MonoBehaviour
             }
         }
 
-        // Average speed calculations
-        if(secondClock > 0) {
-            secondClock -= Time.deltaTime;
-            if(secondClock <= 0) {
-                secondClock = 1;
-
-                float trackSpeedsTotal = (averageTrackSpeed*(averageTrackSpeedCount - averageTrackSpeedCount == averageTrackSpeedCountLimit ? 1 : 0)) + kc.TrackSpeed;
-                if(averageTrackSpeedCount < averageTrackSpeedCountLimit) averageTrackSpeedCount += 1;
-                averageTrackSpeed = trackSpeedsTotal / averageTrackSpeedCount;
-
-            }
-        }
-
-        // Determine if we're stuck/unstuck
-        if(stuck && dot > 0 && kc.momentum == 1) {
-            stuck = false;
-        } else if(!stuck && dot <= 0 && averageTrackSpeed <= 1) {
-            stuck = true;
-        }
-
         Waypoints waypoints = pt.GetWaypoints();
         if(checkpointIndex != pt.GetWaypointIndex()) CheckpointIndexUpdated();
         checkpointIndex = pt.GetWaypointIndex();
 
-        targetPosition = DetermineTargetPosition();
-
         turnAmount = waypoints.GetTurnAmount(checkpointIndex);
-        if(Vector3.Distance(transform.position, targetPosition) < 0.3f*waypoints.avgWaypointDistance) {
-            turnFactor = waypoints.GetTurnFactor(checkpointIndex, turnFactorCount);
-        } else {
-            turnFactor = waypoints.GetSmartTurnFactor(kc.kartForward, checkpointIndex, turnFactorCount);
-        }
+        turnFactor = waypoints.GetSmartTurnFactor(kc.kartForward, checkpointIndex, turnFactorCount);
+
+        targetPosition = DetermineTargetPosition();
 
         forward = kc.kartForward;
         forward.y = 0;
         directionToTarget = (targetPosition-transform.position).normalized;
         directionToTarget.y = 0;
 
-        dot = Vector3.Dot(forward.normalized, directionToTarget.normalized); 
-        cross = Vector3.Cross(forward.normalized, directionToTarget.normalized).y;
+        dot = Vector3.Dot(forward, directionToTarget); 
+        dotToNext = Vector3.Dot(forward, (pt.GetNextWaypoint().position-pt.GetCurrentWaypoint().position).normalized);
+        cross = Vector3.Cross(forward, directionToTarget).y;
 
+        isFacingTarget = dot > 0;        // Check if we're facing towards the target
         turnLR = (int)Mathf.Sign(cross); // Get turn direction, +1 for right, -1 for left
-        if(turnLR == 0) turnLR = (int)Mathf.Sign(turnFactor);
-        if(stuck) {
-            turnValue = turnLR;
-        } else if(!kc.IsDrifting()) {
-            turnValue = turnLR * dotProductToTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
-        } else {
-            // Drift engaged, ensure that turn input matches drift direction
-            turnValue = turnLR * dotProductToDriftTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
-        }
 
+        // float mod = dotProductToTurn.Evaluate(Mathf.Abs(dot));
+        // if(kfwiHit.HasValue && kfwiHit.Value.distance <= waypoints.avgWaypointDistance/2f) {
+            float mod1 = dotProductToTurn.Evaluate(Mathf.Abs(dotToNext));
+            float mod2 = dotProductToTurn.Evaluate(Mathf.Abs(dot));
+            float mod = (mod1+mod2)/2f;
+        //     print("using dot next");
+        // }
+        // if(kfwiHit.HasValue && Vector3.Distance(kfwiHit.Value.point, targetPosition) > 3f) {
+        //     mod = Mathf.Clamp01(2*mod);
+        // }
+        turnValue = turnLR * mod; // Convert turnLR into a turn value for use in turn input
         turnInput = new Vector2(turnValue, 0);
+
         kc.SetTurnInput(turnInput);
 
         throttleInput = DetermineThrottle();
         kc.SetThrottleInput(throttleInput);
 
-        int sign_turnFactor = (int)Mathf.Sign(turnFactor);
-        int sign_dirToWaypoint = (int)Mathf.Sign(waypoints.GetSmartTurnFactor(kc.kartForward, checkpointIndex, 0));
-        bool tooFarWrongDirection = sign_turnFactor != sign_dirToWaypoint && Mathf.Abs(dot) < 0.5;
-        print("sign(turnfactor): " + Mathf.Sign(turnFactor) + ", sign(dirToWaypoint): " + sign_dirToWaypoint + ", driftDir: " + kc.driftDirection + ", dot: " + Mathf.Abs(dot) + ", result: " + tooFarWrongDirection);
-        driftInput = !stuck && kc.CanEngageDrift && Math.Abs(waypoints.GetTurnFactor(checkpointIndex, turnFactorCount)) > tfThresholdDrift;
+        driftInput = Math.Abs(waypoints.GetTurnFactor(checkpointIndex, turnFactorCount)) > tfThresholdDrift;
         if(!kc.IsDrifting() && driftInput) DriftEngaged();
         kc.SetDriftInput(driftInput);
-
-        boostInput = turnFactor < tfThresholdThrottle && kc.BoostRatio >= kc.requiredBoostPercentage;
-        kc.SetBoostInput(boostInput);
 
         // Debug code
         // Red = direction to waypoint
@@ -166,19 +130,39 @@ public class BotDriver : MonoBehaviour
 
     private Vector3 DetermineTargetPosition() 
     {
-        return pt.GetNextWaypoint().position;
+        Vector3 nextWaypointPos = pt.GetNextWaypoint().position;
+        Vector3 currentWaypointPos = pt.GetCurrentWaypoint().position;
+        kfwiHit = GetKartForwardWaypointIntersection();
+        if (kfwiHit.HasValue) {
+            float dtp = kfwiHit.Value.distance;
+            Vector3 proj = kfwiHit.Value.point;
+
+            Vector3 a = (nextWaypointPos-currentWaypointPos).normalized;
+            a.y = 0;
+            Vector3 b = kc.kartForward.normalized;
+            b.y = 0;
+            Vector3 c = kfwiHit.Value.normal.normalized;
+            c.y = 0;
+            if(Mathf.Sign(Vector3.Cross(c, a).y) == Mathf.Sign(Vector3.Cross(c, b).y)) {
+                /* (dtp/avgWaypointDistance) used to be clamped to [0, 1], but not clamping it allows 
+                *   for overcorrection that seems right */
+                return proj + (nextWaypointPos-proj)*dtpToTargetWaypointWeight.Evaluate(dtp/pt.GetWaypoints().avgWaypointDistance);
+            }
+        }
+
+        return nextWaypointPos;
     }
 
-    private bool GetKartForwardWaypointIntersection() 
+    private RaycastHit? GetKartForwardWaypointIntersection() 
     {
         int targetColliderIndex = checkpointIndex + 1;
         if(targetColliderIndex > pt.GetWaypoints().Count) targetColliderIndex = 0;
         foreach (RaycastHit hit in Physics.RaycastAll(transform.position + kc.kartForward*2, kc.kartForward, Mathf.Infinity, 1 << 6)) {
             if (hit.collider.isTrigger && hit.collider.gameObject.transform.GetSiblingIndex() == targetColliderIndex) {
-                return true;
+                return hit;
             }
         }
-        return false;
+        return null;
     }
 
     // This method is kind of expensive, lets only run it on an interval (tfThresholdCalcFrequency)
@@ -195,7 +179,6 @@ public class BotDriver : MonoBehaviour
     private float DetermineThrottle() 
     {
         if(!kc.Grounded()) return 0;
-        if(stuck) return -0.5f;
 
         float throttle = 0;
 
@@ -212,7 +195,7 @@ public class BotDriver : MonoBehaviour
             throttle = turnFactorToThrottle.Evaluate(Mathf.Abs(turnFactor)/(0.5f*turnFactorCount));
         } else if(kc.TrackSpeed < kc.CurrentMaxSpeed) { // Priority 2
             throttleState = "Full throttle";
-            throttle = Mathf.Clamp01(this.throttleInput + 2.5f*Time.deltaTime);
+            throttle = Mathf.Clamp01(this.throttleInput + AddtlThrottleByVelocityRatio.Evaluate(kc.TrackSpeed/kc.CurrentMaxSpeed));
         }
 
         return throttle;
@@ -226,7 +209,8 @@ public class BotDriver : MonoBehaviour
 
     private void DriftEngaged() 
     {
-
+        // Engaging drift, ensure that turn input matches drift direction
+        kc.SetTurnInput(new Vector2(Mathf.Abs(turnValue)*Mathf.Sign(turnFactor), 0));
     }
 
     private void SayMessage(String message) {

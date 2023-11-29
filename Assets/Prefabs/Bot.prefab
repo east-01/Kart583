@@ -476,7 +476,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9076567849466585229}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 11.38}
   m_LocalScale: {x: 1, y: 0.65, z: 1.75}
   m_ConstrainProportionsScale: 0
@@ -593,14 +593,47 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.8957346
-      value: 0.30046952
-      inSlope: -2.5025983
-      outSlope: -2.5025983
+      time: 0.4
+      value: 1
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.2878785
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.8443892
+      value: 0.14560741
+      inSlope: -1.7333643
+      outSlope: -1.7333643
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.064309224
+      outWeight: 1
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  dotProductToDriftTurn:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
     - serializedVersion: 3
       time: 1
       value: 0
@@ -626,6 +659,15 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
+      time: 0.05
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
       time: 1
       value: 0.25
       inSlope: 0
@@ -637,7 +679,54 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  throttle: 0
+  dtpToTargetWaypointWeight:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.15
+      value: 0
+      inSlope: -0.07919615
+      outSlope: -0.07919615
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.05579398
+    - serializedVersion: 3
+      time: 1
+      value: 0.8
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  tfThresholdCalcFrequency: 0.33
+  turnFactorCount: 3
+  tfThresholdSingleBrake: 0.8
+  tfThresholdSingleDrift: 0.25
+  tfThresholdSingleThrottle: 0.1
+  checkpointIndex: 0
+  turnAmount: 0
+  turnFactor: 0
+  targetPosition: {x: 0, y: 0, z: 0}
+  forward: {x: 0, y: 0, z: 0}
+  directionToTarget: {x: 0, y: 0, z: 0}
+  dot: 0
+  cross: 0
+  turnLR: 0
+  turnValue: 0
+  tfThresholdMax: 0
+  tfThresholdBrake: 0
+  tfThresholdDrift: 0
+  tfThresholdThrottle: 0
+  tfThresholdCalcTime: 0
+  turnInput: {x: 0, y: 0}
+  throttleInput: 0
+  driftInput: 0
+  throttleState: 
 --- !u!114 &5477847855913915400
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -722,6 +811,7 @@ MonoBehaviour:
   passiveBoostDrain: 3
   activeBoostDrain: 1.75
   kartForward: {x: 0, y: 0, z: 0}
+  momentum: 0
   driftParticles: 0
 --- !u!114 &4596716325871044638
 MonoBehaviour:
