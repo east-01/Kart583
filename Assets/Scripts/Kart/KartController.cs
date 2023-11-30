@@ -1,12 +1,9 @@
 using UnityEngine;
 using System;
-using Unity.VisualScripting;
-using UnityEngine.InputSystem;
-using System.Runtime.InteropServices.WindowsRuntime;
+// Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
  * Kart Controller by Ethan Mullen
- * 
  */
 public class KartController : MonoBehaviour
 {
@@ -66,15 +63,26 @@ public class KartController : MonoBehaviour
 	    Initially, it will be set to Vector3.forward or (TODO) the direction that the
 		  spawnpoint dictates.
 		kartForward is used in velocity calculations. */
+	/* TODO: Traction, a fix to all collision problems.
+	   Make a variable called hasTraction that checks if the kart's velocity was
+	     the intended velocity. If it does, we have traction and hasTraction = true
+	   We'll use hasTraction for the velocity manipulation section. Two schools of
+	     thought right now:
+		 1. If hasTraction == false, don't change the velocity at all
+		 2. If hasTraction == false, attempt to guide the velocity in the direction that the 
+		      simulated wheels would. I.e., if the car were sliding backwards at a slight angle, 
+			  the car would turn to correct the car so that transform.forward = velocity.
+	   */
 	public Vector3 kartForward;
 	/** Momentum is updated along side kartForward, showing if we're rolling forward or backwards. */
-	private int momentum;
+	[SerializeField] public int momentum;
 
 	public int driftDirection { get; private set; } // Indicates if we're in a left/right drift
 	private float driftTheta;
 	private float driftThetaTarget;
 	[Header("Runtime fields")]
 	public bool driftParticles; // True if driftparticles should be showing
+	private bool driftHopRequest;
 
 	private float boostAmount;
 	private bool boosting;
@@ -89,7 +97,9 @@ public class KartController : MonoBehaviour
 		rb = GetComponent<Rigidbody>();
 		stateMgr = GetComponent<KartStateManager>();
 
-		kartForward = Vector3.forward;
+		// TODO: Make kart spawn at a spawn position and face a certain direction
+		kartForward = new Vector3(1, 0, 0); 
+		transform.forward = kartForward;
     }
 
     private void Update()
@@ -228,6 +238,10 @@ public class KartController : MonoBehaviour
 			rb.AddForce(RotateVectorAroundAxis(rb.velocity, Vector3.up, theta)-rb.velocity, ForceMode.VelocityChange);
 		}
 		
+		if(driftHopRequest) {
+			rb.AddForce(Vector3.up * driftVerticalVelocity, ForceMode.VelocityChange);
+			driftHopRequest = false;
+		}
 	}
 
 	/** The callback from KartStateManager indicating when we've changed state.
@@ -240,16 +254,14 @@ public class KartController : MonoBehaviour
 			case KartState.DRIVING:
 				break;
 			case KartState.DRIFTING:
-				
-				float speedPercent = TrackSpeed/CurrentMaxSpeed;
-				
-				if(speedPercent < driftHopSpeedPercent || momentum != 1) {
+								
+				if(!CanDriftHop) {
 					stateMgr.state = KartState.DRIVING;
 					break;
 				}
 
-				rb.AddForce(Vector3.up * driftVerticalVelocity, ForceMode.VelocityChange);
-				if(speedPercent < driftEngageSpeedPercent) stateMgr.state = KartState.DRIVING;
+				driftHopRequest = true;
+				if(!CanEngageDrift) stateMgr.state = KartState.DRIVING;
 
 				break;
 			case KartState.REVERSING:
@@ -299,27 +311,38 @@ public class KartController : MonoBehaviour
 		return Physics.Raycast(raycastOrigin, Vector3.down, distance);
 	}
 
-	/* Input Events */
-	public void OnTurn(InputAction.CallbackContext context) 
-	{ 
-		turn = context.ReadValue<Vector2>();
-		if(turn.magnitude <= inputDeadzone) turn = Vector2.zero;
+	/* Input */
+	public Vector2 GetTurnInput() { return turn; }
+	public void SetTurnInput(Vector2 turn) {
+		this.turn = turn;
+		if(turn.magnitude <= inputDeadzone) this.turn = Vector2.zero;
 	}
 
-	public void OnThrottle(InputAction.CallbackContext context) 
-	{ 
-		throttle = context.ReadValue<float>();
+	public float GetThrottleInput() { return throttle; }
+	public void SetThrottleInput(float throttle) {
+		this.throttle = throttle;
 	}
 
-	public void OnReverse(InputAction.CallbackContext context) { 
-		throttle = -context.ReadValue<float>();	
+	public void SetReverseInput(float reverse) {
+		this.throttle = -reverse;
 	}
 
-	public void OnBoost(InputAction.CallbackContext context) { 
-		if(context.performed && !boosting && (boostAmount/maxBoost) >= requiredBoostPercentage) { 
+	public bool IsDrifting() { return state == KartState.DRIFTING; }
+	public void SetDriftInput(bool buttonDown) {
+		if(buttonDown) { 
+			if(state == KartState.DRIVING && Grounded() && !ActivelyBoosting) 
+				stateMgr.state = KartState.DRIFTING;
+		} else { 
+			if(state == KartState.DRIFTING)
+				stateMgr.state = KartState.DRIVING;
+		}
+	}
+
+	public void SetBoostInput(bool buttonDown) {
+		if(buttonDown && !boosting && (boostAmount/maxBoost) >= requiredBoostPercentage) { 
 			boosting = true;
 			stateMgr.state = KartState.DRIVING;
-		} else if(context.canceled) { 
+		} else if(!buttonDown) { 
 			if(boosting) boostAmount = 0;
 			boosting = false;
 		}
@@ -330,7 +353,7 @@ public class KartController : MonoBehaviour
 		if(rb == null) rb = GetComponent<Rigidbody>(); 
 		return new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude; 
 	} }
-	public float CurrentMaxSpeed { get { return ActivelyBoosting ? maxBoostSpeed : maxSpeed; } }
+	public float CurrentMaxSpeed { get { return momentum == 1 ? (ActivelyBoosting ? maxBoostSpeed : maxSpeed) : maxSpeed/4f; } }
 	public float SpeedRatio { get { return TrackSpeed/CurrentMaxSpeed; } }
 
 	public float GetSteeringWheelDirection() { return steeringWheelDirection; }
@@ -339,13 +362,16 @@ public class KartController : MonoBehaviour
 	/** Calculations related to forward/backward break at slow speeds, only do them above this speed. */
 	public bool CanChangeForward { get { return TrackSpeed > 1.25f; } }
 
+	public bool CanDriftHop { get { return SpeedRatio >= driftHopSpeedPercent && momentum == 1; } }
+	public bool CanEngageDrift { get { return SpeedRatio >= driftEngageSpeedPercent; } }
+
 	public float GetBoostAmount() { return boostAmount; }
 	public bool IsBoosting() { return boosting; }
 	public bool ActivelyBoosting { get { return boosting && boostAmount > 0;} }
 	public float BoostRatio { get { return boostAmount/maxBoost; } }
 
 	private void DrawRays() { 
-		Debug.DrawLine(transform.position, transform.position + kartForward*3f, Color.blue, Time.deltaTime);
+		// Debug.DrawLine(transform.position, transform.position + kartForward*3f, Color.blue, Time.deltaTime);
 	}
 
 }

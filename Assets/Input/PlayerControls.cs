@@ -80,15 +80,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
-                },
-                {
-                    ""name"": ""Item"",
-                    ""type"": ""Button"",
-                    ""id"": ""1265ec3e-2b69-40a3-b2cf-337dbc4c48ea"",
-                    ""expectedControlType"": ""Button"",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -245,28 +236,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""action"": ""Boost"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""676eec6f-3613-4574-8b05-3b5280d58ac2"",
-                    ""path"": ""<Gamepad>/leftTrigger"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Item"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""0b74567d-8b86-4d90-981c-2290ef87b0f7"",
-                    ""path"": ""<Keyboard>/rightCtrl"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""Item"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -281,7 +250,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         m_Gameplay_Drift = m_Gameplay.FindAction("Drift", throwIfNotFound: true);
         m_Gameplay_Boost = m_Gameplay.FindAction("Boost", throwIfNotFound: true);
         m_Gameplay_Join = m_Gameplay.FindAction("Join", throwIfNotFound: true);
-        m_Gameplay_Item = m_Gameplay.FindAction("Item", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -347,7 +315,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_Drift;
     private readonly InputAction m_Gameplay_Boost;
     private readonly InputAction m_Gameplay_Join;
-    private readonly InputAction m_Gameplay_Item;
     public struct GameplayActions
     {
         private @PlayerControls m_Wrapper;
@@ -358,7 +325,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         public InputAction @Drift => m_Wrapper.m_Gameplay_Drift;
         public InputAction @Boost => m_Wrapper.m_Gameplay_Boost;
         public InputAction @Join => m_Wrapper.m_Gameplay_Join;
-        public InputAction @Item => m_Wrapper.m_Gameplay_Item;
         public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -386,9 +352,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Join.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
                 @Join.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
                 @Join.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnJoin;
-                @Item.started -= m_Wrapper.m_GameplayActionsCallbackInterface.OnItem;
-                @Item.performed -= m_Wrapper.m_GameplayActionsCallbackInterface.OnItem;
-                @Item.canceled -= m_Wrapper.m_GameplayActionsCallbackInterface.OnItem;
             }
             m_Wrapper.m_GameplayActionsCallbackInterface = instance;
             if (instance != null)
@@ -411,9 +374,6 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Join.started += instance.OnJoin;
                 @Join.performed += instance.OnJoin;
                 @Join.canceled += instance.OnJoin;
-                @Item.started += instance.OnItem;
-                @Item.performed += instance.OnItem;
-                @Item.canceled += instance.OnItem;
             }
         }
     }
@@ -426,6 +386,5 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         void OnDrift(InputAction.CallbackContext context);
         void OnBoost(InputAction.CallbackContext context);
         void OnJoin(InputAction.CallbackContext context);
-        void OnItem(InputAction.CallbackContext context);
     }
 }
