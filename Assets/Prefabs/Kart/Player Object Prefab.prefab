@@ -1159,7 +1159,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1be87775e4fd82649b0a6d29cb8a19a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemImagePrefab: {fileID: 5961374820829462327, guid: 9bfcdb32057f2f54aa5410fb7d5b000a, type: 3}
+  oilImagePrefab: {fileID: 5961374820829462327, guid: 9bfcdb32057f2f54aa5410fb7d5b000a, type: 3}
+  boltImagePrefab: {fileID: 5961374820829462327, guid: 642b426491150364fad6e99487e53e2c, type: 3}
+  itemImagePrefabs: []
   overallDuration: 3
   singleImageDuration: 0.5
   singleImageFrequency: 0.35
