@@ -4,5 +4,6 @@ using UnityEngine;
 
 public enum Item
 {
-    OIL
+    OIL,
+    BOLT
 }
