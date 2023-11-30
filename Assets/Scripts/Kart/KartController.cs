@@ -63,16 +63,6 @@ public class KartController : MonoBehaviour
 	    Initially, it will be set to Vector3.forward or (TODO) the direction that the
 		  spawnpoint dictates.
 		kartForward is used in velocity calculations. */
-	/* TODO: Traction, a fix to all collision problems.
-	   Make a variable called hasTraction that checks if the kart's velocity was
-	     the intended velocity. If it does, we have traction and hasTraction = true
-	   We'll use hasTraction for the velocity manipulation section. Two schools of
-	     thought right now:
-		 1. If hasTraction == false, don't change the velocity at all
-		 2. If hasTraction == false, attempt to guide the velocity in the direction that the 
-		      simulated wheels would. I.e., if the car were sliding backwards at a slight angle, 
-			  the car would turn to correct the car so that transform.forward = velocity.
-	   */
 	public Vector3 kartForward;
 	/** Momentum is updated along side kartForward, showing if we're rolling forward or backwards. */
 	[SerializeField] public int momentum;
@@ -105,6 +95,8 @@ public class KartController : MonoBehaviour
     private void Update()
     {
 		DrawRays();
+
+		// GetComponent<Material>().color = HasTraction ? Color.white : Color.red;
 
 		bool grounded = Grounded();
 		if(grounded) { 
@@ -166,14 +158,14 @@ public class KartController : MonoBehaviour
 		if(CanChangeForward && kartForwardCandidate.magnitude > 0) { 
 			kartForward = rb.velocity.normalized*momentum;	
 		}
-		if(timeSinceLastCollision < crashStateLength) { 
+		if(timeSinceLastCollision < crashStateLength || !HasTraction) { 
 			kartForward = transform.forward;
 		}
 		
 		Vector3 transformForward = kartForward; // Default kartForward for state DRIVING
 		transformForward.y = 0;
 		transformForward = RotateVectorAroundAxis(transformForward, Vector3.up, driftTheta);
-		if(CanChangeForward && transformForward.magnitude > 0 && timeSinceLastCollision > crashStateLength) 
+		if(CanChangeForward && HasTraction && transformForward.magnitude > 0 && timeSinceLastCollision > crashStateLength) 
 			transform.forward = transformForward.normalized; // Use TrackSpeed > 1.15f to stop randomly turning at slow speeds
 
 		/** Crash state */
@@ -209,14 +201,14 @@ public class KartController : MonoBehaviour
 		if(ActivelyBoosting && !lastActivelyBoosting) {
 			throttleForce *= 10;
 			// Make velocity == maxVelocity
-			rb.AddForce((addedVelocity.normalized*CurrentMaxSpeed)-rb.velocity, ForceMode.VelocityChange);
+			if(HasTraction) rb.AddForce((addedVelocity.normalized*CurrentMaxSpeed)-rb.velocity, ForceMode.VelocityChange);
 		}
 
 		if(Mathf.Abs(throttle) > inputDeadzone) {
 			if(TrackSpeed <= CurrentMaxSpeed) { 
-				rb.AddForce(throttleForce, ForceMode.Acceleration);	
+				if(HasTraction) rb.AddForce(throttleForce, ForceMode.Acceleration);	
 			} else { 
-				rb.AddForce((addedVelocity.normalized*momentum*CurrentMaxSpeed)-rb.velocity, ForceMode.VelocityChange);
+				if(HasTraction) rb.AddForce((addedVelocity.normalized*momentum*CurrentMaxSpeed)-rb.velocity, ForceMode.VelocityChange);
 			}
 		}
 
@@ -235,11 +227,11 @@ public class KartController : MonoBehaviour
 		if(theta != 0) {
 			/* Turn method #2: Rotate the velocity vector around the axis by theta, then add the difference
 					to the velocity. This should rotate the vector without changing velocity magnitude. */
-			rb.AddForce(RotateVectorAroundAxis(rb.velocity, Vector3.up, theta)-rb.velocity, ForceMode.VelocityChange);
+			if(HasTraction) rb.AddForce(RotateVectorAroundAxis(rb.velocity, Vector3.up, theta)-rb.velocity, ForceMode.VelocityChange);
 		}
 		
 		if(driftHopRequest) {
-			rb.AddForce(Vector3.up * driftVerticalVelocity, ForceMode.VelocityChange);
+			if(HasTraction) rb.AddForce(Vector3.up * driftVerticalVelocity, ForceMode.VelocityChange);
 			driftHopRequest = false;
 		}
 	}
@@ -359,6 +351,20 @@ public class KartController : MonoBehaviour
 	public float GetSteeringWheelDirection() { return steeringWheelDirection; }
 	public bool SteeringWheelMatchesTurn { get { return Mathf.Sign(GetSteeringWheelDirection()) == Mathf.Sign(turn.x); } }
 	public bool SteeringWheelMatchesDrift { get { return Mathf.Sign(GetSteeringWheelDirection()) == Mathf.Sign(driftDirection); } }
+	/* TODO: Traction, a fix to all collision problems.
+	Make a variable called hasTraction that checks if the kart's velocity was
+		the intended velocity. If it does, we have traction and hasTraction = true
+	We'll use hasTraction for the velocity manipulation section. Two schools of
+		thought right now:
+		1. If hasTraction == false, don't change the velocity at all
+		2. If hasTraction == false, attempt to guide the velocity in the direction that the 
+			simulated wheels would. I.e., if the car were sliding backwards at a slight angle, 
+			the car would turn to correct the car so that transform.forward = velocity.
+	*/
+	public bool HasTraction { get { 
+		if(rb.velocity.magnitude == 0) return true;
+		return Mathf.Abs(Vector3.Dot(rb.velocity.normalized, kartForward.normalized)) >= 0.8f; 
+	} }
 	/** Calculations related to forward/backward break at slow speeds, only do them above this speed. */
 	public bool CanChangeForward { get { return TrackSpeed > 1.25f; } }
 
