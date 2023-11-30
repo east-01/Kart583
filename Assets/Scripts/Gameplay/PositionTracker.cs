@@ -16,8 +16,8 @@ public class PositionTracker : MonoBehaviour
         GameObject waypointsObj = GameObject.Find("Waypoints");
         if(waypointsObj != null && waypointsObj.GetComponent<Waypoints>() == null) waypointsObj = null;
         if(waypointsObj == null) {
-            Debug.LogError("Failed to find waypoints GameObject!");
-            Destroy(gameObject);
+            Debug.LogError("Failed to find waypoints GameObject in this scene, disabling.");
+            gameObject.SetActive(false);
             return;
         }
         waypoints = waypointsObj.GetComponent<Waypoints>();
