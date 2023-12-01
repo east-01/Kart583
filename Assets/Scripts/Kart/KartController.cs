@@ -171,9 +171,9 @@ public class KartController : MonoBehaviour
 		/** Crash state */
 		if(timeSinceLastCollision + Time.fixedDeltaTime >= crashStateLength && timeSinceLastCollision < crashStateLength) { 
 			// Reached end of crash state, make kart forward match velocity
-			kartForward = transform.forward;
-			Vector3 targetVelocity = kartForward*momentum*rb.velocity.magnitude;
-			rb.AddForce(targetVelocity-rb.velocity, ForceMode.VelocityChange);
+			// kartForward = transform.forward;
+			// Vector3 targetVelocity = kartForward*momentum*rb.velocity.magnitude;
+			// rb.AddForce(targetVelocity-rb.velocity, ForceMode.VelocityChange);
 		}
 		this.timeSinceLastCollision += Time.fixedDeltaTime;
 
@@ -362,8 +362,9 @@ public class KartController : MonoBehaviour
 			the car would turn to correct the car so that transform.forward = velocity.
 	*/
 	public bool HasTraction { get { 
-		if(rb.velocity.magnitude == 0) return true;
-		return Mathf.Abs(Vector3.Dot(rb.velocity.normalized, kartForward.normalized)) >= 0.8f; 
+		return true;
+		// if(rb.velocity.magnitude == 0) return true;
+		// return Mathf.Abs(Vector3.Dot(rb.velocity.normalized, kartForward.normalized)) >= 0.8f; 
 	} }
 	/** Calculations related to forward/backward break at slow speeds, only do them above this speed. */
 	public bool CanChangeForward { get { return TrackSpeed > 1.25f; } }
