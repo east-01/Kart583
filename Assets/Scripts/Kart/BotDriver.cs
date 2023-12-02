@@ -39,7 +39,7 @@ public class BotDriver : MonoBehaviour
 
     [SerializeField] private float dot, cross;
 
-    [SerializeField] private int turnLR;
+    [SerializeField] private int turnLR; // Turn direction
     [SerializeField] private float turnValue;
     [SerializeField] private String throttleState;
     [SerializeField] private float averageTrackSpeed;
@@ -126,18 +126,18 @@ public class BotDriver : MonoBehaviour
         if(turnLR == 0) turnLR = (int)Mathf.Sign(turnFactor);
         if(stuck) {
             turnValue = turnLR;
-        } else if(!kc.IsDrifting()) {
+        } else if(!kc.DriftInput) {
             turnValue = turnLR * dotProductToTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
         } else {
             // Drift engaged, ensure that turn input matches drift direction
             turnValue = turnLR * dotProductToDriftTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
         }
 
-        turnInput = new Vector2(turnValue, 0);
-        kc.SetTurnInput(turnInput);
+        turnInput = new(turnValue, 0);
+        kc.TurnInput = turnInput;
 
         throttleInput = DetermineThrottle();
-        kc.SetThrottleInput(throttleInput);
+        kc.ThrottleInput = throttleInput;
 
         int sign_turnFactor = (int)Mathf.Sign(turnFactor);
         int sign_dirToWaypoint = (int)Mathf.Sign(waypoints.GetSmartTurnFactor(kc.kartForward, checkpointIndex, 0));
@@ -145,12 +145,12 @@ public class BotDriver : MonoBehaviour
 
         // print("sign(turnfactor): " + Mathf.Sign(turnFactor) + ", sign(dirToWaypoint): " + sign_dirToWaypoint + ", driftDir: " + kc.driftDirection + ", dot: " + Mathf.Abs(dot) + ", result: " + tooFarWrongDirection);
 
-        driftInput = !stuck && kc.CanEngageDrift && Math.Abs(waypoints.GetTurnFactor(checkpointIndex, turnFactorCount)) > tfThresholdDrift;
-        if(!kc.IsDrifting() && driftInput) DriftEngaged();
-        kc.SetDriftInput(driftInput);
+        driftInput = !stuck && kc.CanDriftEngage && Math.Abs(waypoints.GetTurnFactor(checkpointIndex, turnFactorCount)) > tfThresholdDrift;
+        if(!kc.DriftInput && driftInput) DriftEngaged();
+        kc.DriftInput = driftInput;
 
         boostInput = kc.ActivelyBoosting || (turnFactor < tfThresholdThrottle && kc.BoostRatio >= kc.requiredBoostPercentage);
-        kc.SetBoostInput(boostInput);
+        kc.BoostInput = boostInput;
 
         // Debug code
         // Red = direction to waypoint

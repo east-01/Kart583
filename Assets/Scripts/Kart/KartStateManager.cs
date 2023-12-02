@@ -47,7 +47,7 @@ public class KartStateManager : MonoBehaviour
 		/* Active state changes - Recieve requests */
 
 		/* Passive state changes */
-		if(state == KartState.DRIFTING && kc.Grounded() && kc.GetSteeringWheelDirection() == 0 && timeInState >= 0.15f) { 
+		if(state == KartState.DRIFTING && kc.Grounded() && kc.steeringWheelDirection == 0 && timeInState >= 0.15f) { 
 			state = KartState.DRIVING;
 		}
 
