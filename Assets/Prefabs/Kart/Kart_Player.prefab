@@ -1,0 +1,221 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &8440250627260547506
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3608140939005531148, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_Name
+      value: Kart_Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 5445422395183357872, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: itemSlotManager
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+--- !u!114 &4518181260819848706 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5445422395183357872, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+  m_PrefabInstance: {fileID: 8440250627260547506}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc70dc3e8c25b2f4ba7be4834073166f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &5130578726108140990 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3608140939005531148, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+  m_PrefabInstance: {fileID: 8440250627260547506}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3188521547448801102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d5bc62db68b2ac42a6c4ca6e6c4b9b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8027975397500084053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Actions: {fileID: -944628639613478452, guid: e0395e7a7eb280a4589b6661c768073f, type: 3}
+  m_NotificationBehavior: 2
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents:
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3188521547448801102}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
+        m_MethodName: OnTurn
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 8a63b628-a07a-4685-91e0-69c6b301e5ec
+    m_ActionName: Gameplay/Turn[/Keyboard/a,/Keyboard/d]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3188521547448801102}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
+        m_MethodName: OnThrottle
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 724d1704-5fa1-4972-9ae7-33038b96e7b9
+    m_ActionName: Gameplay/Throttle[/Keyboard/w]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3188521547448801102}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
+        m_MethodName: OnReverse
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 4f816a71-e251-44fa-af9a-46d7e08d3842
+    m_ActionName: Gameplay/Reverse[/Keyboard/s]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3188521547448801102}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
+        m_MethodName: OnDrift
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 7327ce7e-2487-4c33-90d8-219f6145de58
+    m_ActionName: Gameplay/Drift[/Keyboard/shift]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3188521547448801102}
+        m_TargetAssemblyTypeName: HumanDriver, Assembly-CSharp
+        m_MethodName: OnBoost
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 884edfb8-efd3-4ca1-a6d2-d5358fb7fbed
+    m_ActionName: Gameplay/Boost[/Keyboard/space]
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: fb9cd52a-7c48-4d21-b374-2ae50f7f062e
+    m_ActionName: Gameplay/Join[/Keyboard/anyKey]
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4518181260819848706}
+        m_TargetAssemblyTypeName: KartManager, Assembly-CSharp
+        m_MethodName: OnItem
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 1265ec3e-2b69-40a3-b2cf-337dbc4c48ea
+    m_ActionName: Gameplay/Item[/Keyboard/rightCtrl]
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Gameplay
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}

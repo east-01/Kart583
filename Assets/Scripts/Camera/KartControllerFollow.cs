@@ -57,7 +57,7 @@ public class KartControllerFollow : MonoBehaviour
 		angle.y = 0;
 		if(angle.magnitude == 0) return Vector3.zero;
 
-		Vector3 targetPos = kc.gameObject.transform.position - (angle.normalized * distance);
+		Vector3 targetPos = kc.gameObject.transform.position - kc.momentum*(angle.normalized * distance);
 		targetPos.y = kc.gameObject.transform.position.y + height;
 
 		return targetPos;

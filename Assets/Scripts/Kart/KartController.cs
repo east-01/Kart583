@@ -254,7 +254,7 @@ public class KartController : MonoBehaviour
 
 	public bool Grounded() 
 	{ 
-		float distance = 0.05f;
+		float distance = 0.1f;
 		Vector3 raycastOrigin = new(transform.position.x, GetComponent<BoxCollider>().bounds.min.y+0.001f, transform.position.z);
 		return Physics.Raycast(raycastOrigin, Vector3.down, distance);
 	}
