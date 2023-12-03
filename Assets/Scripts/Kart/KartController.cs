@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
-using Unity.VisualScripting.Antlr3.Runtime.Tree;
-using System.Collections.Generic;
+using System.Data.Common;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
@@ -13,10 +12,9 @@ public class KartController : MonoBehaviour
 	/* ----- Settings variables ----- */
 	public Transform kartModel;
 
-	[Header("Controls")]
+	[Header("General")]
 	public float inputDeadzone = 0.1f;
-	public float crashStateLength = 0.15f;
-	public Vector3 up = new(0, 1, 0);
+	public float wheelSlideTorque = 60;
 
 	[Header("Speed")]
 	public float maxSpeed = 20f;
@@ -54,26 +52,21 @@ public class KartController : MonoBehaviour
 	[Header("Input"), SerializeField] private Vector2 turn;
 	[SerializeField] private float throttle;
 	[SerializeField] private bool boosting;
-
-
-	public float steeringWheelDirection; // A [-1, 1] range float indicating the amount the steering wheel is turned and the direction.
-
-	// Velocity/Speed
+	
+	[Header("Runtime fields")] public Vector3 up = new(0, 1, 0);
 	public Vector3 kartForward;
 	public int momentum;
+	public bool grounded; // Stores last update's grounded status
+	public float airtime;
+	public float timeSinceLastCollision;
+	public float steeringWheelDirection; // A [-1, 1] range float indicating the amount the steering wheel is turned and the direction.
+	public float boostAmount;
 
 	public int driftDirection; // Indicates if we're in a left/right drift
 	private float driftTheta;
 	private float driftThetaTarget;
-	[Header("Runtime fields")]
 	public bool driftParticles; // True if driftparticles should be showing
 	private bool driftHopRequest;
-
-	public float boostAmount;
-
-	private bool grounded; // Stores last update's grounded status
-	private float airtime;
-	public bool collisionFlag;
 
     private void Start()
     {
@@ -82,17 +75,16 @@ public class KartController : MonoBehaviour
 
 		if(kartModel == null) Debug.LogWarning("KartController on \"" + gameObject.name + "\" doesn't have a kartModel assigned."); 
 
-		collisionFlag = false;
+		timeSinceLastCollision = 1000f;
 
 		// TODO: Make kart spawn at a spawn position and face a certain direction
 		kartForward = new Vector3(1, 0, 0); 
 		transform.forward = kartForward;
+
     }
 
     private void Update()
     {
-		DrawRays();
-
 		bool grounded = Grounded();
 		if(grounded) { 
 			airtime = 0;
@@ -142,7 +134,7 @@ public class KartController : MonoBehaviour
 
 		// Animate kartModel forward
 		if(kartModel != null)
-			kartModel.forward = RotateVectorAroundAxis(kartForward, up, driftTheta);
+			kartModel.forward = RotateVectorAroundAxis(transform.forward, up, driftTheta);
 
 	}
 
@@ -153,37 +145,61 @@ public class KartController : MonoBehaviour
 		Vector3 velNoY = rb.velocity;
 		velNoY.y = 0;
 
+		timeSinceLastCollision += Time.fixedDeltaTime;
+
 		// Momentum gets updated first, then kartForward second
-		momentum = Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1;
-		if(velNoY.magnitude > 0.15f)
-			kartForward = new Vector3(rb.velocity.x, 0, rb.velocity.z).normalized;
-		else
-			kartForward = transform.forward;
+		momentum = TrackSpeed > 0.1f ? (Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1) : 0;
 
 		// Update theta
 		theta = kartTurnSpeed * steeringWheelDirection * kartTurnPower.Evaluate(SpeedRatio) * DriftTurnMultiplier * Time.fixedDeltaTime;
 		if(!grounded) theta /= 3;
 		if(momentum < 0) theta = -theta;
 
-		// Handle collision or driving state
-		if(collisionFlag) {
-			
-		} else {
+		switch(stateMgr.state) {
+			case KartState.DRIVING:
+			case KartState.DRIFTING:
 
-			Vector3 throttleForce = (ActivelyBoosting ? 1f : throttle) * acceleration * transform.forward;
-			if(Mathf.Abs(throttle) > inputDeadzone && TrackSpeed <= CurrentMaxSpeed)
-				rb.AddForce(throttleForce, ForceMode.Acceleration);	
+				if(velNoY.magnitude > 0.5f) {
+					kartForward = momentum*velNoY.normalized;
+				} else {
+					Vector3 forwardNoY = transform.forward;
+					forwardNoY.y = 0;
+					if(forwardNoY.magnitude > 0.05f) kartForward = forwardNoY;
+				}
 
-			Vector3 turnForce = theta*1000f*-Vector3.Cross(rb.velocity.normalized, up);
-			rb.AddForce(turnForce, ForceMode.Acceleration);
+				Vector3 throttleForce = (ActivelyBoosting ? 1f : throttle) * acceleration * transform.forward;
+				if(Mathf.Abs(throttle) > inputDeadzone && TrackSpeed <= CurrentMaxSpeed)
+					rb.AddForce(throttleForce, ForceMode.Acceleration);	
 
-			transform.forward = kartForward;
+				Vector3 turnForce = theta*1000f*-Vector3.Cross(rb.velocity.normalized, up);
+				rb.AddForce(turnForce, ForceMode.Acceleration);
+				
+				transform.forward = kartForward;
 
-			if(driftHopRequest) {
-				rb.AddForce(up * driftVerticalVelocity, ForceMode.VelocityChange);
-				driftHopRequest = false;
-			}
+				if(driftHopRequest) {
+					rb.AddForce(up * driftVerticalVelocity, ForceMode.VelocityChange);
+					driftHopRequest = false;
+				}
+				break;
 
+			case KartState.COLLISION:
+
+				float dot = Vector3.Dot(rb.velocity.normalized, transform.forward);
+				kartForward = transform.forward;
+				if((TrackSpeed < 0.1f*maxSpeed || Mathf.Abs(dot) > 0.975f) && timeSinceLastCollision > 0.05f) {
+					stateMgr.state = KartState.DRIVING;
+					momentum = (int)Mathf.Sign(dot);
+				} else { 
+					// Wheel sliding force
+					float minSR = 0f;
+					float sr = SpeedRatio;
+					if(sr < minSR) sr = minSR;
+					Vector3 rawTorque = wheelSlideTorque*Math.Max(Mathf.Abs(dot), sr)*-Vector3.Cross(rb.velocity.normalized, transform.forward);
+					Vector3 torque = up.normalized*Vector3.Dot(rawTorque, up);
+					rb.AddTorque(torque, ForceMode.Acceleration);
+				}
+
+				break;
 		}
 
 	}
@@ -191,15 +207,15 @@ public class KartController : MonoBehaviour
 	public void OnCollisionEnter(Collision collision)
 	{
 		if(collision.collider.isTrigger) return;
-		bool wasGroundCollision = true;
+
 		for(int i = 0; i < collision.contactCount; i++) { 
-			if(Vector3.Dot(Vector3.up, collision.GetContact(i).normal) < 0.75) { 
-				wasGroundCollision = false;
-				break;
+			Vector3 norm = collision.GetContact(i).normal;
+			if(Vector3.Dot(up, norm) < 0.5) { 
+				stateMgr.state = KartState.COLLISION;
+				rb.AddForce(-(rb.velocity.normalized*(Vector3.Dot(norm, rb.velocity)))*0.5f, ForceMode.VelocityChange);
+				return;
 			}
 		}
-
-		if(!wasGroundCollision) collisionFlag = true;
 
 	}
 
@@ -213,17 +229,16 @@ public class KartController : MonoBehaviour
 			case KartState.DRIVING:
 				break;
 			case KartState.DRIFTING:
-								
-				if(!CanDriftHop) {
+				if(!CanDriftEngage) {
 					stateMgr.state = KartState.DRIVING;
 					break;
 				}
 
 				driftHopRequest = true;
-				if(!CanDriftEngage) stateMgr.state = KartState.DRIVING;
-
 				break;
-			case KartState.REVERSING:
+			case KartState.COLLISION:
+				timeSinceLastCollision = 0;
+				boostAmount = 0;
 				break;
 			default:
 				break;
@@ -297,8 +312,7 @@ public class KartController : MonoBehaviour
 	public bool SteeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	public bool SteeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }
 
-	public bool CanDriftHop { get { return SpeedRatio >= driftHopSpeedPercent && momentum == 1; } }
-	public bool CanDriftEngage { get { return SpeedRatio >= driftEngageSpeedPercent; } }
+	public bool CanDriftEngage { get { return SpeedRatio >= driftEngageSpeedPercent && momentum == 1; } }
 
 	public bool ActivelyBoosting { get { return boosting && boostAmount > 0;} }
 	public float BoostRatio { get { return boostAmount/maxBoost; } }
@@ -315,7 +329,7 @@ public class KartController : MonoBehaviour
 		} 
 	}
 
-	private void DrawRays() { 
+	private void DrawForces() { 
 		// Debug.DrawLine(transform.position, transform.position + kartForward*3f, Color.blue, Time.deltaTime);
 	}
 

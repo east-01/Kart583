@@ -17,10 +17,6 @@ public class StrictFollow : MonoBehaviour
     {
 
 		float fov = this.fov;
-		KartController kc = subject.GetComponent<KartController>();
-		if(kc != null && kc.isActiveAndEnabled && kc.TrackSpeed > 0 && kc.BoostInput && kc.BoostRatio > 0) {
-			fov *= 1.3f;
-		}
 
 		displayFov = Mathf.Lerp(displayFov, fov, fovInterpolationFactor*Time.deltaTime);
 		GetComponent<Camera>().fieldOfView = displayFov;
