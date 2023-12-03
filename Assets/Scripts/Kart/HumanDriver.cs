@@ -17,28 +17,28 @@ public class HumanDriver : MonoBehaviour
 
     public void OnTurn(InputAction.CallbackContext context) 
     {
-        kc.TurnInput = context.ReadValue<Vector2>();
+        kc.SetTurnInput(context.ReadValue<Vector2>());
     }
 
     public void OnThrottle(InputAction.CallbackContext context) 
     {
-        kc.ThrottleInput = context.ReadValue<float>();
+        kc.SetThrottleInput(context.ReadValue<float>());
     }
 
     public void OnReverse(InputAction.CallbackContext context) 
     {
-        kc.ThrottleInput = -context.ReadValue<float>();
+        kc.SetReverseInput(context.ReadValue<float>());
     }
 
 	public void OnDrift(InputAction.CallbackContext context) { 
         if(!context.performed && !context.canceled) return;        
-        kc.DriftInput = context.performed;
+        kc.SetDriftInput(context.performed);
 	}
 
     public void OnBoost(InputAction.CallbackContext context) 
     {
         if(!context.performed && !context.canceled) return;
-        kc.BoostInput = context.performed;
+        kc.SetBoostInput(context.performed);
     }
 
 }
