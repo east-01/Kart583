@@ -47,24 +47,11 @@ public class KartStateManager : MonoBehaviour
 		/* Active state changes - Recieve requests */
 
 		/* Passive state changes */
-		if(state == KartState.DRIFTING && kc.Grounded() && kc.driftDirection == 0 && timeInState >= 0.15f) { 
+		if(state == KartState.DRIFTING && kc.Grounded() && kc.GetSteeringWheelDirection() == 0 && timeInState >= 0.15f) { 
 			state = KartState.DRIVING;
 		}
-    }
 
-	public void OnDrift(InputAction.CallbackContext context) { 
-		if(context.performed) { 
-			if(state == KartState.DRIVING && kc.Grounded()) 
-			{
-				state = KartState.DRIFTING;
-			}
-		} else if(context.canceled) { 
-			if(state == KartState.DRIFTING)
-			{
-				state = KartState.DRIVING;
-			}				
-		}
-	}
+    }
 
 }
 
