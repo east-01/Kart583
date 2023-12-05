@@ -85,6 +85,7 @@ public class KartController : MonoBehaviour
 
     private void Update()
     {
+
 		bool grounded = Grounded();
 		if(grounded) { 
 			airtime = 0;
@@ -98,8 +99,11 @@ public class KartController : MonoBehaviour
 		// Steering wheel direction modification
 		if(Mathf.Abs(turn.x) > 0) { 
 			steeringWheelDirection += (!SteeringWheelMatchesTurn ? 2f : 1f) * steeringWheelTurnSpeed * turn.x * Time.deltaTime;
+			steeringWheelDirection += (!SteeringWheelMatchesTurn ? 2f : 1f) * steeringWheelTurnSpeed * turn.x * Time.deltaTime;
 			steeringWheelDirection = Mathf.Clamp(steeringWheelDirection, -1, 1);
 		} else { 
+			steeringWheelDirection = Mathf.Lerp(steeringWheelDirection, 0, (steeringWheelTurnSpeed*2f) * (1+SpeedRatio) * Time.deltaTime);
+			if(Mathf.Abs(steeringWheelDirection) <= inputDeadzone) 
 			steeringWheelDirection = Mathf.Lerp(steeringWheelDirection, 0, (steeringWheelTurnSpeed*2f) * (1+SpeedRatio) * Time.deltaTime);
 			if(Mathf.Abs(steeringWheelDirection) <= inputDeadzone) 
 				steeringWheelDirection = 0;
@@ -113,6 +117,7 @@ public class KartController : MonoBehaviour
 		driftThetaTarget = 0;
 		if(stateMgr.state == KartState.DRIFTING && driftDirection != 0 && Mathf.Abs(turn.x) >= inputDeadzone) { 
 			driftThetaTarget = Mathf.Sign(driftDirection)*driftAngleMin;
+			if(SteeringWheelMatchesDrift) 
 			if(SteeringWheelMatchesDrift) 
 				driftThetaTarget += steeringWheelDirection*(driftAngleMax-driftAngleMin);
 		}			
@@ -244,6 +249,18 @@ public class KartController : MonoBehaviour
 				break;
 		}
 	}
+
+	private Vector3 RemoveComponent(Vector3 vector, Vector3 normal)
+    {
+        // Calculate the projection of vector onto normal
+        float projection = Vector3.Dot(vector, normal);
+        Vector3 projectionVector = projection * normal;
+
+        // Subtract the projection from the original vector
+        Vector3 result = vector - projectionVector;
+
+        return result;
+    }
 
 	public Vector3 RotateVectorAroundAxis(Vector3 inputVector, Vector3 rotationAxis, float angleRadians)
     {

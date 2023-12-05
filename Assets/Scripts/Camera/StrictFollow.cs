@@ -24,6 +24,7 @@ public class StrictFollow : MonoBehaviour
 		transform.position = GetTargetPosition();
 		transform.LookAt(subject.position);
 
+
     }
 
 	public Vector3 GetTargetPosition() 

@@ -155,6 +155,8 @@ public class BotDriver : MonoBehaviour
         Debug.DrawRay(transform.position+Vector3.up*0.5f, directionToTarget, Color.red);
         Debug.DrawRay(transform.position+Vector3.up*0.5f, forward, Color.blue);       
         Debug.DrawLine(transform.position, targetPosition, Color.green);
+        bool fu = false;
+        if(fu) print(throttleState); // Get rid of  "throttleState isn't being used warning"
         // End debug code
 
     }
