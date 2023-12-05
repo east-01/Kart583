@@ -54,7 +54,8 @@ public class KartController : MonoBehaviour
 	[SerializeField] private bool boosting;
 	
 	[Header("Runtime fields")] public Vector3 up = new(0, 1, 0);
-	public Vector3 kartForward;
+	// public Vector3 kartForward;
+	[SerializeField] private Vector3 _kartForward;
 	public int momentum;
 	public bool grounded; // Stores last update's grounded status
 	public float airtime;
@@ -65,7 +66,7 @@ public class KartController : MonoBehaviour
 	public int driftDirection; // Indicates if we're in a left/right drift
 	private float driftTheta;
 	private float driftThetaTarget;
-	public bool driftParticles; // True if driftparticles should be showing
+	public bool driftParticles; // True if drift particles should be showing
 	private bool driftHopRequest;
 
     private void Start()
@@ -76,11 +77,6 @@ public class KartController : MonoBehaviour
 		if(kartModel == null) Debug.LogWarning("KartController on \"" + gameObject.name + "\" doesn't have a kartModel assigned."); 
 
 		timeSinceLastCollision = 1000f;
-
-		// TODO: Make kart spawn at a spawn position and face a certain direction
-		kartForward = new Vector3(1, 0, 0); 
-		transform.forward = kartForward;
-
     }
 
     private void Update()
@@ -134,9 +130,6 @@ public class KartController : MonoBehaviour
 			boostAmount = Mathf.Max(boostAmount - passiveBoostDrain*Time.deltaTime, 0);									
 		}
 
-		// Variable kartForward can never be 0, we get stuck.
-		if(kartForward.magnitude == 0) kartForward = transform.forward;
-
 		// Animate kartModel forward
 		if(kartModel != null)
 			kartModel.forward = RotateVectorAroundAxis(transform.forward, up, driftTheta);
@@ -164,13 +157,14 @@ public class KartController : MonoBehaviour
 			case KartState.DRIVING:
 			case KartState.DRIFTING:
 
-				if(velNoY.magnitude > 0.5f) {
-					kartForward = momentum*velNoY.normalized;
-				} else {
-					Vector3 forwardNoY = transform.forward;
-					forwardNoY.y = 0;
-					if(forwardNoY.magnitude > 0.05f) kartForward = forwardNoY;
+				if(RemoveUpComponent(rb.velocity).normalized.magnitude > 0) {
+					KartForward = momentum*velNoY.normalized;
+					Debug.DrawLine(transform.position, transform.position + KartForward, Color.yellow);
+				} else if(RemoveUpComponent(transform.forward).normalized.magnitude > 0) {
+					KartForward = RemoveUpComponent(transform.forward).normalized;
 				}
+
+				transform.forward = KartForward;
 
 				Vector3 throttleForce = (ActivelyBoosting ? 1f : throttle) * acceleration * transform.forward;
 				if(Mathf.Abs(throttle) > inputDeadzone && TrackSpeed <= CurrentMaxSpeed)
@@ -179,8 +173,6 @@ public class KartController : MonoBehaviour
 				Vector3 turnForce = theta*1000f*-Vector3.Cross(rb.velocity.normalized, up);
 				rb.AddForce(turnForce, ForceMode.Acceleration);
 				
-				transform.forward = kartForward;
-
 				if(driftHopRequest) {
 					rb.AddForce(up * driftVerticalVelocity, ForceMode.VelocityChange);
 					driftHopRequest = false;
@@ -190,7 +182,7 @@ public class KartController : MonoBehaviour
 			case KartState.COLLISION:
 
 				float dot = Vector3.Dot(rb.velocity.normalized, transform.forward);
-				kartForward = transform.forward;
+				if(AcceptableKartForward(transform.forward)) KartForward = transform.forward;
 				if((TrackSpeed < 0.1f*maxSpeed || Mathf.Abs(dot) > 0.975f) && timeSinceLastCollision > 0.05f) {
 					stateMgr.state = KartState.DRIVING;
 					momentum = (int)Mathf.Sign(dot);
@@ -262,6 +254,10 @@ public class KartController : MonoBehaviour
         return result;
     }
 
+	public Vector3 RemoveUpComponent(Vector3 input) {
+		return RemoveComponent(input, up);
+	}
+
 	public Vector3 RotateVectorAroundAxis(Vector3 inputVector, Vector3 rotationAxis, float angleRadians)
     {
         rotationAxis = rotationAxis.normalized;
@@ -313,6 +309,17 @@ public class KartController : MonoBehaviour
 				boosting = false;
 			}
 		}
+	}
+
+	public Vector3 KartForward {
+		get { return _kartForward; }
+		set {
+			if(AcceptableKartForward(value)) _kartForward = value;
+		}
+	}
+
+	public bool AcceptableKartForward(Vector3 value) {
+		return RemoveUpComponent(value).magnitude > 0;
 	}
 
 	/** The velocity magnitude tangential to the up vector */

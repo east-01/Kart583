@@ -104,10 +104,10 @@ public class BotDriver : MonoBehaviour
         if(Vector3.Distance(transform.position, targetPosition) < 1f) {
             turnFactor = waypoints.GetTurnFactor(checkpointIndex, turnFactorCount);
         } else {
-            turnFactor = waypoints.GetSmartTurnFactor(kc.kartForward, checkpointIndex, turnFactorCount);
+            turnFactor = waypoints.GetSmartTurnFactor(kc.KartForward, checkpointIndex, turnFactorCount);
         }
 
-        forward = kc.kartForward;
+        forward = kc.KartForward;
         forward.y = 0;
         directionToTarget = (targetPosition-transform.position).normalized;
         directionToTarget.y = 0;
@@ -172,7 +172,7 @@ public class BotDriver : MonoBehaviour
     {
         int targetColliderIndex = checkpointIndex + 1;
         if(targetColliderIndex > pt.GetWaypoints().Count) targetColliderIndex = 0;
-        foreach (RaycastHit hit in Physics.RaycastAll(transform.position + kc.kartForward*2, kc.kartForward, Mathf.Infinity, 1 << 6)) {
+        foreach (RaycastHit hit in Physics.RaycastAll(transform.position + kc.KartForward*2, kc.KartForward, Mathf.Infinity, 1 << 6)) {
             if (hit.collider.isTrigger && hit.collider.gameObject.transform.GetSiblingIndex() == targetColliderIndex) {
                 return true;
             }

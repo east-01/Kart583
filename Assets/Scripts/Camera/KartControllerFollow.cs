@@ -50,14 +50,18 @@ public class KartControllerFollow : MonoBehaviour
 		float ratio = Mathf.Clamp01(kc.timeSinceLastCollision/5f);
 		Vector3 angle = Vector3.zero;
 		if(kc.TrackSpeed > 0.1f) {
-			angle = Vector3.Lerp(kc.kartForward, kc.GetComponent<Rigidbody>().velocity, ratio*ratio).normalized;
+			angle = Vector3.Lerp(kc.KartForward, kc.GetComponent<Rigidbody>().velocity, ratio*ratio).normalized;
 		} else {
-			angle = kc.kartForward;
+			angle = kc.KartForward;
 		}
+
 		angle.y = 0;
 		if(angle.magnitude == 0) return Vector3.zero;
 
-		Vector3 targetPos = kc.gameObject.transform.position - kc.momentum*(angle.normalized * distance);
+		int momentum = kc.momentum;
+		if(momentum == 0) momentum = 1;
+
+		Vector3 targetPos = kc.gameObject.transform.position - momentum*(angle.normalized * distance);
 		targetPos.y = kc.gameObject.transform.position.y + height;
 
 		return targetPos;

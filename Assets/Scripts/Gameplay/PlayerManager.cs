@@ -6,7 +6,11 @@ using UnityEngine.InputSystem;
 public class PlayerManager : MonoBehaviour
 {
 
-	private List<PlayerInput> players = new List<PlayerInput>();
+	public GameObject kartBotPrefab;
+
+	/** This could include bots as well */
+	private List<GameObject> playerObjects = new List<GameObject>();
+	private List<PlayerInput> playerInputs = new List<PlayerInput>();
 
 	private PlayerInputManager controls;
 
@@ -32,22 +36,50 @@ public class PlayerManager : MonoBehaviour
 
     }
 
+	void AddPlayer(GameObject playerObject) 
+	{	
+		if(playerObjects.Count >= 8) {
+			Debug.LogError("Tried to add a new player even though there is already 8 (or more) players.");
+			Destroy(playerObject);
+			return;
+		}
+
+		playerObject.transform.position = GameObject.Find("SpawnPositions").transform.GetChild(playerObjects.Count).position;
+
+		GameObject sp = GameObject.Find("SpawnPositions");
+		Vector3 forward = new Vector3(1, 0, 0);
+		if(sp != null && sp.GetComponent<SpawnPositions>() != null) {
+			playerObject.transform.forward = sp.GetComponent<SpawnPositions>().spawnForward;
+			playerObject.GetComponent<KartController>().KartForward = sp.GetComponent<SpawnPositions>().spawnForward;
+		}
+
+		playerObjects.Add(playerObject);
+	}
+
 	void PlayerJoined(PlayerInput player)
 	{
 
-		if(players.Count == 0) {
+		if(playerInputs.Count == 0) {
 			Camera.main.GetComponent<AudioListener>().enabled = false;
 			Camera.main.enabled = false; 
 		} else { // Player one's camera always gets the audio listener
 			player.camera.GetComponent<AudioListener>().enabled = false;
 		}
 
-		players.Add(player);
+		playerInputs.Add(player);
+		AddPlayer(player.gameObject);
 	}
 
 	void PlayerLeft(PlayerInput player) 
 	{ 
 		
 	}
+
+	public void SpawnBot() 
+	{
+		AddPlayer(GameObject.Instantiate(kartBotPrefab));
+	}
+
+	public int PlayerCount { get { return playerObjects.Count; } }
 
 }
