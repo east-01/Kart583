@@ -9,10 +9,14 @@ public class RaceManager : MonoBehaviour
     /* ----- Settings fields ---- */
     public bool running = true;
 
+    [Header("Default settings")] public int laps = 3;
+    public float startDelay = 10;
+    public bool bots = true;
+
     /* ----- Runtime fields ----- */
     public RaceSettings settings;
     private PlayerManager pm;
-    private float raceTime;
+    public float raceTime;
     private float ensureRCCheck;
 
     private void Start()
@@ -69,9 +73,11 @@ public class RaceManager : MonoBehaviour
     public RaceSettings DefaultSettings 
     {
         get {
-            return new RaceSettings(3, 10, false);
+            return new RaceSettings(laps, startDelay, bots);
         }
     }
+
+    public bool CanMove { get { return raceTime >= 0; } }
 
 }
 

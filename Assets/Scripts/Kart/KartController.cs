@@ -47,6 +47,7 @@ public class KartController : MonoBehaviour
 	/* ----- Runtime variable ----- */
 	private KartStateManager stateMgr;
 	private Rigidbody rb;
+	private RaceManager rm;
 
 	/* Input variables */
 	[Header("Input"), SerializeField] private Vector2 turn;
@@ -71,16 +72,28 @@ public class KartController : MonoBehaviour
 
     private void Start()
     {
-		rb = GetComponent<Rigidbody>();
 		stateMgr = GetComponent<KartStateManager>();
+		rb = GetComponent<Rigidbody>();
+		rm = null;
+        GameObject rmo = GameObject.Find("GameplayManager");
+        if(rmo != null && !rmo.TryGetComponent<RaceManager>(out rm)) {
+            Debug.LogError("KartController failed to find race manager!");
+            gameObject.SetActive(false);
+        }
 
 		if(kartModel == null) Debug.LogWarning("KartController on \"" + gameObject.name + "\" doesn't have a kartModel assigned."); 
-
 		timeSinceLastCollision = 1000f;
     }
 
     private void Update()
     {
+
+		if(!rm.CanMove) {
+			turn = Vector2.zero;
+			throttle = 0;
+			boosting = false;
+			return;
+		}
 
 		bool grounded = Grounded();
 		if(grounded) { 
@@ -104,7 +117,7 @@ public class KartController : MonoBehaviour
 			if(Mathf.Abs(steeringWheelDirection) <= inputDeadzone) 
 				steeringWheelDirection = 0;
 		}
-		
+
 		// If we're drifting and airborne, change drift direction to match joystick
 		// Use airtime to ensure we maintain drift direction during small falls.
 		if(stateMgr.state == KartState.DRIFTING && airtime > 0.05f && Math.Abs(turn.x) >= inputDeadzone) 
@@ -336,7 +349,7 @@ public class KartController : MonoBehaviour
 	public bool SteeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	public bool SteeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }
 
-	public bool CanDriftEngage { get { return SpeedRatio >= driftEngageSpeedPercent && momentum == 1; } }
+	public bool CanDriftEngage { get { return SpeedRatio >= driftEngageSpeedPercent && momentum == 1 && rm.CanMove; } }
 
 	public bool ActivelyBoosting { get { return boosting && boostAmount > 0;} }
 	public float BoostRatio { get { return boostAmount/maxBoost; } }

@@ -19317,6 +19317,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   running: 1
+  laps: 3
+  startDelay: 10
+  bots: 1
+  raceTime: 0
 --- !u!4 &880675183
 Transform:
   m_ObjectHideFlags: 0
