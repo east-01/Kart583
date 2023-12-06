@@ -51,7 +51,7 @@ public class ItemSlotAnimator : MonoBehaviour
         if(timeTillSpawn > 0) {
             timeTillSpawn -= Time.deltaTime;
             if(timeTillSpawn <= 0) 
-                SpawnNewImage(animationTime + (singleImageDuration/2f) >= overallDuration, Item.OIL);
+                SpawnNewImage(animationTime + (singleImageDuration/2f) >= overallDuration, this.result);
         }
 
     }
@@ -61,6 +61,7 @@ public class ItemSlotAnimator : MonoBehaviour
         this.timeTillSpawn = singleImageFrequency;
 
         GameObject imageObj = null;
+        GameObject imageObj2 = null;
         // Search for a disabled (already spawned) image
         foreach(GameObject existingImgObj in animatingItemImages) {
             if(!existingImgObj.activeSelf) {
@@ -71,8 +72,10 @@ public class ItemSlotAnimator : MonoBehaviour
 
         // Didn't find an existing object, spawn new one
         if(imageObj == null) {
-            imageObj = GameObject.Instantiate(itemImagePrefabs.ToArray()[(int)result], transform); //instantiate according to passed through item selection
+            imageObj = GameObject.Instantiate(itemImagePrefabs.ToArray()[0], transform); //instantiate according to passed through item selection
+            imageObj2 = GameObject.Instantiate(itemImagePrefabs.ToArray()[1], transform);
             animatingItemImages.Add(imageObj);
+            animatingItemImages.Add(imageObj2);
         }
 
         imageObj.GetComponent<ItemImage>().StartAnimation(startPosition, centerPosition, endPosition, singleImageDuration, stopAtCenter);
