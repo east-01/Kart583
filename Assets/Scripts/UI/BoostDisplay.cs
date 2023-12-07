@@ -88,6 +88,7 @@ public class BoostDisplay : MonoBehaviour
 	void Display(bool display) { 
 		showing = display;
 		animationTimeCnt = animationTime;
+		text.color = colors.Evaluate(displayValue);
 	}
 
 }

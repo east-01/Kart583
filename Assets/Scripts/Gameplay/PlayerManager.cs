@@ -1,7 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Linq;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -9,8 +9,9 @@ public class PlayerManager : MonoBehaviour
 	public GameObject kartBotPrefab;
 
 	/** This could include bots as well */
-	private List<GameObject> playerObjects = new List<GameObject>();
-	private List<PlayerInput> playerInputs = new List<PlayerInput>();
+	public List<GameObject> playerObjects = new List<GameObject>();
+	public List<PlayerInput> playerInputs = new List<PlayerInput>();
+	public List<PositionTracker> playerPositions = new List<PositionTracker>();
 
 	private PlayerInputManager controls;
 
@@ -33,7 +34,9 @@ public class PlayerManager : MonoBehaviour
 
 	void Update()
     {
-
+		playerPositions = playerPositions.OrderByDescending(o=>o.raceCompletion).ToList();
+		int i = 0;
+		playerPositions.ForEach(pt => { pt.racePos = i; i++; });
     }
 
 	void AddPlayer(GameObject playerObject) 
@@ -54,6 +57,8 @@ public class PlayerManager : MonoBehaviour
 		}
 
 		playerObjects.Add(playerObject);
+		playerPositions.Add(playerObject.GetComponent<PositionTracker>());
+	
 	}
 
 	void PlayerJoined(PlayerInput player)

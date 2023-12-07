@@ -17,6 +17,7 @@ public class KartControllerFollow : MonoBehaviour
 	public Vector3 targetPosition;
 	public float displayFov { get; private set; }
 	public float fovInterpolationFactor = 3f;
+	public Vector3 targetAngle;
 
 	void Start() 
 	{
@@ -35,36 +36,23 @@ public class KartControllerFollow : MonoBehaviour
 		displayFov = Mathf.Lerp(displayFov, fov, fovInterpolationFactor*Time.deltaTime);
 		GetComponent<Camera>().fieldOfView = displayFov;
 
-		targetPosition = GetTargetPosition();
+		Vector3 currentAngle = kc.RemoveUpComponent(subject.gameObject.transform.position-transform.position).normalized;
+		Vector3 targetAngle = Vector3.zero;
 
-		if(targetPosition.magnitude > 0) {
-			transform.position = GetTargetPosition();
-			transform.LookAt(kc.gameObject.transform.position);
-		}
-
-    }
-
-	public Vector3 GetTargetPosition() 
-	{ 
-		KartController kc = subject.GetComponent<KartController>();
-		float ratio = Mathf.Clamp01(kc.timeSinceLastCollision/5f);
-		Vector3 angle = Vector3.zero;
 		if(kc.TrackSpeed > 0.1f) {
-			angle = Vector3.Lerp(kc.KartForward, kc.GetComponent<Rigidbody>().velocity, ratio*ratio).normalized;
+			float ratio = Mathf.Clamp01(kc.timeSinceLastCollision/5f);
+			targetAngle = kc.RemoveUpComponent(Vector3.Lerp(kc.GetComponent<Rigidbody>().velocity, kc.KartForward, ratio*ratio).normalized);
 		} else {
-			angle = kc.KartForward;
+			targetAngle = kc.KartForward;
 		}
 
-		angle.y = 0;
-		if(angle.magnitude == 0) return Vector3.zero;
-
-		int momentum = kc.momentum;
-		if(momentum == 0) momentum = 1;
-
-		Vector3 targetPos = kc.gameObject.transform.position - momentum*(angle.normalized * distance);
+        Vector3 angle = Vector3.Lerp(currentAngle, targetAngle, 0.3f);
+		Vector3 targetPos = kc.gameObject.transform.position - (angle.normalized * distance);
 		targetPos.y = kc.gameObject.transform.position.y + height;
 
-		return targetPos;
-	}
+		transform.position = targetPos;
+		transform.LookAt(kc.gameObject.transform.position);
+
+    }
 
 }

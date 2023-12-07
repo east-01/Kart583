@@ -1,5 +1,4 @@
 using System;
-using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerManager))]
@@ -9,9 +8,7 @@ public class RaceManager : MonoBehaviour
     /* ----- Settings fields ---- */
     public bool running = true;
 
-    [Header("Default settings")] public int laps = 3;
-    public float startDelay = 10;
-    public bool bots = true;
+    public RaceSettings defaultSettings;
 
     /* ----- Runtime fields ----- */
     public RaceSettings settings;
@@ -32,7 +29,7 @@ public class RaceManager : MonoBehaviour
     public void Activate(RaceSettings? settingsNullable) 
     {
         // Load settings
-        settingsNullable ??= DefaultSettings;
+        settingsNullable ??= defaultSettings;
         settings = settingsNullable.Value;
 
         // Load settings values
@@ -60,36 +57,39 @@ public class RaceManager : MonoBehaviour
     public void EnsureRaceConditions() 
     {  
 
+        int botsInGame = pm.playerObjects.Count - pm.playerInputs.Count;
         if(pm.PlayerCount < 8 && settings.bots && raceTime > -3) {
-            for(int i = 0; i < 8-pm.PlayerCount; i++) {
+            for(int i = 0; i < 8-pm.PlayerCount && i < settings.botLimit-botsInGame; i++) {
                 pm.SpawnBot();
             }
         }
         
+        // String positions = "";
+        // pm.playerPositions.ForEach(pt => positions += ((int)Math.Round(pt.raceCompletion*10000)/10000f) + ", ");
+        // if(positions.Length > 2) print(positions.Substring(0, positions.Length-2));
+
         // Reset ensureRCCheck timer
         ensureRCCheck = raceTime < 0 ? 1 : 5;
-    }
-
-    public RaceSettings DefaultSettings 
-    {
-        get {
-            return new RaceSettings(laps, startDelay, bots);
-        }
     }
 
     public bool CanMove { get { return raceTime >= 0; } }
 
 }
 
+[Serializable]
 public struct RaceSettings 
 {
     public int laps;
     public float startDelay;
+    public float startBoostPercent;
     public bool bots;
-    public RaceSettings(int laps, float startDelay, bool bots) {
+    public int botLimit;
+    public RaceSettings(int laps, float startDelay, float startBoostPercent, bool bots, int botLimit) {
         this.laps = laps;
         this.startDelay = startDelay;
+        this.startBoostPercent = startBoostPercent;
         this.bots = bots;
+        this.botLimit = botLimit;
     }
 }
 

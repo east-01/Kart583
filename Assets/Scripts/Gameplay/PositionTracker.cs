@@ -1,17 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 /** Keeps track of a Kart's position on a track */
-public class PositionTracker : MonoBehaviour
+public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
 {
 
+    private RaceManager rm;
     private Waypoints waypoints;
 
-    [SerializeField] private int waypointIndex;
+    [SerializeField] public int waypointIndex;
+    public float segmentCompletion;
     public float lapCompletion;
+    public float raceCompletion;
+    public int lapNumber;
+    public int racePos;
+    public bool hasStartedRace;
 
-    void Awake() 
+    void Start() 
     {
         GameObject waypointsObj = GameObject.Find("Waypoints");
         if(waypointsObj != null && waypointsObj.GetComponent<Waypoints>() == null) waypointsObj = null;
@@ -21,6 +28,13 @@ public class PositionTracker : MonoBehaviour
             return;
         }
         waypoints = waypointsObj.GetComponent<Waypoints>();
+        
+        GameObject gm = GameObject.Find("GameplayManager");
+        if(gm == null) throw new InvalidOperationException("Failed to find GameplayManager in scene!");
+        rm = gm.GetComponent<RaceManager>();
+
+        hasStartedRace = false;
+        lapNumber = 0;
     }
 
     void OnTriggerEnter(Collider other) 
@@ -33,15 +47,25 @@ public class PositionTracker : MonoBehaviour
 
         if(advancedNaturally || advancedLapCompleted) waypointIndex = enteredIndex;
 
-        if(advancedLapCompleted) print("LAP COMPLETED");
+        if(!hasStartedRace) {
+            hasStartedRace = true;
+            lapNumber = 0;
+        } else if(advancedLapCompleted) 
+            lapNumber += 1;
     }
 
     void Update() {
+        if(rm.raceTime < 0) {
+            waypointIndex = waypoints.Count-1;
+            lapNumber = 0;
+        }
+
+        segmentCompletion = GetSegmentCompletion();
         lapCompletion = GetLapCompletion();
+        raceCompletion = GetRaceCompletion();
     }
 
     public Waypoints GetWaypoints() { return waypoints; }
-    public int GetWaypointIndex() { return waypointIndex; }
     public Transform GetCurrentWaypoint() { return waypoints.GetWaypointFromIndex(waypointIndex); }
     public Transform GetNextWaypoint() 
     {
@@ -52,12 +76,24 @@ public class PositionTracker : MonoBehaviour
 
     public BoxCollider GetNextWaypointCollider() { return GetNextWaypoint().GetComponent<BoxCollider>(); }
 
+    public float GetSegmentCompletion() 
+    {
+        Vector3 lineStart = GetCurrentWaypoint().position;
+        Vector3 lineEnd = GetNextWaypoint().position;
+        Vector3 lineDirection = lineEnd - lineStart;
+        float lineMagnitude = lineDirection.magnitude;
+        Vector3 lineNormalized = lineDirection / lineMagnitude;
+
+        Vector3 pointLineStart = transform.position - lineStart;
+        float dotProduct = Vector3.Dot(pointLineStart, lineNormalized);
+
+        dotProduct = Mathf.Clamp(dotProduct, 0f, lineMagnitude);
+        return dotProduct/lineMagnitude;
+    }
+
     public float GetLapCompletion() 
     {
-        float selfToTargetWaypoint = Vector3.Distance(transform.position, GetNextWaypoint().position);
-        float prevToTargetWaypoint = Vector3.Distance(GetCurrentWaypoint().position, GetNextWaypoint().position);
-        float segmentCompletion = Mathf.Clamp01(selfToTargetWaypoint/prevToTargetWaypoint);
-
+        // lc1&2 represent the lap completion percentage at both waypoint positions
         float lc1 = waypointIndex/(float)waypoints.Count;
         float lc2 = (waypointIndex+1)/(float)waypoints.Count;
         if(lc2 == 0) lc2 = 1;
@@ -65,4 +101,13 @@ public class PositionTracker : MonoBehaviour
         return Mathf.Lerp(lc1, lc2, segmentCompletion);
     }
 
+    public float GetRaceCompletion() 
+    {
+        return Mathf.Lerp((float)lapNumber/rm.settings.laps, Mathf.Clamp01((float)(lapNumber+1)/rm.settings.laps), lapCompletion);
+    }
+
+    public int CompareTo(PositionTracker other)
+    {
+        return -raceCompletion.CompareTo(other.raceCompletion);
+    }
 }

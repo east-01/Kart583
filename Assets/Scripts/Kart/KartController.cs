@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
-using System.Data.Common;
+using UnityEngine.Rendering;
+using Palmmedia.ReportGenerator.Core;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
@@ -45,18 +46,21 @@ public class KartController : MonoBehaviour
 	public float activeBoostDrain = 1.75f;
 
 	/* ----- Runtime variable ----- */
+	private RaceManager rm;
 	private KartStateManager stateMgr;
 	private Rigidbody rb;
-	private RaceManager rm;
+	private PositionTracker pt;
 
 	/* Input variables */
 	[Header("Input"), SerializeField] private Vector2 turn;
 	[SerializeField] private float throttle;
 	[SerializeField] private bool boosting;
-	
+
 	[Header("Runtime fields")] public Vector3 up = new(0, 1, 0);
 	// public Vector3 kartForward;
 	[SerializeField] private Vector3 _kartForward;
+	[SerializeField] private Vector3 velocity;
+	[SerializeField] private float theta;
 	public int momentum;
 	public bool grounded; // Stores last update's grounded status
 	public float airtime;
@@ -72,14 +76,12 @@ public class KartController : MonoBehaviour
 
     private void Start()
     {
+        GameObject gm = GameObject.Find("GameplayManager");
+        if(gm == null) throw new InvalidOperationException("Failed to find GameplayManager in scene!");
+        rm = gm.GetComponent<RaceManager>();
 		stateMgr = GetComponent<KartStateManager>();
 		rb = GetComponent<Rigidbody>();
-		rm = null;
-        GameObject rmo = GameObject.Find("GameplayManager");
-        if(rmo != null && !rmo.TryGetComponent<RaceManager>(out rm)) {
-            Debug.LogError("KartController failed to find race manager!");
-            gameObject.SetActive(false);
-        }
+		pt = GetComponent<PositionTracker>();
 
 		if(kartModel == null) Debug.LogWarning("KartController on \"" + gameObject.name + "\" doesn't have a kartModel assigned."); 
 		timeSinceLastCollision = 1000f;
@@ -87,13 +89,6 @@ public class KartController : MonoBehaviour
 
     private void Update()
     {
-
-		if(!rm.CanMove) {
-			turn = Vector2.zero;
-			throttle = 0;
-			boosting = false;
-			return;
-		}
 
 		bool grounded = Grounded();
 		if(grounded) { 
@@ -106,9 +101,9 @@ public class KartController : MonoBehaviour
 		this.driftParticles = airtime <= 0.05f && stateMgr.state == KartState.DRIFTING && driftDirection != 0;
 
 		// Steering wheel direction modification
-		if(Mathf.Abs(turn.x) > 0) { 
-			steeringWheelDirection += (!SteeringWheelMatchesTurn ? 2f : 1f) * steeringWheelTurnSpeed * turn.x * Time.deltaTime;
-			steeringWheelDirection += (!SteeringWheelMatchesTurn ? 2f : 1f) * steeringWheelTurnSpeed * turn.x * Time.deltaTime;
+		if(Mathf.Abs(TurnInput.x) > 0) { 
+			steeringWheelDirection += (!SteeringWheelMatchesTurn ? 2f : 1f) * steeringWheelTurnSpeed * TurnInput.x * Time.deltaTime;
+			steeringWheelDirection += (!SteeringWheelMatchesTurn ? 2f : 1f) * steeringWheelTurnSpeed * TurnInput.x * Time.deltaTime;
 			steeringWheelDirection = Mathf.Clamp(steeringWheelDirection, -1, 1);
 		} else { 
 			steeringWheelDirection = Mathf.Lerp(steeringWheelDirection, 0, (steeringWheelTurnSpeed*2f) * (1+SpeedRatio) * Time.deltaTime);
@@ -120,11 +115,11 @@ public class KartController : MonoBehaviour
 
 		// If we're drifting and airborne, change drift direction to match joystick
 		// Use airtime to ensure we maintain drift direction during small falls.
-		if(stateMgr.state == KartState.DRIFTING && airtime > 0.05f && Math.Abs(turn.x) >= inputDeadzone) 
-			driftDirection = (int)Mathf.Sign(turn.x);
+		if(stateMgr.state == KartState.DRIFTING && airtime > 0.05f && Math.Abs(TurnInput.x) >= inputDeadzone) 
+			driftDirection = (int)Mathf.Sign(TurnInput.x);
 
 		driftThetaTarget = 0;
-		if(stateMgr.state == KartState.DRIFTING && driftDirection != 0 && Mathf.Abs(turn.x) >= inputDeadzone) { 
+		if(stateMgr.state == KartState.DRIFTING && driftDirection != 0 && Mathf.Abs(TurnInput.x) >= inputDeadzone) { 
 			driftThetaTarget = Mathf.Sign(driftDirection)*driftAngleMin;
 			if(SteeringWheelMatchesDrift) 
 			if(SteeringWheelMatchesDrift) 
@@ -143,15 +138,21 @@ public class KartController : MonoBehaviour
 			boostAmount = Mathf.Max(boostAmount - passiveBoostDrain*Time.deltaTime, 0);									
 		}
 
+		if(rm.raceTime <= 0) {
+			boostAmount = rm.settings.startBoostPercent*maxBoost;
+		}
+
 		// Animate kartModel forward
 		if(kartModel != null)
 			kartModel.forward = RotateVectorAroundAxis(transform.forward, up, driftTheta);
 
 	}
 
-	private float theta;
 	private void FixedUpdate() 
 	{
+
+		DrawVector(KartForward, Color.blue);
+		DrawVector(rb.velocity, Color.cyan);
 
 		Vector3 velNoY = rb.velocity;
 		velNoY.y = 0;
@@ -162,7 +163,7 @@ public class KartController : MonoBehaviour
 		momentum = TrackSpeed > 0.1f ? (Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1) : 0;
 
 		// Update theta
-		theta = kartTurnSpeed * steeringWheelDirection * kartTurnPower.Evaluate(SpeedRatio) * DriftTurnMultiplier * Time.fixedDeltaTime;
+		theta = kartTurnSpeed * steeringWheelDirection * kartTurnPower.Evaluate(SpeedRatio) * Math.Max(SpeedRatio, 0.05f) * DriftTurnMultiplier * Time.fixedDeltaTime;
 		if(!grounded) theta /= 3;
 		if(momentum < 0) theta = -theta;
 
@@ -170,22 +171,37 @@ public class KartController : MonoBehaviour
 			case KartState.DRIVING:
 			case KartState.DRIFTING:
 
-				if(RemoveUpComponent(rb.velocity).normalized.magnitude > 0) {
-					KartForward = momentum*velNoY.normalized;
-					Debug.DrawLine(transform.position, transform.position + KartForward, Color.yellow);
-				} else if(RemoveUpComponent(transform.forward).normalized.magnitude > 0) {
-					KartForward = RemoveUpComponent(transform.forward).normalized;
+				if(velNoY.magnitude > 0.5f) {
+					KartForward = TrackVelocity.normalized*momentum;
+				} else {
+					Vector3 forwardNoY = transform.forward;
+					forwardNoY.y = 0;
+					if(forwardNoY.magnitude > 0.05f) KartForward = forwardNoY;
 				}
 
 				transform.forward = KartForward;
 
-				Vector3 throttleForce = (ActivelyBoosting ? 1f : throttle) * acceleration * transform.forward;
-				if(Mathf.Abs(throttle) > inputDeadzone && TrackSpeed <= CurrentMaxSpeed)
+				Vector3 throttleForce = (ActivelyBoosting ? 1f : ThrottleInput) * (ActivelyBoosting ? acceleration*5f : acceleration) * transform.forward;
+				if(Math.Abs(TurnInput.x) > inputDeadzone)
+					throttleForce = RotateVectorAroundAxis(throttleForce, up, theta);
+
+				if(Mathf.Abs(throttle) > inputDeadzone && TrackSpeed <= CurrentMaxSpeed) {
 					rb.AddForce(throttleForce, ForceMode.Acceleration);	
+					DrawVector(throttleForce, Color.yellow);
+				}
 
 				Vector3 turnForce = theta*1000f*-Vector3.Cross(rb.velocity.normalized, up);
 				rb.AddForce(turnForce, ForceMode.Acceleration);
-				
+				DrawVector(turnForce, Color.red);
+
+				// Correction force: if kartForward != velocity forward, apply a correctional force to fix it
+				if(turnForce.magnitude <= 0.5f && momentum == 1) {
+					float similarity = Vector3.Dot(KartForward.normalized, RemoveUpComponent(rb.velocity).normalized);
+					Vector3 correctionForce = SpeedRatio * similarity * Mathf.Clamp01(timeSinceLastCollision/2f) * 120 * (RemoveUpComponent(KartForward)-RemoveUpComponent(rb.velocity.normalized));
+					rb.AddForce(correctionForce, ForceMode.Acceleration);
+					DrawVector(correctionForce, new Color(0.7f, 0.35f, 0f));
+				}
+
 				if(driftHopRequest) {
 					rb.AddForce(up * driftVerticalVelocity, ForceMode.VelocityChange);
 					driftHopRequest = false;
@@ -195,7 +211,7 @@ public class KartController : MonoBehaviour
 			case KartState.COLLISION:
 
 				float dot = Vector3.Dot(rb.velocity.normalized, transform.forward);
-				if(AcceptableKartForward(transform.forward)) KartForward = transform.forward;
+				KartForward = RemoveUpComponent(transform.forward);
 				if((TrackSpeed < 0.1f*maxSpeed || Mathf.Abs(dot) > 0.975f) && timeSinceLastCollision > 0.05f) {
 					stateMgr.state = KartState.DRIVING;
 					momentum = (int)Mathf.Sign(dot);
@@ -211,6 +227,8 @@ public class KartController : MonoBehaviour
 
 				break;
 		}
+
+		if(airtime > 0.5f && rb.velocity.y == 0) rb.MovePosition(transform.position+Vector3.up*0.1f);
 
 	}
 
@@ -281,13 +299,13 @@ public class KartController : MonoBehaviour
 	public bool Grounded() 
 	{ 
 		float distance = 0.1f;
-		Vector3 raycastOrigin = new(transform.position.x, GetComponent<BoxCollider>().bounds.min.y+0.001f, transform.position.z);
+		Vector3 raycastOrigin = new(transform.position.x, GetComponent<BoxCollider>().bounds.min.y+0.01f, transform.position.z);
 		return Physics.Raycast(raycastOrigin, Vector3.down, distance);
 	}
 
 	/* Input */
 	public Vector2 TurnInput {
-		get { return turn; }
+		get { return CanMove ? turn : Vector2.zero; }
 		set {
 			turn = value;
 			if(turn.magnitude <= inputDeadzone) this.turn = Vector2.zero;
@@ -295,14 +313,14 @@ public class KartController : MonoBehaviour
 	}
 
 	public float ThrottleInput {
-		get { return throttle; }
+		get { return CanMove ? (ActivelyBoosting ? 1f : throttle) : 0; }
 		set {
 			this.throttle = value;
 		}
 	}
 
 	public bool DriftInput { 
-		get { return stateMgr.state == KartState.DRIFTING; } 
+		get { return CanMove && stateMgr.state == KartState.DRIFTING; } 
 		set {
 			if(value && stateMgr.state == KartState.DRIVING && Grounded() && !ActivelyBoosting)
 				stateMgr.state = KartState.DRIFTING;
@@ -312,7 +330,7 @@ public class KartController : MonoBehaviour
 	}
 
 	public bool BoostInput {
-		get { return boosting; }
+		get { return CanMove && boosting; }
 		set {
 			if(value && !boosting && (boostAmount/maxBoost) >= requiredBoostPercentage) { 
 				boosting = true;
@@ -327,7 +345,7 @@ public class KartController : MonoBehaviour
 	public Vector3 KartForward {
 		get { return _kartForward; }
 		set {
-			if(AcceptableKartForward(value)) _kartForward = value;
+			if(AcceptableKartForward(value)) _kartForward = RemoveUpComponent(value);
 		}
 	}
 
@@ -335,23 +353,28 @@ public class KartController : MonoBehaviour
 		return RemoveUpComponent(value).magnitude > 0;
 	}
 
+	public Vector3 TrackVelocity { get { 
+		if(rb == null) rb = GetComponent<Rigidbody>();
+		return RemoveUpComponent(rb.velocity); 
+	} }
 	/** The velocity magnitude tangential to the up vector */
-	public float TrackSpeed { 
-		get { 
-			if(rb == null) rb = GetComponent<Rigidbody>(); 
-			return new Vector3(rb.velocity.x, 0, rb.velocity.z).magnitude; 
-		} 
+	public float TrackSpeed { get { return TrackVelocity.magnitude; } }
+
+	public void DrawVector(Vector3 forceVector, Color col) 
+	{
+		Debug.DrawLine(transform.position, transform.position + forceVector, col);
 	}
 
 	public float CurrentMaxSpeed { get { return momentum == 1 ? (ActivelyBoosting ? maxBoostSpeed : maxSpeed) : maxSpeed/4f; } }
 	public float SpeedRatio { get { return TrackSpeed/CurrentMaxSpeed; } }
+	public bool CanMove { get { return rm != null && rm.CanMove && pt.lapNumber < rm.settings.laps; } }
 
 	public bool SteeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	public bool SteeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }
 
-	public bool CanDriftEngage { get { return SpeedRatio >= driftEngageSpeedPercent && momentum == 1 && rm.CanMove; } }
+	public bool CanDriftEngage { get { return SpeedRatio >= driftEngageSpeedPercent && momentum == 1 && CanMove; } }
 
-	public bool ActivelyBoosting { get { return boosting && boostAmount > 0;} }
+	public bool ActivelyBoosting { get { return CanMove && boosting && boostAmount > 0;} }
 	public float BoostRatio { get { return boostAmount/maxBoost; } }
 	
 	public float DriftTurnMultiplier { 

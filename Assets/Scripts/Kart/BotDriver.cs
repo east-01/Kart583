@@ -95,8 +95,8 @@ public class BotDriver : MonoBehaviour
         }
 
         Waypoints waypoints = pt.GetWaypoints();
-        if(checkpointIndex != pt.GetWaypointIndex()) CheckpointIndexUpdated();
-        checkpointIndex = pt.GetWaypointIndex();
+        if(checkpointIndex != pt.waypointIndex) CheckpointIndexUpdated();
+        checkpointIndex = pt.waypointIndex;
 
         targetPosition = DetermineTargetPosition();
 
