@@ -288,7 +288,7 @@ GameObject:
   - component: {fileID: 7464647775686573063}
   m_Layer: 0
   m_Name: Kart
-  m_TagString: Untagged
+  m_TagString: Kart
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -734,6 +734,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Drift Smoke
       objectReference: {fileID: 0}
+    - target: {fileID: 245406496992670200, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 245406496992670207, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -800,6 +804,10 @@ PrefabInstance:
     - target: {fileID: 245406496992670200, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
       propertyPath: m_Name
       value: Drift Smoke
+      objectReference: {fileID: 0}
+    - target: {fileID: 245406496992670200, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 245406496992670206, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
       propertyPath: looping
@@ -871,6 +879,10 @@ PrefabInstance:
     - target: {fileID: 3278971880541195625, guid: a440c521f8ee14640882dc5257d41f8c, type: 3}
       propertyPath: m_Name
       value: Held Item
+      objectReference: {fileID: 0}
+    - target: {fileID: 3278971880541195625, guid: a440c521f8ee14640882dc5257d41f8c, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3278971880541195625, guid: a440c521f8ee14640882dc5257d41f8c, type: 3}
       propertyPath: m_IsActive

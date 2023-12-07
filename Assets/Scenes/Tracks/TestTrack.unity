@@ -316,11 +316,13 @@ MonoBehaviour:
     startDelay: 0
     startBoostPercent: 50
     bots: 0
+    botLimit: 8
   settings:
     laps: 0
     startDelay: 0
     startBoostPercent: 0
     bots: 0
+    botLimit: 0
   raceTime: 0
 --- !u!4 &60849915
 Transform:

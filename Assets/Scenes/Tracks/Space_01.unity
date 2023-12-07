@@ -4932,6 +4932,68 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: df662df82e46b874b9d59f720516dd43, type: 3}
+--- !u!1001 &180204946
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 481132007}
+    m_Modifications:
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_RootOrder
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -45.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5.47
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3274890966919036621, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+      propertyPath: m_Name
+      value: Item Box (1)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+--- !u!4 &180204947 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
+  m_PrefabInstance: {fileID: 180204946}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &180901006 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4642117726106736, guid: df662df82e46b874b9d59f720516dd43, type: 3}
@@ -11250,7 +11312,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1145543856}
-  - {fileID: 1206421442}
+  - {fileID: 180204947}
   - {fileID: 1166517893}
   - {fileID: 778899275}
   - {fileID: 1179113762}
@@ -19575,6 +19637,7 @@ GameObject:
   - component: {fileID: 880675182}
   - component: {fileID: 880675181}
   - component: {fileID: 880675180}
+  - component: {fileID: 880675184}
   m_Layer: 0
   m_Name: GameplayManager
   m_TagString: Untagged
@@ -19703,6 +19766,25 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &880675184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 880675179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ed40ef50acced44d9e68d85a3aafd77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  items:
+  - item: 0
+    itemIcon: {fileID: 21300000, guid: cf11399fd649b9b45ab5778b21fad2d8, type: 3}
+    worldItem: {fileID: 5285458207848432673, guid: f5659f4d3d80e38499e974301d64095e, type: 3}
+  - item: 1
+    itemIcon: {fileID: 21300000, guid: 05b58ea3649003e4da71b257da3fbd90, type: 3}
+    worldItem: {fileID: 0}
 --- !u!1001 &881723481
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25418,11 +25500,6 @@ Transform:
 Transform:
   m_CorrespondingSourceObject: {fileID: 2301417569539831974, guid: fd235087b3c7b1845bbb84ee04e5c555, type: 3}
   m_PrefabInstance: {fileID: 968596225}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1206421442 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-  m_PrefabInstance: {fileID: 1521224943}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1207462770
 PrefabInstance:
@@ -31374,16 +31451,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4642117726106736, guid: df662df82e46b874b9d59f720516dd43, type: 3}
   m_PrefabInstance: {fileID: 708806215}
   m_PrefabAsset: {fileID: 0}
-<<<<<<< HEAD
 --- !u!1001 &1519106934
-=======
---- !u!1001 &1521224943
->>>>>>> 19087ad (Rebased w/ Alpha. Still an issue with item animation alignment)
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-<<<<<<< HEAD
     m_TransformParent: {fileID: 1000000688}
     m_Modifications:
     - target: {fileID: 3654124824493552138, guid: 9b89a5687ce0f3c42a9320ee92e7e467, type: 3}
@@ -31444,60 +31516,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9b89a5687ce0f3c42a9320ee92e7e467, type: 3}
-=======
-    m_TransformParent: {fileID: 481132007}
-    m_Modifications:
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_RootOrder
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -45.510002
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.65
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -5.47
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036617, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3274890966919036621, guid: 888ed27d92790114f8071c181592eb82, type: 3}
-      propertyPath: m_Name
-      value: Item Box (1)
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 888ed27d92790114f8071c181592eb82, type: 3}
->>>>>>> 19087ad (Rebased w/ Alpha. Still an issue with item animation alignment)
 --- !u!4 &1524844955 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2301417569539831974, guid: fd235087b3c7b1845bbb84ee04e5c555, type: 3}

@@ -9,7 +9,7 @@ public enum Item
     BOLT
 }
 
-struct ItemPackage 
+struct ItemData 
 {
     Item type;
     Image icon;
