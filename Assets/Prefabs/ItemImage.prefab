@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 6471565857285550796}
   - component: {fileID: 35061587112208476}
   m_Layer: 0
-  m_Name: Oil Image
+  m_Name: ItemImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -153,3 +153,4 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  item: 0

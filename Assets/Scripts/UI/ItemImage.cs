@@ -1,10 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ItemImage : MonoBehaviour
 {
+
+
 
     public AnimationCurve fadeCurve;
     public AnimationCurve sizeCurve;
@@ -16,6 +19,8 @@ public class ItemImage : MonoBehaviour
     private float animationDuration;
     private float animationTime;
     private bool stopAtCenter;
+
+    public Item item; // The item that is represented by this image, set by StartAnimation()
 
     void Update()
     {
@@ -49,8 +54,9 @@ public class ItemImage : MonoBehaviour
 
     /** Activates the image game object and puts it in position for the animation.
         Use stopAtCenter = true to make the item stop at the center position. */
-    public void StartAnimation(RectTransform startPosition, RectTransform centerPosition, RectTransform endPosition, float duration, bool stopAtCenter) 
+    public void StartAnimation(Item item, RectTransform startPosition, RectTransform centerPosition, RectTransform endPosition, float duration, bool stopAtCenter) 
     {
+        this.item = item;
         this.startPosition = startPosition;
         this.centerPosition = centerPosition;
         this.endPosition = endPosition;
@@ -58,6 +64,10 @@ public class ItemImage : MonoBehaviour
         this.stopAtCenter = stopAtCenter;
 
         this.animationTime = 0;    
+
+        // GetComponent<Image>().sprite = "Assets/Materials/boltimg.jpg";
+        // TODO: Add code to change image to represent item enum
+
         gameObject.SetActive(true);
 
         transform.position = startPosition.position;

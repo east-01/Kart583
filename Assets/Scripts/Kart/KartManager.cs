@@ -19,9 +19,8 @@ public class KartManager : MonoBehaviour
     { 
 		if(slotItem != null) return false;
 
-        Array values = Enum.GetValues(typeof(Item));
-        int randomIndex = UnityEngine.Random.Range(0, values.Length);
-        Item result = (Item)values.GetValue(randomIndex);
+		// Eventually this code will change to better give items based off of position
+        Item result = ItemSlotAnimator.GetRandomItem();
 
 		this.slotItem = result;
 
@@ -45,5 +44,4 @@ public class KartManager : MonoBehaviour
 			heldItemScript.Hide(true);
 		}
 	}
-
 }
