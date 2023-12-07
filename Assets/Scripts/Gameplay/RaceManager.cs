@@ -12,15 +12,12 @@ public class RaceManager : MonoBehaviour
 
     /* ----- Runtime fields ----- */
     public RaceSettings settings;
-    private PlayerManager pm;
     public float raceTime;
     private float ensureRCCheck;
 
     private void Start()
     {
         running = false;
-
-        pm = GetComponent<PlayerManager>();
 
         // TODO: Load settings from settings menu
         Activate(null);
@@ -57,6 +54,7 @@ public class RaceManager : MonoBehaviour
     public void EnsureRaceConditions() 
     {  
 
+        PlayerManager pm = GameplayManager.PlayerManager;
         int botsInGame = pm.playerObjects.Count - pm.playerInputs.Count;
         if(pm.PlayerCount < 8 && settings.bots && raceTime > -3) {
             for(int i = 0; i < 8-pm.PlayerCount && i < settings.botLimit-botsInGame; i++) {

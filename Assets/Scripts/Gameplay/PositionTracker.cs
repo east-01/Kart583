@@ -7,7 +7,6 @@ using System;
 public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
 {
 
-    private RaceManager rm;
     private Waypoints waypoints;
 
     [SerializeField] public int waypointIndex;
@@ -29,10 +28,6 @@ public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
         }
         waypoints = waypointsObj.GetComponent<Waypoints>();
         
-        GameObject gm = GameObject.Find("GameplayManager");
-        if(gm == null) throw new InvalidOperationException("Failed to find GameplayManager in scene!");
-        rm = gm.GetComponent<RaceManager>();
-
         hasStartedRace = false;
         lapNumber = 0;
     }
@@ -55,7 +50,7 @@ public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
     }
 
     void Update() {
-        if(rm.raceTime < 0) {
+        if(GameplayManager.RaceManager.raceTime < 0) {
             waypointIndex = waypoints.Count-1;
             lapNumber = 0;
         }
@@ -103,6 +98,7 @@ public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
 
     public float GetRaceCompletion() 
     {
+        RaceManager rm = GameplayManager.RaceManager;
         return Mathf.Lerp((float)lapNumber/rm.settings.laps, Mathf.Clamp01((float)(lapNumber+1)/rm.settings.laps), lapCompletion);
     }
 

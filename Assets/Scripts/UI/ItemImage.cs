@@ -4,10 +4,12 @@ using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.UI;
 
+/** This class is responsible for showing an animating a single item in an
+  *   item slot animation.
+  * We also have the option to stop the animation at the center, so the player
+  *   can see what item they currently have. */
 public class ItemImage : MonoBehaviour
 {
-
-
 
     public AnimationCurve fadeCurve;
     public AnimationCurve sizeCurve;
@@ -65,8 +67,7 @@ public class ItemImage : MonoBehaviour
 
         this.animationTime = 0;    
 
-        // GetComponent<Image>().sprite = "Assets/Materials/boltimg.jpg";
-        // TODO: Add code to change image to represent item enum
+        GetComponent<Image>().sprite = GameplayManager.ItemAtlas.RetrieveData(item).itemIcon;
 
         gameObject.SetActive(true);
 

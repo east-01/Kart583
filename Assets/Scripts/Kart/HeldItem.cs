@@ -9,6 +9,7 @@ public class HeldItem : MonoBehaviour
     {
         gameObject.SetActive(true);
         // TODO: Update held items texture to reflect what's in the held item slot			
+
     }
 
     public void Hide(bool animate) 

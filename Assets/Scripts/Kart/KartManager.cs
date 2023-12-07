@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -31,17 +32,30 @@ public class KartManager : MonoBehaviour
 	public void OnItem(InputAction.CallbackContext context) {
 		if(context.performed && (itemSlotManager == null || !itemSlotManager.IsAnimating()) && slotItem != null && heldItem == null) {
 
-			heldItem = slotItem;
+			heldItem = slotItem.Value;
 			slotItem = null;
 
 			if(itemSlotManager != null) itemSlotManager.DisableChildren();
-			heldItemScript.Show((Item)heldItem);
+			heldItemScript.Show(heldItem.Value);
 
 		} else if(context.canceled && heldItem.HasValue) {
-			print("TODO: Perform action for item \"" + heldItem + "\"");
-			heldItem = null;
 
+			GameObject worldItemPrefab = GameplayManager.ItemAtlas.RetrieveData(heldItem.Value).worldItem;
+			String err = null;
+			if(worldItemPrefab == null || worldItemPrefab.GetComponent<WorldItem>() == null)	
+				err = worldItemPrefab == null ? 
+				"Item \"" + heldItem + "\" is missing a world item prefab!" : 
+				"Item \"" + heldItem + "\" has a world item prefab, but that prefab is missing a WorldItem script";			
+
+			// Clear held item
+			heldItem = null;
 			heldItemScript.Hide(true);
+
+			// If an error occured we don't want to instantiate a new item.
+			if(err != null) { Debug.Log(err); return; } 
+
+			Instantiate(worldItemPrefab).GetComponent<WorldItem>().ActivateItem(gameObject, GetComponent<KartController>().TurnInput);
+
 		}
 	}
 }

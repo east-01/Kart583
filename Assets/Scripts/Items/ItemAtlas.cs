@@ -8,7 +8,12 @@ using UnityEngine;
   *   in the GameplayManager of the scene, where this ItemAtlas script should belong. */
 public class ItemAtlas : MonoBehaviour
 {
-    public List<ItemDataPackage> items;
+    /** It's very important that we match the enum index (i.e. OIL = 0) to the list index so that RetrieveData() is fast. */
+    [Header("IMPORTANT NOTE: Match enum index to list index")] public List<ItemDataPackage> items;
+    public ItemDataPackage RetrieveData(Item item) 
+    {
+        return items[(int)item];
+    }
 }
 
 [Serializable]

@@ -48,13 +48,7 @@ public class PlayerManager : MonoBehaviour
 		}
 
 		playerObject.transform.position = GameObject.Find("SpawnPositions").transform.GetChild(playerObjects.Count).position;
-
-		GameObject sp = GameObject.Find("SpawnPositions");
-		Vector3 forward = new Vector3(1, 0, 0);
-		if(sp != null && sp.GetComponent<SpawnPositions>() != null) {
-			playerObject.transform.forward = sp.GetComponent<SpawnPositions>().spawnForward;
-			playerObject.GetComponent<KartController>().KartForward = sp.GetComponent<SpawnPositions>().spawnForward;
-		}
+		playerObject.transform.forward = GameplayManager.SpawnPositions != null ? GameplayManager.SpawnPositions.spawnForward : new Vector3(1, 0, 0);
 
 		playerObjects.Add(playerObject);
 		playerPositions.Add(playerObject.GetComponent<PositionTracker>());

@@ -20,11 +20,14 @@ public class OilWorldItem : WorldItem
 
     public override void ItemDestroyed()
     {
+        print("TODO: Item oil destroyed");
         Destroy(gameObject);
     }
 
     public override void ItemHit(GameObject hitPlayer)
     {
+        print("TODO: Player hit oil spill");
         ItemDestroyed();
     }
+    
 }

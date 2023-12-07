@@ -36,8 +36,6 @@ public class WaypointMover : MonoBehaviour
         //Calculate the next three waypoint transforms into a Tuple for later curvature use
         (wp1, wp2, wp3) = waypoints.ThreeWPLookAhead(currentWaypoint);
 
-        
-
         transform.position = Vector3.MoveTowards(transform.position, currentWaypoint.position, moveSpeed * Time.deltaTime);
         if (Vector3.Distance(transform.position, currentWaypoint.position) < distanceThreshold)
         {
