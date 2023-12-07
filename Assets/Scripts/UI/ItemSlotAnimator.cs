@@ -1,14 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class ItemSlotAnimator : MonoBehaviour
 {
 
     /* Editor fields*/
-    public GameObject oilImagePrefab;
-    public GameObject boltImagePrefab;
-    public List<GameObject> itemImagePrefabs;
+    public GameObject itemImagePrefab;
 
     [Header("Animation Settings")]
     public float overallDuration;
@@ -28,9 +27,6 @@ public class ItemSlotAnimator : MonoBehaviour
     [SerializeField] private float timeTillSpawn;
     void Start() 
     {
-        itemImagePrefabs.Add(oilImagePrefab);
-        itemImagePrefabs.Add(boltImagePrefab);
-
         if(animatingItemImages != null && animatingItemImages.Count > 0) 
             animatingItemImages.ForEach(itemImage => GameObject.Destroy(itemImage));
         animatingItemImages = new List<GameObject>();
@@ -50,18 +46,23 @@ public class ItemSlotAnimator : MonoBehaviour
 
         if(timeTillSpawn > 0) {
             timeTillSpawn -= Time.deltaTime;
-            if(timeTillSpawn <= 0) 
-                SpawnNewImage(animationTime + (singleImageDuration/2f) >= overallDuration, this.result);
+            if(timeTillSpawn <= 0) {
+
+                bool lastImage = animationTime + (singleImageDuration/2f) >= overallDuration;
+                if(lastImage) 
+                    SpawnNewImage(true, this.result);
+                else
+                    SpawnNewImage(false, GetRandomItem());
+            }
         }
 
     }
 
-    private void SpawnNewImage(bool stopAtCenter, Item result) 
+    private void SpawnNewImage(bool stopAtCenter, Item itemToSpawn) 
     {
         this.timeTillSpawn = singleImageFrequency;
 
         GameObject imageObj = null;
-        GameObject imageObj2 = null;
         // Search for a disabled (already spawned) image
         foreach(GameObject existingImgObj in animatingItemImages) {
             if(!existingImgObj.activeSelf) {
@@ -72,13 +73,11 @@ public class ItemSlotAnimator : MonoBehaviour
 
         // Didn't find an existing object, spawn new one
         if(imageObj == null) {
-            imageObj = GameObject.Instantiate(itemImagePrefabs.ToArray()[0], transform); //instantiate according to passed through item selection
-            imageObj2 = GameObject.Instantiate(itemImagePrefabs.ToArray()[1], transform);
+            imageObj = Instantiate(itemImagePrefab, transform); //instantiate according to passed through item selection
             animatingItemImages.Add(imageObj);
-            animatingItemImages.Add(imageObj2);
         }
 
-        imageObj.GetComponent<ItemImage>().StartAnimation(startPosition, centerPosition, endPosition, singleImageDuration, stopAtCenter);
+        imageObj.GetComponent<ItemImage>().StartAnimation(itemToSpawn, startPosition, centerPosition, endPosition, singleImageDuration, stopAtCenter);
     }
 
     /** Animate a single ItemImage once with parameters. */
@@ -88,7 +87,13 @@ public class ItemSlotAnimator : MonoBehaviour
         this.animationTime = 0;
         this.animating = true;
         this.result = result;
-        SpawnNewImage(false, result);
+    }
+
+    public static Item GetRandomItem() 
+    {
+        Array values = Enum.GetValues(typeof(Item));
+        int randomIndex = UnityEngine.Random.Range(0, values.Length);
+        return (Item)values.GetValue(randomIndex);
     }
 
     public bool IsAnimating() { return animating; }
