@@ -11,6 +11,7 @@ public class BotPath : MonoBehaviour
 {
 
     public List<Vector3> waypointPositions;
+    public bool randomizeWaypoints = true;
     public bool drawBotPath = true;
     public int drawResolution = 10;
     public float drawFrequency = 1;
@@ -18,7 +19,10 @@ public class BotPath : MonoBehaviour
 
     void Start() 
     {
-        PickPath();
+        if(randomizeWaypoints)
+            PickPath();
+        else
+            PickWaypointPath();
     }
 
     void Update()
@@ -35,22 +39,72 @@ public class BotPath : MonoBehaviour
     public void PickPath() 
     {
         waypointPositions = new List<Vector3>();
+        int i = 0;
         foreach(Transform pos in GameplayManager.Waypoints.transform) {
-            
+            BoxCollider collider = pos.gameObject.GetComponent<BoxCollider>();
+
             bool foundPoint = false;
             for(int pickAttempt = 0; pickAttempt < 100; pickAttempt++) {
 
                 // Pick point
+                Vector3 center = collider.bounds.center;
+                Vector3 size = collider.bounds.size;
+
+                float randomX = UnityEngine.Random.Range(center.x - size.x/2f, center.x + size.x/2f);
+                float randomZ = UnityEngine.Random.Range(center.z - size.z/2f, center.z + size.z/2f);
+                RaycastHit hit;
+                Physics.Raycast(new Vector3(randomX, center.y, randomZ), -Vector3.up, out hit, 10f);
+                if(hit.point == null) continue;
+                
+                Vector3 testPos = new(randomX, pos.position.y, randomZ);
+
+                // Check if point is within radius of checkpoint
+                if(Vector3.Distance(pos.position, testPos) >= (Math.Max(size.x, size.z)*0.8f)/2f) continue;
 
                 // Check if point has line of sight
-                
+                // RaycastHit losHit;
+                // Physics.Raycast(waypointPositions[waypointPositions.Count-1], testPos-waypointPositions[waypointPositions.Count-1], out losHit);
+                // if(losHit.point != null) continue;
+
                 // Check if waypoint has clear radius
+                bool hasObstruction = false;
+                Collider[] colliders = Physics.OverlapSphere(center, 2.5f);
+                foreach(Collider c in colliders) {
+                    bool isGround = Math.Abs(c.gameObject.transform.position.y) < 0.1f;
+                    if(!isGround && c.gameObject.tag != "Kart" && c.gameObject.tag != "Waypoint") {
+                        print("hit obstruction " + c.gameObject.name);
+                        hasObstruction = true;
+                        break;
+                    }
+                } 
+
+                if(hasObstruction) continue;
 
                 // If we passed checks, found point = true
-            
+                foundPoint = true;
+                waypointPositions.Add(testPos);
+                break;
 
             }
 
+            if(!foundPoint) {
+                Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
+                waypointPositions.Add(pos.position);
+            }
+            i++;
+        }
+
+        if(waypointPositions.Count != GameplayManager.Waypoints.Count) {
+            Debug.LogError("Error: Botpath on \"" + gameObject.name + "\" failed to pick the same amount of waypoints as the defined waypoints.");
+        }
+
+    }
+
+    public void PickWaypointPath() 
+    {
+        waypointPositions = new List<Vector3>();
+
+        foreach(Transform pos in GameplayManager.Waypoints.transform) {
             waypointPositions.Add(pos.position);
         }
     }
@@ -66,12 +120,11 @@ public class BotPath : MonoBehaviour
         Vector3 wi_p1 = waypointPositions[WaypointAdder(waypointIndex, 1)];
         Vector3 wi_p2 = waypointPositions[WaypointAdder(waypointIndex, 2)];
 
-        float a = Mathf.Abs(0.5f-progress)/0.5f;
         float localScalar = Math.Max(Math.Abs(GetTurnAmount(waypointIndex)), 0.1f);
 
         Vector3 p0 = wi;
-        Vector3 p1 = wi + ((wi_p1-wi_n1)/2f).normalized*localScalar*scale;
-        Vector3 p2 = wi_p1 + ((wi-wi_p2)/2f).normalized*localScalar*scale;
+        Vector3 p1 = wi + localScalar*scale*(wi_p1-wi_n1).normalized;
+        Vector3 p2 = wi_p1 + localScalar*scale*(wi-wi_p2).normalized;
         Vector3 p3 = wi_p1;
 
         return (
@@ -189,7 +242,7 @@ public class BotPath : MonoBehaviour
                 Vector3 pos = ReadPath(progress, wpidx).Item1;
 
                 if(prevPos.HasValue) {
-                    Debug.DrawLine(prevPos.Value, pos, new Color(1f, 0.5f, 0), drawFrequency);
+                    Debug.DrawLine(prevPos.Value, pos, new Color(1f, 0.5f, 0), drawFrequency+0.05f);
                 }  
                 prevPos = pos;
             }
