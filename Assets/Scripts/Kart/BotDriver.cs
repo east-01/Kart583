@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[RequireComponent(typeof(PositionTracker), typeof(KartController), typeof(BotPath))]
 public class BotDriver : MonoBehaviour
 {
 
@@ -13,6 +14,7 @@ public class BotDriver : MonoBehaviour
 
     private PositionTracker pt;
     private KartController kc;
+    private BotPath bp;
 
     private float secondClock;
 
@@ -62,6 +64,7 @@ public class BotDriver : MonoBehaviour
     {
         pt = GetComponent<PositionTracker>();
         kc = GetComponent<KartController>();
+        bp = GetComponent<BotPath>();
 
         checkpointIndex = -1;
         secondClock = 1;
@@ -100,19 +103,19 @@ public class BotDriver : MonoBehaviour
 
         targetPosition = DetermineTargetPosition();
 
-        turnAmount = waypoints.GetTurnAmount(checkpointIndex);
+        turnAmount = bp.GetTurnAmount(checkpointIndex);
         if(Vector3.Distance(transform.position, targetPosition) < 1f) {
-            turnFactor = waypoints.GetTurnFactor(checkpointIndex, turnFactorCount);
+            turnFactor = bp.GetTurnFactor(checkpointIndex, turnFactorCount);
         } else {
-            turnFactor = waypoints.GetSmartTurnFactor(kc.KartForward, checkpointIndex, turnFactorCount);
+            turnFactor = bp.GetSmartTurnFactor(kc.KartForward, checkpointIndex, turnFactorCount);
         }
 
         forward = kc.KartForward;
         forward.y = 0;
-        directionToTarget = (targetPosition-transform.position).normalized;
+        directionToTarget = bp.ReadPath(transform.position).Item2.normalized;
         directionToTarget.y = 0;
 
-        dot = Vector3.Dot(forward.normalized, directionToTarget.normalized)*Vector3.Dot(forward.normalized, directionToTarget.normalized); 
+        dot = Vector3.Dot(forward.normalized, directionToTarget.normalized); 
         cross = Vector3.Cross(forward.normalized, directionToTarget.normalized).y;
 
         // Determine if we're stuck/unstuck
@@ -141,7 +144,7 @@ public class BotDriver : MonoBehaviour
         throttleInput = DetermineThrottle();
         kc.ThrottleInput = throttleInput;
 
-        driftInput = !stuck && kc.CanDriftEngage && Math.Abs(waypoints.GetTurnFactor(checkpointIndex, turnFactorCount)) > tfThresholdDrift;
+        driftInput = !stuck && kc.CanDriftEngage && Math.Abs(bp.GetTurnFactor(checkpointIndex, turnFactorCount)) > tfThresholdDrift;
         if(!kc.DriftInput && driftInput) DriftEngaged();
         kc.DriftInput = driftInput;
 

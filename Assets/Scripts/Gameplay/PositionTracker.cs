@@ -73,8 +73,13 @@ public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
 
     public float GetSegmentCompletion() 
     {
-        Vector3 lineStart = GetCurrentWaypoint().position;
-        Vector3 lineEnd = GetNextWaypoint().position;
+        return GetLineProgress(transform.position, GetCurrentWaypoint().position, GetNextWaypoint().position);
+    }
+
+    public float GetLineProgress(Vector3 position, Vector3 current, Vector3 next)
+    {
+        Vector3 lineStart = current;
+        Vector3 lineEnd = next;
         Vector3 lineDirection = lineEnd - lineStart;
         float lineMagnitude = lineDirection.magnitude;
         Vector3 lineNormalized = lineDirection / lineMagnitude;
