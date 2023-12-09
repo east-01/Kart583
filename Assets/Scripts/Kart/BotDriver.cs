@@ -76,6 +76,8 @@ public class BotDriver : MonoBehaviour
         DetermineTurnFactorThresholds();
     }
 
+    /** Bot logic:
+      * The goal is to stay on the orange line. This will be done using the tangent to the line at that position */
     void Update() 
     {
 
@@ -109,7 +111,9 @@ public class BotDriver : MonoBehaviour
 
         // if(distanceFromPath > 3f) transform.position = pathPosition;
 
-        turnLR = (int)Mathf.Sign(Vector3.Cross(kc.KartForward, pathTangent).y); // Get turn direction, +1 for right, -1 for left
+        Vector3 targetForward = Vector3.Lerp(pathTangent, (pathPosition-transform.position).normalized, Mathf.Clamp01(distanceFromPath/10f));
+
+        turnLR = (int)Mathf.Sign(Vector3.Cross(kc.KartForward, targetForward).y); // Get turn direction, +1 for right, -1 for left
         if(turnLR == 0) turnLR = (int)Mathf.Sign(turnFactor);
         if(!kc.DriftInput) {
             turnValue = turnLR * dotProductToTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
@@ -119,7 +123,13 @@ public class BotDriver : MonoBehaviour
         }
         kc.TurnInput = new(turnValue, 0);
 
-        kc.ThrottleInput = 0.8f;
+        float secondDerivative = bp.curveSegments[pt.waypointIndex].CalculateBezierSecondDerivative(bp.EstimateProgress()).magnitude;
+        print(secondDerivative);
+
+        // float floor = 0.5f;
+        // throttleInput = floor + (1-floor)*Mathf.Clamp01(secondDerivative/500f);
+        throttleInput = DetermineThrottle();
+        kc.ThrottleInput = throttleInput;
 
         // Waypoints waypoints = pt.GetWaypoints();
         // if(checkpointIndex != pt.waypointIndex) CheckpointIndexUpdated();
@@ -182,6 +192,7 @@ public class BotDriver : MonoBehaviour
         Debug.DrawRay(transform.position+Vector3.up*0.5f, directionToTarget, Color.red);
         Debug.DrawRay(transform.position+Vector3.up*0.5f, forward, Color.blue);       
         Debug.DrawLine(transform.position, pathPosition, new(1f, 0.5f, 0));
+        Debug.DrawRay(pathPosition, pathTangent, new(1f, 0.5f, 0));
         bool fu = false;
         if(fu) print(throttleState); // Get rid of  "throttleState isn't being used warning"
         // End debug code

@@ -11,6 +11,9 @@ public class BotPath : MonoBehaviour
 {
 
     public List<Vector3> waypointPositions;
+    /** Cache the curve and it's associated waypoint */
+    public Dictionary<int, BezierCurve> curveSegments;
+
     public bool randomizeWaypoints = true;
     public bool drawBotPath = true;
     public int drawResolution = 10;
@@ -34,11 +37,12 @@ public class BotPath : MonoBehaviour
 
     /** For each checkpoint bounding box, we'll pick a random point inside it. 
       * In order for a point to be valid, two conditions have to be met:
-          1. The previous waypoint has a line of sight to the picked one.
-          2. The waypoint has a clear nm radius where n can be chosen by editor. */
+      *   1. The previous waypoint has a line of sight to the picked one.
+      *   2. The waypoint has a clear nm radius where n can be chosen by editor. */
     public void PickPath() 
     {
         waypointPositions = new List<Vector3>();
+        curveSegments = new Dictionary<int, BezierCurve>();
         int i = 0;
         foreach(Transform pos in GameplayManager.Waypoints.transform) {
             BoxCollider collider = pos.gameObject.GetComponent<BoxCollider>();
@@ -115,21 +119,27 @@ public class BotPath : MonoBehaviour
       *   first vector and the tangent vector in the second. */
     public (Vector3, Vector3) ReadPath(float progress, int waypointIndex) 
     {        
-        Vector3 wi = waypointPositions[waypointIndex]; 
-        Vector3 wi_n1 = waypointPositions[WaypointAdder(waypointIndex, -1)];
-        Vector3 wi_p1 = waypointPositions[WaypointAdder(waypointIndex, 1)];
-        Vector3 wi_p2 = waypointPositions[WaypointAdder(waypointIndex, 2)];
 
-        float localScalar = Math.Max(Math.Abs(GetTurnAmount(waypointIndex)), 0.1f);
+        if(!curveSegments.ContainsKey(waypointIndex)) {
+            Vector3 wi = waypointPositions[waypointIndex]; 
+            Vector3 wi_n1 = waypointPositions[WaypointAdder(waypointIndex, -1)];
+            Vector3 wi_p1 = waypointPositions[WaypointAdder(waypointIndex, 1)];
+            Vector3 wi_p2 = waypointPositions[WaypointAdder(waypointIndex, 2)];
 
-        Vector3 p0 = wi;
-        Vector3 p1 = wi + localScalar*scale*(wi_p1-wi_n1).normalized;
-        Vector3 p2 = wi_p1 + localScalar*scale*(wi-wi_p2).normalized;
-        Vector3 p3 = wi_p1;
+            float localScalar = Math.Max(Math.Abs(GetTurnAmount(waypointIndex)), 0.1f);
 
+            curveSegments.Add(waypointIndex, new BezierCurve(
+        /*p0*/  wi,
+        /*p1*/  wi + localScalar*scale*(wi_p1-wi_n1).normalized,
+        /*p2*/  wi_p1 + localScalar*scale*(wi-wi_p2).normalized,
+        /*p3*/  wi_p1
+            ));
+        }
+
+        BezierCurve curve = curveSegments[waypointIndex];
         return (
-            CalculateBezierPoint(progress, p0, p1, p2, p3),
-            CalculateTangent(progress, p0, p1, p2, p3)
+            curve.CalculateBezierPoint(progress),
+            curve.CalculateTangent(progress)
         );
     }
 
@@ -138,39 +148,14 @@ public class BotPath : MonoBehaviour
     {
         PositionTracker pt = GetComponent<PositionTracker>();
         // Progress along curve (aka t), lets try using segment progress for now.
-        float progress = pt.segmentCompletion;
+        float progress = EstimateProgress();
         return ReadPath(progress, pt.waypointIndex);
     }
 
-    // Thanks ChatGPT! I'd rather not do this math today.
-    Vector3 CalculateBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+    public float EstimateProgress() 
     {
-        float u = 1 - t;
-        float tt = t * t;
-        float uu = u * u;
-        float uuu = uu * u;
-        float ttt = tt * t;
-
-        Vector3 p = uuu * p0; // (1-t)^3 * P0
-        p += 3 * uu * t * p1; // 3 * (1-t)^2 * t * P1
-        p += 3 * u * tt * p2; // 3 * (1-t) * t^2 * P2
-        p += ttt * p3; // t^3 * P3
-
-        return p;
-    }
-
-    Vector3 CalculateTangent(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
-    {
-        float u = 1 - t;
-        float uu = u * u;
-        float tt = t * t;
-
-        Vector3 tangent =
-            3 * uu * (p1 - p0) +
-            6 * u * t * (p2 - p1) +
-            3 * tt * (p3 - p2);
-
-        return tangent.normalized;
+        PositionTracker pt = GetComponent<PositionTracker>();
+        return curveSegments[pt.waypointIndex].ClosestEstimate(transform.position, 2, pt.segmentCompletion);
     }
 
     public float GetTurnAmount(int waypointIndex) 
