@@ -123,8 +123,8 @@ public class BotDriver : MonoBehaviour
         }
         kc.TurnInput = new(turnValue, 0);
 
-        float secondDerivative = bp.curveSegments[pt.waypointIndex].CalculateBezierSecondDerivative(bp.EstimateProgress()).magnitude;
-        print(secondDerivative);
+        // float secondDerivative = bp.curveSegments[pt.waypointIndex].CalculateBezierSecondDerivative(bp.EstimateProgress()).magnitude;
+        // print(secondDerivative);
 
         // float floor = 0.5f;
         // throttleInput = floor + (1-floor)*Mathf.Clamp01(secondDerivative/500f);

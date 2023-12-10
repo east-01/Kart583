@@ -57,5 +57,5 @@ public class KartStateManager : MonoBehaviour
 
 public enum KartState
 {
-	DRIVING, DRIFTING, REVERSING, COLLISION
+	DRIVING, DRIFTING
 }
