@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.UI;
 
 /** This script goes on the ItemDisplay object in the player's HUD, responsible
   *   for showing item icons to the player. It uses the itemImagePrefab to do the
@@ -11,6 +12,7 @@ public class ItemSlotAnimator : MonoBehaviour
 
     /* Editor fields*/
     public GameObject itemImagePrefab;
+    public Sprite[] spriteArray;
 
     [Header("Animation Settings")]
     public float overallDuration;
@@ -91,8 +93,12 @@ public class ItemSlotAnimator : MonoBehaviour
         }
 
         // Didn't find an existing object, spawn new one
-        if(imageObj == null) {
+        if(imageObj == null)
+        {
+
+            //itemImagePrefab.GetComponent<SpriteRenderer>().sprite = spriteArray[(int)result];
             imageObj = Instantiate(itemImagePrefab, transform); //instantiate according to passed through item selection
+            Debug.Log(imageObj.name);
             animatingItemImages.Add(imageObj);
         }
 

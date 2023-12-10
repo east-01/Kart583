@@ -51,7 +51,8 @@ public class GameplayManager : MonoBehaviour
         List<String> problems = new List<String>();
         if(rm == null) problems.Add("GameplayManager object doesn't have a RaceManager script component!");
         if(pm == null) problems.Add("GameplayManager object doesn't have a PlayerManager script component!");
-        if(spawnPositions == null) problems.Add("Failed to find SpawnPositions. " + spo == null ? "No spawn position object found." : "Game object found, no SpawnPositions script component though.");
+        if (ia == null) problems.Add("GameplayManager object doesn't have an ItemAtlas script component!");
+        if (spawnPositions == null) problems.Add("Failed to find SpawnPositions. " + spo == null ? "No spawn position object found." : "Game object found, no SpawnPositions script component though.");
         if(waypoints == null) problems.Add("Failed to find Waypoints. " + wpo == null ? "No waypoint object found." : "Game object found, no Waypoints script component though.");
 
         ready = problems.Count == 0;

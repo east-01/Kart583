@@ -49,9 +49,9 @@ public class ItemImage : MonoBehaviour
         float size = sizeCurve.Evaluate(legProgress);
         transform.localScale = new Vector3(size, size, 0);
 
-        Color newCol = GetComponent<Image>().color;
+        Color newCol = GetComponent<SpriteRenderer>().color;
         newCol.a = fadeCurve.Evaluate(legProgress);
-        GetComponent<Image>().color = newCol;
+        GetComponent<SpriteRenderer>().color = newCol;
     }
 
     /** Activates the image game object and puts it in position for the animation.
@@ -65,9 +65,11 @@ public class ItemImage : MonoBehaviour
         this.animationDuration = duration;
         this.stopAtCenter = stopAtCenter;
 
-        this.animationTime = 0;    
+        this.animationTime = 0;
 
-        GetComponent<Image>().sprite = GameplayManager.ItemAtlas.RetrieveData(item).itemIcon;
+        GameplayManager gameplay = FindObjectOfType<GameplayManager>();
+        Debug.Log(gameplay.name);
+        GetComponent<SpriteRenderer>().sprite = gameplay.GetComponent<ItemAtlas>().RetrieveData(item).itemIcon;
 
         gameObject.SetActive(true);
 

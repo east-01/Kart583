@@ -10,6 +10,7 @@ public class KartManager : MonoBehaviour
 
 	public ItemSlotAnimator itemSlotManager;
 	public HeldItem heldItemScript;
+	public GameplayManager gameplayManager;
 
 	private Item? slotItem;
 	private Item? heldItem;
@@ -40,7 +41,7 @@ public class KartManager : MonoBehaviour
 
 		} else if(context.canceled && heldItem.HasValue) {
 
-			GameObject worldItemPrefab = GameplayManager.ItemAtlas.RetrieveData(heldItem.Value).worldItem;
+			GameObject worldItemPrefab = gameplayManager.GetComponent<ItemAtlas>().RetrieveData(heldItem.Value).worldItem;
 			String err = null;
 			if(worldItemPrefab == null || worldItemPrefab.GetComponent<WorldItem>() == null)	
 				err = worldItemPrefab == null ? 
