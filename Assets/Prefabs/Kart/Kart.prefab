@@ -420,58 +420,40 @@ MonoBehaviour:
   maxSpeed: 35
   maxBoostSpeed: 45
   acceleration: 30
-  kartTurnSpeed: 2.5
+  kartTurnSpeed: 45
   kartTurnPower:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0.05
-      inSlope: 0
-      outSlope: 0
+      value: 0.5
+      inSlope: 3.5584507
+      outSlope: 3.5584507
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0
+      outWeight: 0.10116493
     - serializedVersion: 3
-      time: 0.2
-      value: 0.1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 1
-    - serializedVersion: 3
-      time: 0.5
+      time: 0.35
       value: 1
-      inSlope: 1.875251
+      inSlope: -0.105156556
       outSlope: 0
       tangentMode: 65
       weightedMode: 0
-      inWeight: 0.10014305
+      inWeight: 0.17841816
       outWeight: 0.33333334
     - serializedVersion: 3
       time: 0.675
       value: 1
       inSlope: -0
-      outSlope: -0.7907682
+      outSlope: -0.102754906
       tangentMode: 5
       weightedMode: 0
       inWeight: 0.33333334
-      outWeight: 0.13358371
-    - serializedVersion: 3
-      time: 0.9
-      value: 0.4
-      inSlope: -0.47951633
-      outSlope: -0.47951633
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.15665236
-      outWeight: 0
+      outWeight: 0.17794646
     - serializedVersion: 3
       time: 1
-      value: 0.4
+      value: 0.8
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -489,7 +471,8 @@ MonoBehaviour:
   driftAngleMax: 0.4
   driftHopSpeedPercent: 0.1
   driftEngageSpeedPercent: 0.45
-  driftVerticalVelocity: 3
+  driftEngageDuration: 0.33
+  driftHopHeight: 0.3
   requiredBoostPercentage: 0.3
   maxBoost: 2
   boostGain: 1
