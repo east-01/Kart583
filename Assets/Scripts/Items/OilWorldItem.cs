@@ -12,7 +12,7 @@ public class OilWorldItem : WorldItem
 
         KartController kc = owner.GetComponent<KartController>();
 
-        transform.position = owner.transform.position - kc.KartForward.normalized*1.5f;
+        transform.position = owner.transform.position - kc.KartForward.normalized*3f - kc.up*0.3f;
 
         // TODO: Play activation animation and sound
 
