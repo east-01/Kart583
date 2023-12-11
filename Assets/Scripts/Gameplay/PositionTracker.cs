@@ -28,6 +28,8 @@ public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
         }
         waypoints = waypointsObj.GetComponent<Waypoints>();
         
+        segmentCompletion = lapCompletion = raceCompletion = 0;
+
         hasStartedRace = false;
         lapNumber = 0;
     }
@@ -92,13 +94,23 @@ public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
     }
 
     public float GetLapCompletion() 
+    {  
+        return ConvertToLapProgress((waypointIndex, segmentCompletion));
+    }
+
+    public float ConvertToLapProgress((int waypointIndex, float segmentCompletion) position) 
     {
         // lc1&2 represent the lap completion percentage at both waypoint positions
-        float lc1 = waypointIndex/(float)waypoints.Count;
-        float lc2 = (waypointIndex+1)/(float)waypoints.Count;
+        float lc1 = position.waypointIndex/(float)waypoints.Count;
+        float lc2 = ((position.waypointIndex+1)%waypoints.Count)/(float)waypoints.Count;
         if(lc2 == 0) lc2 = 1;
+        return Mathf.Clamp01(Mathf.Lerp(lc1, lc2, position.segmentCompletion));        
+    }
 
-        return Mathf.Lerp(lc1, lc2, segmentCompletion);
+    public (int, float) ConvertFromLapProgress(float lapProgress) 
+    {
+        float segmentComp = 1/(float)waypoints.Count;
+        return ((int)(lapProgress/segmentComp), (lapProgress%segmentComp)/segmentComp);
     }
 
     public float GetRaceCompletion() 

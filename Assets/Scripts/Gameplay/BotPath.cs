@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Net.NetworkInformation;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 /** This class is a wrapper between the Waypoints class and the BotDriver class.
   * This class will pick waypoints from inside each checkpoint box bounds, then
@@ -14,25 +18,38 @@ public class BotPath : MonoBehaviour
     /** Cache the curve and it's associated waypoint */
     public Dictionary<int, BezierCurve> curveSegments;
 
+    private PositionTracker pt;
+
     public bool randomizeWaypoints = true;
     public bool drawBotPath = true;
     public int drawResolution = 10;
     public float drawFrequency = 1;
     public float scale = 5;
 
+    public float pathLength;
+
     void Start() 
     {
-        if(randomizeWaypoints)
-            PickPath();
-        else
-            PickWaypointPath();
+        pt = GetComponent<PositionTracker>();   
+
+        ReloadPath();          
     }
 
     void Update()
     {
         if(drawBotPath) DrawPath();
-        
+    }
 
+    public void ReloadPath() 
+    {
+        waypointPositions = new List<Vector3>();
+
+        if(randomizeWaypoints)
+            PickPath();
+        else
+            PickWaypointPath();   
+
+        ReloadCurves();
     }
 
     /** For each checkpoint bounding box, we'll pick a random point inside it. 
@@ -41,8 +58,6 @@ public class BotPath : MonoBehaviour
       *   2. The waypoint has a clear nm radius where n can be chosen by editor. */
     public void PickPath() 
     {
-        waypointPositions = new List<Vector3>();
-        curveSegments = new Dictionary<int, BezierCurve>();
         int i = 0;
         foreach(Transform pos in GameplayManager.Waypoints.transform) {
             BoxCollider collider = pos.gameObject.GetComponent<BoxCollider>();
@@ -63,7 +78,7 @@ public class BotPath : MonoBehaviour
                 Vector3 testPos = new(randomX, pos.position.y, randomZ);
 
                 // Check if point is within radius of checkpoint
-                if(Vector3.Distance(pos.position, testPos) >= (Math.Max(size.x, size.z)*0.8f)/2f) continue;
+                if(Vector3.Distance(pos.position, testPos) >= (Math.Max(size.x, size.z)*0.6f)/2f) continue;
 
                 // Check if point has line of sight
                 // RaycastHit losHit;
@@ -106,10 +121,34 @@ public class BotPath : MonoBehaviour
 
     public void PickWaypointPath() 
     {
-        waypointPositions = new List<Vector3>();
-
         foreach(Transform pos in GameplayManager.Waypoints.transform) {
             waypointPositions.Add(pos.position);
+        }
+
+    }
+
+    public void ReloadCurves()
+    {
+        curveSegments = new Dictionary<int, BezierCurve>();
+        pathLength = 0;
+        for(int waypointIndex = 0; waypointIndex < waypointPositions.Count; waypointIndex++) {
+            
+            Vector3 wi = waypointPositions[waypointIndex]; 
+            Vector3 wi_n1 = waypointPositions[WaypointAdder(waypointIndex, -1)];
+            Vector3 wi_p1 = waypointPositions[WaypointAdder(waypointIndex, 1)];
+            Vector3 wi_p2 = waypointPositions[WaypointAdder(waypointIndex, 2)];
+
+            float localScalar = Math.Max(Math.Abs(GetTurnAmount(waypointIndex)), 0.1f);
+            BezierCurve curve = new BezierCurve(
+        /*p0*/  wi,
+        /*p1*/  wi + localScalar*scale*(wi_p1-wi_n1).normalized,
+        /*p2*/  wi_p1 + localScalar*scale*(wi-wi_p2).normalized,
+        /*p3*/  wi_p1
+            );
+
+            curveSegments.Add(waypointIndex, curve);
+            pathLength += curve.Length;
+
         }
     }
 
@@ -119,23 +158,7 @@ public class BotPath : MonoBehaviour
       *   first vector and the tangent vector in the second. */
     public (Vector3, Vector3) ReadPath(float progress, int waypointIndex) 
     {        
-
-        if(!curveSegments.ContainsKey(waypointIndex)) {
-            Vector3 wi = waypointPositions[waypointIndex]; 
-            Vector3 wi_n1 = waypointPositions[WaypointAdder(waypointIndex, -1)];
-            Vector3 wi_p1 = waypointPositions[WaypointAdder(waypointIndex, 1)];
-            Vector3 wi_p2 = waypointPositions[WaypointAdder(waypointIndex, 2)];
-
-            float localScalar = Math.Max(Math.Abs(GetTurnAmount(waypointIndex)), 0.1f);
-
-            curveSegments.Add(waypointIndex, new BezierCurve(
-        /*p0*/  wi,
-        /*p1*/  wi + localScalar*scale*(wi_p1-wi_n1).normalized,
-        /*p2*/  wi_p1 + localScalar*scale*(wi-wi_p2).normalized,
-        /*p3*/  wi_p1
-            ));
-        }
-
+        if(waypointIndex < 0 || waypointIndex >= curveSegments.Count) throw new InvalidOperationException("waypointIndex is out of bounds of curveSegments array! (value: " + waypointIndex + ")");
         BezierCurve curve = curveSegments[waypointIndex];
         return (
             curve.CalculateBezierPoint(progress),
@@ -158,46 +181,96 @@ public class BotPath : MonoBehaviour
         return curveSegments[pt.waypointIndex].ClosestEstimate(transform.position, 2, pt.segmentCompletion);
     }
 
+    /** Analyze the second derivative of the bezier curve at the specified progress point on the
+      *   specified waypoint's segment. This function will return the magnitude of the second
+      *   derivative vector. */
+    public float AnalyzeSecondDerivative(int waypoint, float progress) 
+    {
+        if(!curveSegments.ContainsKey(waypoint)) return 0;
+        return curveSegments[waypoint].CalculateBezierSecondDerivative(progress).magnitude;
+    }
+
+    /** Analyze the bot path with specified settings. This function will poll the turn amount
+      *   at specific points along the curve specified in the PathAnalysisSettings.
+      * See PathAnalysisSettings for details on parameters. */
+    public float AnalyzePath(PathAnalysisSettings settings) 
+    {
+        if(settings.points < 2) throw new InvalidOperationException("Points must be 2 or greater.");
+        int waypoint = settings.startWaypoint;
+        float prog = settings.startProgress;
+
+        // Move forward along the startOffset
+        if(settings.startOffset > 0) (waypoint, prog) = MoveAlongPath(settings.startOffset, waypoint, prog);
+
+        float accumulator = 0;
+        float totalWeight = 0;
+        for(int i = 0; i < settings.points; i++) {
+            float derivativeMagnitude = AnalyzeSecondDerivative(waypoint, prog);
+            float weight = settings.weightFunction.Evaluate(i / (float)settings.points);
+
+            accumulator += derivativeMagnitude * weight;
+            totalWeight += weight;
+
+            (waypoint, prog) = MoveAlongPath((i/((float)settings.points))*settings.distance, waypoint, prog);
+        }
+
+        // Ensure division by zero doesn't occur
+        return totalWeight > 0 ? (accumulator / totalWeight)/settings.distance : 0;
+    }
+
+    /** Call AnalyzePath() using current position.
+      * This method overrides the setting's starting waypoint and progress with
+      *   the position tracker's current waypoint and progress. */
+    public float AnalyzePathFromCurrentPosition(PathAnalysisSettings settings) 
+    {
+        settings.startProgress = EstimateProgress();
+        settings.startWaypoint = pt.waypointIndex;
+        return AnalyzePath(settings);
+    }
+
     public float GetTurnAmount(int waypointIndex) 
     {
-        Vector3 a = (waypointPositions[waypointIndex] - waypointPositions[WaypointAdder(waypointIndex, -1)]).normalized;
+        Vector3 curr = waypointPositions[waypointIndex];
+        Vector3 next = waypointPositions[WaypointAdder(waypointIndex, 1)];
+        Vector3 prev = waypointPositions[WaypointAdder(waypointIndex, -1)];
+        Vector3 a = (curr-prev).normalized;
         a.y = 0;
-        Vector3 b = (waypointPositions[WaypointAdder(waypointIndex, 1)] - waypointPositions[waypointIndex]).normalized;
+        Vector3 b = (next-curr).normalized;
         b.y = 0;
         return Vector3.Cross(a, b).y;
     }
 
-    public float GetTurnFactor(int currentWaypointIndex, int lookAheadAmount) 
-    {
-        float accumulator = 0;
-        for(int i = 0; i < lookAheadAmount; i++) {
-            accumulator += GetTurnAmount(currentWaypointIndex);
+    // public float GetTurnFactor(int currentWaypointIndex, int lookAheadAmount) 
+    // {
+    //     float accumulator = 0;
+    //     for(int i = 0; i < lookAheadAmount; i++) {
+    //         accumulator += GetTurnAmount(currentWaypointIndex);
 
-            currentWaypointIndex += 1;
-            if(currentWaypointIndex >= transform.childCount) currentWaypointIndex = 0;
-        }
-        return accumulator;
-    }
+    //         currentWaypointIndex += 1;
+    //         if(currentWaypointIndex >= transform.childCount) currentWaypointIndex = 0;
+    //     }
+    //     return accumulator;
+    // }
 
-    public float GetSmartTurnFactor(Vector3 currentVector, int currentWaypointIndex, int lookAheadAmount) 
-    {  
-        Vector3 a = (waypointPositions[currentWaypointIndex] - waypointPositions[WaypointAdder(currentWaypointIndex, -1)]).normalized;
-        a.y = 0;
-        Vector3 b = (waypointPositions[WaypointAdder(currentWaypointIndex, 1)] - waypointPositions[currentWaypointIndex]).normalized;
-        b.y = 0;
+    // public float GetSmartTurnFactor(Vector3 currentVector, int currentWaypointIndex, int lookAheadAmount) 
+    // {  
+    //     Vector3 a = (waypointPositions[currentWaypointIndex] - waypointPositions[WaypointAdder(currentWaypointIndex, -1)]).normalized;
+    //     a.y = 0;
+    //     Vector3 b = (waypointPositions[WaypointAdder(currentWaypointIndex, 1)] - waypointPositions[currentWaypointIndex]).normalized;
+    //     b.y = 0;
 
-        float accumulator = Vector3.Cross(a, b).y;
-        for(int i = 0; i < lookAheadAmount; i++) {
-            float turnAmount = GetTurnAmount(currentWaypointIndex);
-            accumulator += turnAmount;
+    //     float accumulator = Vector3.Cross(a, b).y;
+    //     for(int i = 0; i < lookAheadAmount; i++) {
+    //         float turnAmount = GetTurnAmount(currentWaypointIndex);
+    //         accumulator += turnAmount;
 
 
-            currentWaypointIndex += 1;
-            if(currentWaypointIndex >= transform.childCount) 
-                currentWaypointIndex = 0;
-        }
-        return accumulator;
-    }
+    //         currentWaypointIndex += 1;
+    //         if(currentWaypointIndex >= transform.childCount) 
+    //             currentWaypointIndex = 0;
+    //     }
+    //     return accumulator;
+    // }
 
     /** Add to and subtract from the waypoint index and wrap if we go outside the
       *   bounds of waypoint amount. 
@@ -212,6 +285,16 @@ public class BotPath : MonoBehaviour
         return result;
     }
 
+    /** Move some distance along the path. Returns the new waypoint and progress point
+      *   found by moving ahead on the path. */
+    public (int, float) MoveAlongPath(float distance, int currentWaypoint, float currentProgress)
+    {
+        if(pathLength == 0) ReloadCurves();
+        float lapProgress = pt.ConvertToLapProgress((currentWaypoint, currentProgress));
+        (int, float) newLapProgress = pt.ConvertFromLapProgress((lapProgress + distance/pathLength) % 1f);
+        return newLapProgress;
+    }
+
     private float drawCooldown;
     public void DrawPath() 
     {
@@ -220,6 +303,20 @@ public class BotPath : MonoBehaviour
             return;
         }
 
+        if(pathLength < 0.0001f) 
+            return;
+
+        BotDriver bd = GetComponent<BotDriver>();
+
+        float progressEstimate = EstimateProgress();
+
+        // Calculate sight lines
+        float throttleSightStart = pt.ConvertToLapProgress(MoveAlongPath(bd.throttleVision.startOffset, pt.waypointIndex, progressEstimate));
+        float throttleSightEnd = throttleSightStart + bd.throttleVision.distance/pathLength;
+
+        float driftSightStart = pt.ConvertToLapProgress(MoveAlongPath(bd.driftVision.startOffset, pt.waypointIndex, progressEstimate));
+        float driftSightEnd = driftSightStart + bd.driftVision.distance/pathLength;
+
         Vector3? prevPos = null;
         for(int wpidx = 0; wpidx < waypointPositions.Count; wpidx++) {
             for(int i = 0; i < drawResolution; i++) {
@@ -227,7 +324,15 @@ public class BotPath : MonoBehaviour
                 Vector3 pos = ReadPath(progress, wpidx).Item1;
 
                 if(prevPos.HasValue) {
-                    Debug.DrawLine(prevPos.Value, pos, new Color(1f, 0.5f, 0), drawFrequency+0.05f);
+                    float lapProgress = pt.ConvertToLapProgress((wpidx, progress));
+                    Color color = new Color(1f, 0.5f, 0);
+                    bool isDriftSight = lapProgress >= driftSightStart && lapProgress <= driftSightEnd;
+                    bool isThrottleSight = lapProgress >= throttleSightStart && lapProgress <= throttleSightEnd;
+                    if(isDriftSight) color = Color.blue;
+                    if(isThrottleSight) color = Color.green;
+                    if(isDriftSight && isThrottleSight) color = Color.cyan;
+
+                    Debug.DrawLine(prevPos.Value, pos, color, drawFrequency+0.05f);
                 }  
                 prevPos = pos;
             }
@@ -236,4 +341,17 @@ public class BotPath : MonoBehaviour
         drawCooldown = drawFrequency;
     }
 
+}
+
+/** Settings used for path analysis in BotPath.
+  * The start */
+[Serializable]
+public struct PathAnalysisSettings 
+{
+    public int startWaypoint;
+    public float startProgress;
+    public float startOffset;
+    public float distance;
+    public int points;
+    public AnimationCurve weightFunction;
 }

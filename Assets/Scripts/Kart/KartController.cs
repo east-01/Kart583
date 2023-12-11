@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using Palmmedia.ReportGenerator.Core;
+using JetBrains.Annotations;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
@@ -15,6 +16,7 @@ public class KartController : MonoBehaviour
 	[Header("General")]
 	public float inputDeadzone = 0.1f;
 	public float wheelSlideTorque = 60;
+	public float damageStateSpinSpeed = 5f;
 
 	[Header("Speed")]
 	public float maxSpeed = 20f;
@@ -65,6 +67,8 @@ public class KartController : MonoBehaviour
 	public float steeringWheelDirection; // A [-1, 1] range float indicating the amount the steering wheel is turned and the direction.
 	public float boostAmount;
 
+	public float modelTheta;
+
 	private float driftEngageTime;
 	public int driftDirection; // Indicates if we're in a left/right drift
 	private float driftTheta;
@@ -72,6 +76,8 @@ public class KartController : MonoBehaviour
 	public bool driftParticles; // True if drift particles should be showing
 
 	public float timeSinceLastCollision;
+
+	public float damageCooldown; // When >0, no input goes to the kart
 
     private void Start()
     {
@@ -116,7 +122,7 @@ public class KartController : MonoBehaviour
 
 		// If we're drifting and airborne, change drift direction to match joystick
 		// Use airtime to ensure we maintain drift direction during small falls.
-		if(stateMgr.state == KartState.DRIFTING && driftEngageTime <= driftEngageDuration && Math.Abs(TurnInput.x) >= inputDeadzone) 
+		if(stateMgr.state == KartState.DRIFTING && driftEngageTime < driftEngageDuration && Math.Abs(TurnInput.x) >= inputDeadzone) 
 			driftDirection = (int)Mathf.Sign(TurnInput.x);
 
 		driftThetaTarget = 0;
@@ -145,9 +151,20 @@ public class KartController : MonoBehaviour
 			boostAmount = GameplayManager.RaceManager.settings.startBoostPercent*maxBoost;
 		}
 
+		/* Damage effects */
+		if(damageCooldown > 0) {
+			damageCooldown -= Time.deltaTime;
+			if(damageCooldown < 0) damageCooldown = 0;
+		}
+
 		/* Animate kartModel forward and vertical */
 		if(kartModel != null) {
-			kartModel.forward = RotateVectorAroundAxis(transform.forward, transform.up, driftTheta);
+			if(damageCooldown > 0) {
+				modelTheta += Time.deltaTime*damageStateSpinSpeed;
+				if(modelTheta > Mathf.PI*2) modelTheta -= Mathf.PI*2;
+			}
+
+			kartModel.forward = RotateVectorAroundAxis(transform.forward, transform.up, driftTheta + modelTheta);
 			float t = driftEngageTime/driftEngageDuration;
 			kartModel.localPosition = (initKartModelY + driftHopHeight*(-4*(t*t)+4*t))*Vector3.up;
 		}
@@ -183,9 +200,10 @@ public class KartController : MonoBehaviour
 
 		/* Up force: It should always be that transform.up == up, add a torque to match this */
 		float upDot = Vector3.Dot(up, transform.up);
-		if(upDot < 0.9f) {
-            Quaternion.FromToRotation(transform.up, up).ToAngleAxis(out float angle, out Vector3 axis);
-            rb.AddTorque(axis * angle * Mathf.Deg2Rad * 5f, ForceMode.Acceleration);
+		if(upDot < 0.975f) {
+            // Quaternion.FromToRotation(transform.up, up).ToAngleAxis(out float angle, out Vector3 axis);
+            // rb.AddTorque(axis * angle * Mathf.Deg2Rad * 25f, ForceMode.Acceleration);
+			rb.MoveRotation(Quaternion.FromToRotation(transform.up, up) * rb.rotation);
 		}
 
 		/* Player might be stuck in ground, get em out */
@@ -352,7 +370,7 @@ public class KartController : MonoBehaviour
 
 	public float CurrentMaxSpeed { get { return momentum == 1 ? (ActivelyBoosting ? maxBoostSpeed : maxSpeed) : maxSpeed/4f; } }
 	public float SpeedRatio { get { return TrackSpeed/CurrentMaxSpeed; } }
-	public bool CanMove { get { return GameplayManager.RaceManager.CanMove && pt.lapNumber < GameplayManager.RaceManager.settings.laps; } }
+	public bool CanMove { get { return GameplayManager.RaceManager.CanMove && pt.lapNumber < GameplayManager.RaceManager.settings.laps && damageCooldown <= 0; } }
 
 	public bool SteeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	public bool SteeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }

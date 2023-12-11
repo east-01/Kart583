@@ -32102,11 +32102,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5244667296191878687, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
       propertyPath: defaultSettings.botLimit
-      value: 1
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 5244667296191878687, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
       propertyPath: defaultSettings.startDelay
-      value: 0
+      value: 5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}

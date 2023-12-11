@@ -4,6 +4,7 @@ public class BezierCurve
 {
 
     private Vector3 start, cp1, cp2, end;
+    public float Length { get; private set; }
 
     public BezierCurve(Vector3 start, Vector3 cp1, Vector3 cp2, Vector3 end) 
     {
@@ -11,6 +12,20 @@ public class BezierCurve
         this.cp1 = cp1;
         this.cp2 = cp2;
         this.end = end;
+        this.Length = 0;
+
+        int intervals = (int)Vector3.Distance(start, end);
+        float intervalWidth = 1.0f / intervals;
+
+        for (int i = 0; i < intervals; i++) {
+            float t1 = i * intervalWidth;
+            float t2 = (i + 1) * intervalWidth;
+
+            Vector3 p1 = CalculateBezierPoint(t1);
+            Vector3 p2 = CalculateBezierPoint(t2);
+
+            Length += Vector3.Distance(p1, p2);
+        }
     }
 
     public Vector3 CalculateBezierPoint(float t)
@@ -96,6 +111,6 @@ public class BezierCurve
 
         // Return the final point on the Bezier curve
         return t;
-    }
+    }        
 
 }

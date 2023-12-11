@@ -75,10 +75,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waypointPositions: []
-  drawBotPath: 1
+  randomizeWaypoints: 1
+  drawBotPath: 0
   drawResolution: 50
-  drawFrequency: 1
+  drawFrequency: 0.1
   scale: 13
+  pathLength: 0
 --- !u!114 &8601565547112359052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -97,20 +99,29 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 1
-      inSlope: -0.0000020200557
-      outSlope: -0.0000020200557
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.059012875
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 1
+      inSlope: -0
+      outSlope: 0.13450646
+      tangentMode: 5
+      weightedMode: 0
+      inWeight: 0.07572038
+      outWeight: 0.139485
     - serializedVersion: 3
       time: 1
       value: 0
-      inSlope: -2.1877894
-      outSlope: -2.1877894
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.042918444
+      inWeight: 0
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
@@ -139,21 +150,21 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  turnFactorToThrottle:
+  dotProductToThrottle:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
-      inSlope: -0.14114808
-      outSlope: -0.14114808
+      value: 0.4
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.09978541
+      outWeight: 0
     - serializedVersion: 3
       time: 1
-      value: 0.25
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -164,28 +175,89 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   tfThresholdCalcFrequency: 0.33
-  turnFactorCount: 3
-  tfThresholdSingleBrake: 0.8
-  tfThresholdSingleDrift: 0.275
-  tfThresholdSingleThrottle: 0.15
+  stuckAnimationDuration: 0.2
+  driftVision:
+    startWaypoint: 0
+    startProgress: 0
+    startOffset: 0
+    distance: 10
+    points: 40
+    weightFunction:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  driftThreshold: 2.2
+  throttleVision:
+    startWaypoint: 0
+    startProgress: 0
+    startOffset: 10
+    distance: 60
+    points: 40
+    weightFunction:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.5
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 0.5
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: -2.6957486
+        outSlope: -2.6957486
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.07725322
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  throttleThreshold: 2.5
+  throttleVisionExtents: {x: 30, y: 60}
   turnInput: {x: 0, y: 0}
   throttleInput: 0
   driftInput: 0
   boostInput: 0
-  checkpointIndex: 0
-  turnAmount: 0
-  turnFactor: 0
-  targetPosition: {x: 0, y: 0, z: 0}
-  directionToTarget: {x: 0, y: 0, z: 0}
+  throttleSight: 0
+  driftSight: 0
+  distanceFromPath: 0
   dot: 0
-  cross: 0
   turnLR: 0
   turnValue: 0
-  throttleState: 
   averageTrackSpeed: 0
   stuck: 0
-  stuckLR: 0
-  tfThresholdMax: 0
-  tfThresholdBrake: 0
-  tfThresholdDrift: 0
-  tfThresholdThrottle: 0
+  stuckAnimTime: 0

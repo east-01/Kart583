@@ -421,78 +421,34 @@ MonoBehaviour:
   maxBoostSpeed: 45
   acceleration: 30
   kartTurnSpeed: 45
-  kartTurnPower:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.5
-      inSlope: 3.5584507
-      outSlope: 3.5584507
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.10116493
-    - serializedVersion: 3
-      time: 0.35
-      value: 1
-      inSlope: -0.105156556
-      outSlope: 0
-      tangentMode: 65
-      weightedMode: 0
-      inWeight: 0.17841816
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.675
-      value: 1
-      inSlope: -0
-      outSlope: -0.102754906
-      tangentMode: 5
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.17794646
-    - serializedVersion: 3
-      time: 1
-      value: 0.8
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
   steeringWheelTurnSpeed: 5
   turnMultiplierRangeDriftMatch: {x: 1.35, y: 2.5}
   turnMultiplierRangeDriftDiffer: {x: -0.2, y: 0.35}
   driftAge: 4
   driftAngleMin: 0.225
   driftAngleMax: 0.4
-  driftHopSpeedPercent: 0.1
   driftEngageSpeedPercent: 0.45
-  driftEngageDuration: 0.33
-  driftHopHeight: 0.3
+  driftEngageDuration: 0.25
+  driftHopHeight: 0.175
   requiredBoostPercentage: 0.3
   maxBoost: 2
   boostGain: 1
   passiveBoostDrain: 3
   activeBoostDrain: 1.75
+  drawVectors: 0
   turn: {x: 0, y: 0}
   throttle: 0
   boosting: 0
   up: {x: 0, y: 1, z: 0}
-  _kartForward: {x: 0, y: 0, z: 0}
   velocity: {x: 0, y: 0, z: 0}
-  theta: 0
   momentum: 0
   grounded: 0
   airtime: 0
-  timeSinceLastCollision: 0
   steeringWheelDirection: 0
   boostAmount: 0
   driftDirection: 0
   driftParticles: 0
+  timeSinceLastCollision: 0
 --- !u!114 &8083418633811770527
 MonoBehaviour:
   m_ObjectHideFlags: 0
