@@ -43,7 +43,7 @@ public abstract class WorldItem : MonoBehaviour
     void OnTriggerEnter(Collider other) 
     {
         if(other.gameObject.tag == "Kart") {
-            // Hit a player, deal damager
+            // Hit a player, deal damage
             if(other.GetComponent<KartManager>() == null) throw new InvalidOperationException("A collider with a \"Kart\" tag hit an item but it didn't have a KartManager!");
             ItemHit(other.gameObject);
         } else if(other.gameObject.tag == "Item") {

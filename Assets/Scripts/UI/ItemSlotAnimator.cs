@@ -57,7 +57,7 @@ public class ItemSlotAnimator : MonoBehaviour
             if(lastImage) 
                 SpawnNewImage(true, this.result);
             else
-                SpawnNewImage(false, GetRandomItem());
+                SpawnNewImage(false, GameplayManager.ItemAtlas.RollRandom());
         }
 
     }
@@ -97,14 +97,6 @@ public class ItemSlotAnimator : MonoBehaviour
         }
 
         imageObj.GetComponent<ItemImage>().StartAnimation(itemToSpawn, startPosition, centerPosition, endPosition, singleImageDuration, stopAtCenter);
-    }
-
-    /** Pick an item enum completely randomly from all options. */
-    public static Item GetRandomItem() 
-    {
-        Array values = Enum.GetValues(typeof(Item));
-        int randomIndex = UnityEngine.Random.Range(0, values.Length);
-        return (Item)values.GetValue(randomIndex);
     }
 
     public bool IsAnimating() { return animating; }

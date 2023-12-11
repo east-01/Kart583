@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Net.NetworkInformation;
 using Unity.VisualScripting;
@@ -90,8 +91,8 @@ public class BotPath : MonoBehaviour
                 Collider[] colliders = Physics.OverlapSphere(center, 2.5f);
                 foreach(Collider c in colliders) {
                     bool isGround = Math.Abs(c.gameObject.transform.position.y) < 0.1f;
-                    if(!isGround && c.gameObject.tag != "Kart" && c.gameObject.tag != "Waypoint") {
-                        print("hit obstruction " + c.gameObject.name);
+                    List<string> tagWhitelist = new string[] {"Kart", "Waypoint", "Item"}.ToList();
+                    if(!isGround && !tagWhitelist.Contains(c.gameObject.tag)) {
                         hasObstruction = true;
                         break;
                     }

@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 /** This class will be responsible for one player.
     Manages items currently */
@@ -9,7 +10,7 @@ public class KartManager : MonoBehaviour
 {
 
 	public ItemSlotAnimator itemSlotManager;
-	public HeldItem heldItemScript;
+	public Image heldItemImage;
 
 	private Item? slotItem;
 	private Item? heldItem;
@@ -21,9 +22,11 @@ public class KartManager : MonoBehaviour
 		if(slotItem != null) return false;
 
 		// Eventually this code will change to better give items based off of position
-        Item result = ItemSlotAnimator.GetRandomItem();
+        Item result = GameplayManager.ItemAtlas.RollRandom();
 
 		this.slotItem = result;
+		
+		heldItemImage.gameObject.SetActive(false);
 
 		if(itemSlotManager != null) itemSlotManager.AnimateItems(result);
 		return true;
@@ -36,7 +39,8 @@ public class KartManager : MonoBehaviour
 			slotItem = null;
 
 			if(itemSlotManager != null) itemSlotManager.DisableChildren();
-			heldItemScript.Show(heldItem.Value);
+			heldItemImage.gameObject.SetActive(true);
+			heldItemImage.sprite = GameplayManager.ItemAtlas.RetrieveData(heldItem.Value).itemIcon;
 
 		} else if(context.canceled && heldItem.HasValue) {
 
@@ -49,7 +53,7 @@ public class KartManager : MonoBehaviour
 
 			// Clear held item
 			heldItem = null;
-			heldItemScript.Hide(true);
+			heldItemImage.gameObject.SetActive(false);
 
 			// If an error occured we don't want to instantiate a new item.
 			if(err != null) { Debug.Log(err); return; } 
