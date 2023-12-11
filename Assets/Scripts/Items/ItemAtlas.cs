@@ -30,15 +30,11 @@ public class ItemAtlas : MonoBehaviour
         float randomValue = (float)new System.Random().NextDouble() * totalWeight;
 
         // Iterate through the enum values and choose the one based on weights
-        Item returnItem = Item.OIL;
-        items.ForEach(idp => {
+        foreach(ItemDataPackage idp in items) {
             randomValue -= idp.weight;
-            if (randomValue <= 0f)
-                returnItem = idp.item;
-        });
-
-        // This should not happen, but if it does, return the last enum value
-        return items[items.Count-1].item;
+            if (randomValue <= 0f) return idp.item;
+        }
+        return Item.OIL;
     }
 }
 

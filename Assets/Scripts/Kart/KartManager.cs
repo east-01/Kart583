@@ -9,11 +9,21 @@ using UnityEngine.UI;
 public class KartManager : MonoBehaviour 
 {
 
+	// ##################################
+	// TODO: Make kart manager like GameplayManager in that it collects and provides access
+	//   to essential kart functions
+	// ##################################
+
 	public ItemSlotAnimator itemSlotManager;
 	public Image heldItemImage;
 
 	private Item? slotItem;
 	private Item? heldItem;
+
+	void Start() 
+	{
+		heldItemImage.gameObject.SetActive(false);
+	}
 
 	/** Callback for when a player hits an item box. 
 	    Return true if item successfully recieved, false if not. */
@@ -26,8 +36,6 @@ public class KartManager : MonoBehaviour
 
 		this.slotItem = result;
 		
-		heldItemImage.gameObject.SetActive(false);
-
 		if(itemSlotManager != null) itemSlotManager.AnimateItems(result);
 		return true;
 	}
@@ -61,5 +69,10 @@ public class KartManager : MonoBehaviour
 			Instantiate(worldItemPrefab).GetComponent<WorldItem>().ActivateItem(gameObject, GetComponent<KartController>().TurnInput);
 
 		}
+	}
+
+	public static bool IsKartGameObject(GameObject obj) 
+	{
+		return obj.GetComponent<KartManager>() != null;
 	}
 }

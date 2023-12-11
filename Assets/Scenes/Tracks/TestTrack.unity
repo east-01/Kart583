@@ -4126,10 +4126,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 1692848356265694792, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
-      propertyPath: items.Array.data[1].weight
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 5244667296191878682, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
       propertyPath: m_Name
       value: GameplayManager
@@ -4176,14 +4172,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5244667296191878686, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5244667296191878687, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
-      propertyPath: defaultSettings.bots
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5244667296191878687, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
-      propertyPath: defaultSettings.startDelay
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

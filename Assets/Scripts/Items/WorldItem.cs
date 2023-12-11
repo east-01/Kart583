@@ -42,17 +42,28 @@ public abstract class WorldItem : MonoBehaviour
     /** Check for collisions with players/other items */
     void OnTriggerEnter(Collider other) 
     {
-        if(other.gameObject.tag == "Kart") {
+		CheckForInteraction(other.gameObject);
+    }
+
+    public void OnCollisionEnter(Collision collision) 
+	{
+		CheckForInteraction(collision.gameObject);
+    }
+
+	/** Check for item interactions from a OnTriggerEnter or OnColliderEnter */
+	public void CheckForInteraction(GameObject other) 
+	{
+		if(other.tag == "Kart") {
             // Hit a player, deal damage
             if(other.GetComponent<KartManager>() == null) throw new InvalidOperationException("A collider with a \"Kart\" tag hit an item but it didn't have a KartManager!");
-            ItemHit(other.gameObject);
-        } else if(other.gameObject.tag == "Item") {
+            ItemHit(other);
+        } else if(other.tag == "Item") {
             // Hit a different item, destroy both
             WorldItem wi = other.GetComponent<WorldItem>();
             if(wi == null) throw new InvalidOperationException("A collider with an \"Item\" tag hit an item but it didn't have a WorldItem script!");
             wi.ItemDestroyed();
             ItemDestroyed();
         }
-    }
+	}
 
 }  

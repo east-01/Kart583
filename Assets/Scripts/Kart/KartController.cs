@@ -162,7 +162,8 @@ public class KartController : MonoBehaviour
 			if(damageCooldown > 0) {
 				modelTheta += Time.deltaTime*damageStateSpinSpeed;
 				if(modelTheta > Mathf.PI*2) modelTheta -= Mathf.PI*2;
-			}
+			} else 
+				modelTheta = 0;
 
 			kartModel.forward = RotateVectorAroundAxis(transform.forward, transform.up, driftTheta + modelTheta);
 			float t = driftEngageTime/driftEngageDuration;

@@ -8,7 +8,7 @@ public class OilWorldItem : WorldItem
     {
 
         Owner = owner;
-        lifeTime = 30f; // 30s of lifetime
+        lifeTime = 25f; // 30s of lifetime
 
         KartController kc = owner.GetComponent<KartController>();
 
@@ -20,13 +20,16 @@ public class OilWorldItem : WorldItem
 
     public override void ItemDestroyed()
     {
-        print("TODO: Item oil destroyed");
         Destroy(gameObject);
     }
 
     public override void ItemHit(GameObject hitPlayer)
     {
-        print("TODO: Player hit oil spill");
+        if(!KartManager.IsKartGameObject(hitPlayer))
+            throw new InvalidOperationException("Called ItemHit with a hitPlayer parameter that isn't an acceptable player!");
+        
+        hitPlayer.GetComponent<KartController>().damageCooldown = 2f;
+
         ItemDestroyed();
     }
     

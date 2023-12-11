@@ -9,9 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4269667279436344730}
-  - component: {fileID: 4685050570054758578}
-  - component: {fileID: 1843379624013673612}
-  - component: {fileID: 4341014239203937993}
+  - component: {fileID: 3914912066728097894}
   - component: {fileID: 385760970509936347}
   - component: {fileID: 4148502584289258436}
   - component: {fileID: 4738943391380594744}
@@ -40,28 +38,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &4685050570054758578
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4275335312303541124}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!135 &1843379624013673612
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4275335312303541124}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 1.2
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!65 &4341014239203937993
+--- !u!65 &3914912066728097894
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -72,8 +49,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 0.1, z: 1}
-  m_Center: {x: 0, y: -1, z: 0}
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &385760970509936347
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -88,7 +65,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 80
+  m_Constraints: 112
   m_CollisionDetection: 1
 --- !u!198 &4148502584289258436
 ParticleSystem:
@@ -4808,11 +4785,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eec79512e75240c43aef1f5966debab8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  speed: 30
+  dir: {x: 0, y: 0, z: 0}
   systems:
   - {fileID: 4148502584289258436}
   - {fileID: 4148273086179075782}
   - {fileID: 4148411214717670142}
   - {fileID: 4148131343343919638}
+  collCooldown: 0
 --- !u!199 &4149035886283732514
 ParticleSystemRenderer:
   serializedVersion: 6
