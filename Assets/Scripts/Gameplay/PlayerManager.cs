@@ -41,6 +41,11 @@ public class PlayerManager : MonoBehaviour
 
 	void AddPlayer(GameObject playerObject) 
 	{	
+		if(playerObjects.Count == 0) {
+			// TODO: Load settings from menu
+			GameplayManager.RaceManager.Activate(null);
+		}
+		
 		if(playerObjects.Count >= 8) {
 			Debug.LogError("Tried to add a new player even though there is already 8 (or more) players.");
 			Destroy(playerObject);

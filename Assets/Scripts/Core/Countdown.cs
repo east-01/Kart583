@@ -28,7 +28,7 @@ public class Countdown : MonoBehaviour
         bool changedNumbers = _currentNumber != (int)Mathf.Abs(rm.raceTime);
         _currentNumber = (int)Mathf.Abs(rm.raceTime);
 
-        if (changedNumbers)
+        if (_currentNumber < _audioClips.Length && changedNumbers)
         {
             _currentAudioClip = _audioClips[_currentNumber];
             _audioSource.PlayOneShot(_currentAudioClip);

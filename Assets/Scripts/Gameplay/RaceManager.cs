@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerManager))]
 public class RaceManager : MonoBehaviour
@@ -18,9 +19,7 @@ public class RaceManager : MonoBehaviour
     private void Start()
     {
         running = false;
-
-        // TODO: Load settings from settings menu
-        Activate(null);
+        raceTime = -100;
     }
 
     public void Activate(RaceSettings? settingsNullable) 
@@ -39,6 +38,13 @@ public class RaceManager : MonoBehaviour
 
     private void Update() 
     {
+        PlayerInputManager pim = GameplayManager.PlayerInputManager;
+        if(CanPlayersJoin && !pim.joiningEnabled) {
+            GameplayManager.PlayerInputManager.EnableJoining();
+        } else if(!CanPlayersJoin && pim.joiningEnabled) {
+            GameplayManager.PlayerInputManager.DisableJoining();
+        }
+
         if(!running) return;
 
         raceTime += Time.deltaTime;
@@ -47,7 +53,6 @@ public class RaceManager : MonoBehaviour
             ensureRCCheck -= Time.deltaTime;
             if(ensureRCCheck <= 0) EnsureRaceConditions();
         }
-
     }
 
     /** Check on everything in the race and if anything's wrong fix it or exit. */
@@ -56,7 +61,7 @@ public class RaceManager : MonoBehaviour
 
         PlayerManager pm = GameplayManager.PlayerManager;
         int botsInGame = pm.playerObjects.Count - pm.playerInputs.Count;
-        if(pm.PlayerCount < 8 && settings.bots && raceTime > -3) {
+        if(pm.PlayerCount < 8 && settings.bots && raceTime > -3f) {
             for(int i = 0; i < 8-pm.PlayerCount && i < settings.botLimit-botsInGame; i++) {
                 pm.SpawnBot();
             }
@@ -71,6 +76,10 @@ public class RaceManager : MonoBehaviour
     }
 
     public bool CanMove { get { return raceTime >= 0; } }
+    public bool CanPlayersJoin { get { 
+        if(GameplayManager.HasRaceCamera && GameplayManager.RaceCamera.Animating) return false;
+        return raceTime <= -3f; 
+    } }
 
 }
 
