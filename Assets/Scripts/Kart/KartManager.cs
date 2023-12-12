@@ -41,7 +41,13 @@ public class KartManager : MonoBehaviour
 	}
 
 	public void OnItem(InputAction.CallbackContext context) {
-		if(context.performed && (itemSlotManager == null || !itemSlotManager.IsAnimating()) && slotItem != null && heldItem == null) {
+		if(!context.performed && !context.canceled) return;
+		PerformItemInput(context.performed);
+	}
+
+	public void PerformItemInput(bool pressed) 
+	{
+		if(pressed && (itemSlotManager == null || !itemSlotManager.IsAnimating()) && slotItem != null && heldItem == null) {
 
 			heldItem = slotItem.Value;
 			slotItem = null;
@@ -50,7 +56,7 @@ public class KartManager : MonoBehaviour
 			heldItemImage.gameObject.SetActive(true);
 			heldItemImage.sprite = GameplayManager.ItemAtlas.RetrieveData(heldItem.Value).itemIcon;
 
-		} else if(context.canceled && heldItem.HasValue) {
+		} else if(!pressed && heldItem.HasValue) {
 
 			GameObject worldItemPrefab = GameplayManager.ItemAtlas.RetrieveData(heldItem.Value).worldItem;
 			String err = null;
@@ -71,8 +77,12 @@ public class KartManager : MonoBehaviour
 		}
 	}
 
+	public bool HasSlotItem { get { return slotItem.HasValue; } }
+	public bool HasHeldItem { get { return heldItem.HasValue; } }
+
 	public static bool IsKartGameObject(GameObject obj) 
 	{
 		return obj.GetComponent<KartManager>() != null;
 	}
+
 }

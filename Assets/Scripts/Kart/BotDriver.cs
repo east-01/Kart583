@@ -15,8 +15,10 @@ public class BotDriver : MonoBehaviour
     public AnimationCurve dotProductToThrottle;
     public float tfThresholdCalcFrequency = 0.33f;
     public float stuckAnimationDuration = 0.2f;
+    public Vector2 itemReleaseTimes = new Vector2(1f, 10f); // Min and max time (in seconds) it takes bot to drop item, randomly selected in range
 
     private PositionTracker pt;
+    private KartManager km;
     private KartController kc;
     private BotPath bp;
 
@@ -48,11 +50,14 @@ public class BotDriver : MonoBehaviour
 
     [SerializeField] private bool stuck;
     [SerializeField] private float stuckAnimTime;
+
+    [SerializeField] private float itemReleaseTime; // Timer counting down seconds until bot releases item
     /* ----------------------------------- */
 
     void Start()
     {
         pt = GetComponent<PositionTracker>();
+        km = GetComponent<KartManager>();
         kc = GetComponent<KartController>();
         bp = GetComponent<BotPath>();
 
@@ -134,6 +139,20 @@ public class BotDriver : MonoBehaviour
             } else {
                 GetComponent<Rigidbody>().AddForce((closestPathPoint-transform.position).normalized*25f, ForceMode.Acceleration);
             }
+        }
+
+        /* Items */
+        if(km.HasHeldItem && itemReleaseTime > 0f) {
+            itemReleaseTime -= Time.deltaTime;
+            if(itemReleaseTime <= 0) {
+                km.PerformItemInput(false);
+            }
+        }
+
+        if(km.HasSlotItem && !km.HasHeldItem && itemReleaseTime < 0.001f) 
+        {
+            km.PerformItemInput(true);
+            itemReleaseTime = itemReleaseTimes.x + (float)(new System.Random().NextDouble()*(itemReleaseTimes.y-itemReleaseTimes.x));
         }
 
         // Debug code
