@@ -1,7 +1,5 @@
 using UnityEngine;
 using System;
-using Palmmedia.ReportGenerator.Core;
-using JetBrains.Annotations;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
