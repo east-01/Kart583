@@ -12,7 +12,7 @@ public class RaceCountdown_GSM : IState
     }
     public void OnStateEnter()
     {
-        _gsm.CountdownPrefab.GetComponent<Countdown>().StartTimer = true;
+
     }
 
     public void OnStateExit()

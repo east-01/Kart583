@@ -47,8 +47,7 @@ public class LevelEnter_GSM : IState
             _karts.Add(bot);
         }
 
-        var camPos = _cam.GetComponent<IntroCamData>().CamStartPos;
-        _cam.transform.position = camPos.transform.position;
+        _cam.transform.position = GameplayManager.IntroCamData.CamStartPos.position;
 
         SpawnKarts();
 
@@ -81,6 +80,7 @@ public class LevelEnter_GSM : IState
 
     private void CameraMove()
     {
+        Vector3 startPosition = GameplayManager.IntroCamData.CamStartPos.position;
         _cam.transform.position = Vector3.MoveTowards(_cam.transform.position, _cam.GetComponent<IntroCamData>().CamEndPos.position, 0.5f);
 
         if (_cam.transform.position == _cam.GetComponent<IntroCamData>().CamEndPos.position)

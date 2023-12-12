@@ -108,7 +108,7 @@ public class BotPath : MonoBehaviour
             }
 
             if(!foundPoint) {
-                Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
+                // Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
                 waypointPositions.Add(pos.position);
             }
             i++;

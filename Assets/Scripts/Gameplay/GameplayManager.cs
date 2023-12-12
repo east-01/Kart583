@@ -16,6 +16,7 @@ public class GameplayManager : MonoBehaviour
     public static ItemAtlas ItemAtlas { get { return Instance.GetItemAtlas(); } }
     public static SpawnPositions SpawnPositions { get { return Instance.GetSpawnPositions(); }}
     public static Waypoints Waypoints { get { return Instance.GetWaypoints(); }}
+    public static IntroCamData IntroCamData { get { return Instance.GetIntroCamData();} }
 
     public bool ready;
 
@@ -25,6 +26,7 @@ public class GameplayManager : MonoBehaviour
 
     private SpawnPositions spawnPositions;
     private Waypoints waypoints;
+    private IntroCamData introCamData;
 
     void Start() 
     {
@@ -47,13 +49,17 @@ public class GameplayManager : MonoBehaviour
         GameObject wpo = GameObject.Find("Waypoints");
         if(wpo != null) waypoints = wpo.GetComponent<Waypoints>();
 
+        GameObject icdo = GameObject.Find("IntroCamData");
+        if(icdo != null) introCamData = wpo.GetComponent<IntroCamData>();
+
         // Check if everything is in order
         List<String> problems = new List<String>();
         if(rm == null) problems.Add("GameplayManager object doesn't have a RaceManager script component!");
         if(pm == null) problems.Add("GameplayManager object doesn't have a PlayerManager script component!");
         if(ia == null) problems.Add("GameplayManager object doesn't have an ItemAtlas script component!");
-        if(spawnPositions == null) problems.Add("Failed to find SpawnPositions. " + spo == null ? "No spawn position object found." : "Game object found, no SpawnPositions script component though.");
-        if(waypoints == null) problems.Add("Failed to find Waypoints. " + wpo == null ? "No waypoint object found." : "Game object found, no Waypoints script component though.");
+        if(spawnPositions == null) problems.Add("Failed to find SpawnPositions. " + (spo == null ? "No spawn position object found." : "Game object found, no SpawnPositions script component though."));
+        if(waypoints == null) problems.Add("Failed to find Waypoints. " + (wpo == null ? "No waypoint object found." : "Game object found, no Waypoints script component though."));
+        if(introCamData == null) problems.Add("Failed to find IntroCamData. " + (icdo == null ? "No intro cam data object found." : "Game object found, no IntroCamData script component though."));
 
         ready = problems.Count == 0;
         if(!ready) {
@@ -69,5 +75,6 @@ public class GameplayManager : MonoBehaviour
 
     public SpawnPositions GetSpawnPositions() { return spawnPositions; }
     public Waypoints GetWaypoints() { return waypoints; }
+    public IntroCamData GetIntroCamData() { return introCamData; }
 
 }

@@ -18,8 +18,6 @@ public class GameStateManager : MonoBehaviour
     public bool IsTimerEnded = false;
     public int LapsCompleted;
 
-    
-
     private void Awake()
     {
         _stateMachine = new StateMachine();
@@ -32,7 +30,6 @@ public class GameStateManager : MonoBehaviour
         _stateMachine.AddTranstion(levelEnter, countdown, IntroFinished());
         _stateMachine.AddTranstion(countdown, activeRace, CountdownComplete());
         _stateMachine.AddTranstion(activeRace, raceEnd, RaceComplete());
-
 
         Func<bool> IntroFinished() => () => IsIntroFinished;
         Func<bool> CountdownComplete() => () => IsTimerEnded;
