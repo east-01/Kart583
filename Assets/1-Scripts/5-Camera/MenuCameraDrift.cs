@@ -13,6 +13,7 @@ public class MenuCameraDrift : MonoBehaviour
     {
         if(startRandomized) {
             rotVector = RollNewVector(); 
+            transform.forward = rotVector;
         }
     }
 
@@ -28,6 +29,7 @@ public class MenuCameraDrift : MonoBehaviour
         // Rotate the camera slowly around its up axis plus the random rotation vector
         transform.Rotate(Vector3.up, (rotationSpeed*Random.Range(-maxRandomOffset, maxRandomOffset)) * Time.deltaTime);
         transform.Rotate(rotVector * Time.deltaTime);
+
     }
 
     public Vector3 RollNewVector() 

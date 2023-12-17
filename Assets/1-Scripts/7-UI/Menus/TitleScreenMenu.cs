@@ -1,22 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class TitleScreenMenu : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+
+    public void ClickedStart() 
     {
-        
+        SceneManager.LoadScene("MapSelect");
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ClickedOptions() 
     {
-        
+        print("TODO: Create options menu");
+        // SceneManager.LoadScene("OptionsMenu");
     }
 
-    public void ClickedStart() {
-
+    public void ClickedQuit() 
+    {
+        Application.Quit();
     }
+
 }
