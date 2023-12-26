@@ -5,40 +5,42 @@ using UnityEngine.InputSystem;
 
 /** Human Driver script is the layer that connects the Input System
       to the KartController. */
-public class HumanDriver : MonoBehaviour
+public class HumanDriver : KartBehavior
 {
 
-    private KartController kc;
-
-    private void Awake() 
+    void Update() 
     {
-        kc = GetComponent<KartController>();
+        if(posTracker.raceCompletion >= 1) {
+            botPath.enabled = true;
+            botDriver.enabled = true;
+            humanDriver.enabled = false;
+        }
     }
 
     public void OnTurn(InputAction.CallbackContext context) 
     {
-        kc.TurnInput = context.ReadValue<Vector2>();
+        kartCtrl.TurnInput = context.ReadValue<Vector2>();
     }
 
     public void OnThrottle(InputAction.CallbackContext context) 
     {
-        kc.ThrottleInput = context.ReadValue<float>();
+        kartCtrl.ThrottleInput = context.ReadValue<float>();
     }
 
     public void OnReverse(InputAction.CallbackContext context) 
     {
-        kc.ThrottleInput = -context.ReadValue<float>();
+        kartCtrl.ThrottleInput = -context.ReadValue<float>();
     }
 
 	public void OnDrift(InputAction.CallbackContext context) { 
         if(!context.performed && !context.canceled) return;        
-        kc.DriftInput = context.performed;
+        kartCtrl.DriftInput = context.performed;
 	}
 
     public void OnBoost(InputAction.CallbackContext context) 
     {
         if(!context.performed && !context.canceled) return;
-        kc.BoostInput = context.performed;
+        kartCtrl.BoostInput = context.performed;
     }
 
 }

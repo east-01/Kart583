@@ -11,15 +11,12 @@ using UnityEngine.Rendering;
   * This class will pick waypoints from inside each checkpoint box bounds, then
   *   the optimal path can be read from any position on the track. 
   * Read more about the optimal path in ReadPath(). */
-[RequireComponent(typeof(PositionTracker))]
-public class BotPath : MonoBehaviour
+public class BotPath : KartBehavior
 {
 
     public List<Vector3> waypointPositions;
     /** Cache the curve and it's associated waypoint */
     public Dictionary<int, BezierCurve> curveSegments;
-
-    private PositionTracker pt;
 
     public bool randomizeWaypoints = true;
     public bool drawBotPath = true;
@@ -31,8 +28,6 @@ public class BotPath : MonoBehaviour
 
     void Start() 
     {
-        pt = GetComponent<PositionTracker>();   
-
         ReloadPath();          
     }
 
@@ -61,14 +56,12 @@ public class BotPath : MonoBehaviour
     {
         int i = 0;
         foreach(Transform pos in GameplayManager.Waypoints.transform) {
-            BoxCollider collider = pos.gameObject.GetComponent<BoxCollider>();
-
             bool foundPoint = false;
             for(int pickAttempt = 0; pickAttempt < 100; pickAttempt++) {
 
                 // Pick point
-                Vector3 center = collider.bounds.center;
-                Vector3 size = collider.bounds.size;
+                Vector3 center = coll.bounds.center;
+                Vector3 size = coll.bounds.size;
 
                 float randomX = UnityEngine.Random.Range(center.x - size.x/2f, center.x + size.x/2f);
                 float randomZ = UnityEngine.Random.Range(center.z - size.z/2f, center.z + size.z/2f);
@@ -170,16 +163,14 @@ public class BotPath : MonoBehaviour
     /** Applies the bot's progress and currentWaypointIndex to ReadPath(float, float). */
     public (Vector3, Vector3) ReadPath(Vector3 position)
     {
-        PositionTracker pt = GetComponent<PositionTracker>();
         // Progress along curve (aka t), lets try using segment progress for now.
         float progress = EstimateProgress();
-        return ReadPath(progress, pt.waypointIndex);
+        return ReadPath(progress, posTracker.waypointIndex);
     }
 
     public float EstimateProgress() 
     {
-        PositionTracker pt = GetComponent<PositionTracker>();
-        return curveSegments[pt.waypointIndex].ClosestEstimate(transform.position, 2, pt.segmentCompletion);
+        return curveSegments[posTracker.waypointIndex].ClosestEstimate(transform.position, 2, posTracker.segmentCompletion);
     }
 
     /** Analyze the second derivative of the bezier curve at the specified progress point on the
@@ -225,7 +216,7 @@ public class BotPath : MonoBehaviour
     public float AnalyzePathFromCurrentPosition(PathAnalysisSettings settings) 
     {
         settings.startProgress = EstimateProgress();
-        settings.startWaypoint = pt.waypointIndex;
+        settings.startWaypoint = posTracker.waypointIndex;
         return AnalyzePath(settings);
     }
 
@@ -291,8 +282,8 @@ public class BotPath : MonoBehaviour
     public (int, float) MoveAlongPath(float distance, int currentWaypoint, float currentProgress)
     {
         if(pathLength == 0) ReloadCurves();
-        float lapProgress = pt.ConvertToLapProgress((currentWaypoint, currentProgress));
-        (int, float) newLapProgress = pt.ConvertFromLapProgress((lapProgress + distance/pathLength) % 1f);
+        float lapProgress = posTracker.ConvertToLapProgress((currentWaypoint, currentProgress));
+        (int, float) newLapProgress = posTracker.ConvertFromLapProgress((lapProgress + distance/pathLength) % 1f);
         return newLapProgress;
     }
 
@@ -307,16 +298,14 @@ public class BotPath : MonoBehaviour
         if(pathLength < 0.0001f) 
             return;
 
-        BotDriver bd = GetComponent<BotDriver>();
-
         float progressEstimate = EstimateProgress();
 
         // Calculate sight lines
-        float throttleSightStart = pt.ConvertToLapProgress(MoveAlongPath(bd.throttleVision.startOffset, pt.waypointIndex, progressEstimate));
-        float throttleSightEnd = throttleSightStart + bd.throttleVision.distance/pathLength;
+        float throttleSightStart = posTracker.ConvertToLapProgress(MoveAlongPath(botDriver.throttleVision.startOffset, posTracker.waypointIndex, progressEstimate));
+        float throttleSightEnd = throttleSightStart + botDriver.throttleVision.distance/pathLength;
 
-        float driftSightStart = pt.ConvertToLapProgress(MoveAlongPath(bd.driftVision.startOffset, pt.waypointIndex, progressEstimate));
-        float driftSightEnd = driftSightStart + bd.driftVision.distance/pathLength;
+        float driftSightStart = posTracker.ConvertToLapProgress(MoveAlongPath(botDriver.driftVision.startOffset, posTracker.waypointIndex, progressEstimate));
+        float driftSightEnd = driftSightStart + botDriver.driftVision.distance/pathLength;
 
         Vector3? prevPos = null;
         for(int wpidx = 0; wpidx < waypointPositions.Count; wpidx++) {
@@ -325,7 +314,7 @@ public class BotPath : MonoBehaviour
                 Vector3 pos = ReadPath(progress, wpidx).Item1;
 
                 if(prevPos.HasValue) {
-                    float lapProgress = pt.ConvertToLapProgress((wpidx, progress));
+                    float lapProgress = posTracker.ConvertToLapProgress((wpidx, progress));
                     Color color = new Color(1f, 0.5f, 0);
                     bool isDriftSight = lapProgress >= driftSightStart && lapProgress <= driftSightEnd;
                     bool isThrottleSight = lapProgress >= throttleSightStart && lapProgress <= throttleSightEnd;

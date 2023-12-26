@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /** This class will be responsible for one player.
     Manages items currently */
-public class KartManager : MonoBehaviour 
+public class KartManager : KartBehavior 
 {
 
 	// ##################################
@@ -72,7 +72,7 @@ public class KartManager : MonoBehaviour
 			// If an error occured we don't want to instantiate a new item.
 			if(err != null) { Debug.Log(err); return; } 
 
-			Instantiate(worldItemPrefab).GetComponent<WorldItem>().ActivateItem(gameObject, GetComponent<KartController>().TurnInput);
+			Instantiate(worldItemPrefab).GetComponent<WorldItem>().ActivateItem(gameObject, kartCtrl.TurnInput);
 
 		}
 	}

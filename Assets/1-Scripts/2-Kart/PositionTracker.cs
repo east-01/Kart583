@@ -4,7 +4,7 @@ using UnityEngine;
 using System;
 
 /** Keeps track of a Kart's position on a track */
-public class PositionTracker : MonoBehaviour, IComparable<PositionTracker>
+public class PositionTracker : KartBehavior, IComparable<PositionTracker>
 {
 
     private Waypoints waypoints;

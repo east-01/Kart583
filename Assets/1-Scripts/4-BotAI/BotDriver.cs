@@ -4,8 +4,8 @@ using UnityEngine;
 /** BotDriver V2 by Ethan Mullen.
   * We'll be following the bot path script, which picks waypoints out on the map
   *   and generates a driving path from that. */
-[RequireComponent(typeof(PositionTracker), typeof(KartController), typeof(BotPath))]
-public class BotDriver : MonoBehaviour
+[RequireComponent(typeof(BotPath))]
+public class BotDriver : KartBehavior
 {
 
     /** Dot product == 1 when vectors match, Dot product == 0 when vectors are orthogonal */
@@ -16,11 +16,6 @@ public class BotDriver : MonoBehaviour
     public float tfThresholdCalcFrequency = 0.33f;
     public float stuckAnimationDuration = 0.2f;
     public Vector2 itemReleaseTimes = new Vector2(1f, 10f); // Min and max time (in seconds) it takes bot to drop item, randomly selected in range
-
-    private PositionTracker pt;
-    private KartManager km;
-    private KartController kc;
-    private BotPath bp;
 
     private float secondClock;
 
@@ -56,11 +51,6 @@ public class BotDriver : MonoBehaviour
 
     void Start()
     {
-        pt = GetComponent<PositionTracker>();
-        km = GetComponent<KartManager>();
-        kc = GetComponent<KartController>();
-        bp = GetComponent<BotPath>();
-
         secondClock = 1;
     }
 
@@ -74,52 +64,52 @@ public class BotDriver : MonoBehaviour
             if(secondClock <= 0) {
                 secondClock = 1;
 
-                float trackSpeedsTotal = (averageTrackSpeed*(averageTrackSpeedCount - averageTrackSpeedCount == averageTrackSpeedCountLimit ? 1 : 0)) + kc.TrackSpeed;
+                float trackSpeedsTotal = (averageTrackSpeed*(averageTrackSpeedCount - averageTrackSpeedCount == averageTrackSpeedCountLimit ? 1 : 0)) + kartCtrl.TrackSpeed;
                 if(averageTrackSpeedCount < averageTrackSpeedCountLimit) averageTrackSpeedCount += 1;
                 averageTrackSpeed = trackSpeedsTotal / averageTrackSpeedCount;
 
             }
         }
 
-        throttleVision.distance = throttleVisionExtents.x + (throttleVisionExtents.y - throttleVisionExtents.x) * Mathf.Max(kc.SpeedRatio, 0.2f);
+        throttleVision.distance = throttleVisionExtents.x + (throttleVisionExtents.y - throttleVisionExtents.x) * Mathf.Max(kartCtrl.SpeedRatio, 0.2f);
 
-        float progressEstimate = bp.EstimateProgress();
-        Vector3 closestPathPoint = bp.curveSegments[pt.waypointIndex].CalculateBezierPoint(progressEstimate);
+        float progressEstimate = botPath.EstimateProgress();
+        Vector3 closestPathPoint = botPath.curveSegments[posTracker.waypointIndex].CalculateBezierPoint(progressEstimate);
         distanceFromPath = Vector3.Distance(transform.position, closestPathPoint);
         float distanceFromPathFactor = Mathf.Clamp01(distanceFromPath/1.5f);
 
         /* If the bot is far away from their path, move the target position forward further along the path
          *   to smooth out our return path. */
-        (int, float) posOffsetByDFP = bp.MoveAlongPath(8f*distanceFromPathFactor, pt.waypointIndex, progressEstimate);
-        (Vector3, Vector3) pathData = bp.ReadPath(posOffsetByDFP.Item2, posOffsetByDFP.Item1);
+        (int, float) posOffsetByDFP = botPath.MoveAlongPath(8f*distanceFromPathFactor, posTracker.waypointIndex, progressEstimate);
+        (Vector3, Vector3) pathData = botPath.ReadPath(posOffsetByDFP.Item2, posOffsetByDFP.Item1);
         Vector3 pathPosition = pathData.Item1;
         Vector3 pathTangent = pathData.Item2;
         Vector3 targetForward = Vector3.Lerp(pathTangent, (pathPosition-transform.position).normalized, distanceFromPathFactor);
 
         dot = Vector3.Dot(targetForward, transform.forward);
-        turnLR = (int)Mathf.Sign(Vector3.Cross(kc.KartForward, targetForward).y); // Get turn direction, +1 for right, -1 for left
+        turnLR = (int)Mathf.Sign(Vector3.Cross(kartCtrl.KartForward, targetForward).y); // Get turn direction, +1 for right, -1 for left
 
-        if(!kc.DriftInput) {
+        if(!kartCtrl.DriftInput) {
             turnValue = turnLR * dotProductToTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
         } else {
             // Drift engaged, ensure that turn input matches drift direction
             turnValue = turnLR * dotProductToDriftTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
         }
-        kc.TurnInput = new(turnValue, 0);
+        kartCtrl.TurnInput = new(turnValue, 0);
 
         /* Throttle */
-        throttleSight = bp.AnalyzePathFromCurrentPosition(throttleVision);
+        throttleSight = botPath.AnalyzePathFromCurrentPosition(throttleVision);
 
         float dfpValue = Mathf.Clamp01(4*(distanceFromPathFactor*distanceFromPathFactor) - 4*distanceFromPathFactor + 1);
         float dotValue = dotProductToThrottle.Evaluate(Math.Abs(dot));
         float thrValue = 1-Mathf.Clamp01((throttleSight-throttleThreshold)/throttleThreshold);
 
         throttleInput =  Mathf.Clamp01((dotValue+thrValue)*(1-distanceFromPathFactor) + (dfpValue*distanceFromPathFactor));
-        kc.ThrottleInput = !stuck ? throttleInput : 0;
+        kartCtrl.ThrottleInput = !stuck ? throttleInput : 0;
 
         /* Drift */
-        driftSight = bp.AnalyzePathFromCurrentPosition(driftVision);
-        kc.DriftInput = !stuck && driftSight > driftThreshold;
+        driftSight = botPath.AnalyzePathFromCurrentPosition(driftVision);
+        kartCtrl.DriftInput = !stuck && driftSight > driftThreshold;
 
         /* Manage stuck */
         if(stuck && stuckAnimTime > 0) {
@@ -137,21 +127,21 @@ public class BotDriver : MonoBehaviour
                 stuckAnimTime = stuckAnimationDuration;
                 stuck = true;
             } else {
-                GetComponent<Rigidbody>().AddForce((closestPathPoint-transform.position).normalized*25f, ForceMode.Acceleration);
+                GetComponentInParent<Rigidbody>().AddForce((closestPathPoint-transform.position).normalized*25f, ForceMode.Acceleration);
             }
         }
 
         /* Items */
-        if(km.HasHeldItem && itemReleaseTime > 0f) {
+        if(kartManager.HasHeldItem && itemReleaseTime > 0f) {
             itemReleaseTime -= Time.deltaTime;
             if(itemReleaseTime <= 0) {
-                km.PerformItemInput(false);
+                kartManager.PerformItemInput(false);
             }
         }
 
-        if(km.HasSlotItem && !km.HasHeldItem && itemReleaseTime < 0.001f) 
+        if(kartManager.HasSlotItem && !kartManager.HasHeldItem && itemReleaseTime < 0.001f) 
         {
-            km.PerformItemInput(true);
+            kartManager.PerformItemInput(true);
             itemReleaseTime = itemReleaseTimes.x + (float)(new System.Random().NextDouble()*(itemReleaseTimes.y-itemReleaseTimes.x));
         }
 

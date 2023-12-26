@@ -5,7 +5,7 @@ using System;
 /**
  * Kart ControllerV3.5 by Ethan Mullen
  */
-public class KartController : MonoBehaviour
+public class KartController : KartBehavior
 {
 
 	/* ----- Settings variables ----- */
@@ -52,9 +52,6 @@ public class KartController : MonoBehaviour
 	[SerializeField] private float throttle;
 	[SerializeField] private bool boosting;
 
-	private KartStateManager stateMgr;
-	private Rigidbody rb;
-	private PositionTracker pt;
 	private float initKartModelY;
 
 	[Header("Runtime fields")] public Vector3 up = new(0, 1, 0);
@@ -79,9 +76,6 @@ public class KartController : MonoBehaviour
 
     private void Start()
     {
-		stateMgr = GetComponent<KartStateManager>();
-		rb = GetComponent<Rigidbody>();
-		pt = GetComponent<PositionTracker>();
 
 		if(kartModel != null) 
 			initKartModelY = kartModel.localPosition.y;
@@ -120,11 +114,11 @@ public class KartController : MonoBehaviour
 
 		// If we're drifting and airborne, change drift direction to match joystick
 		// Use airtime to ensure we maintain drift direction during small falls.
-		if(stateMgr.state == KartState.DRIFTING && driftEngageTime < driftEngageDuration && Math.Abs(TurnInput.x) >= inputDeadzone) 
+		if(kartStateManager.state == KartState.DRIFTING && driftEngageTime < driftEngageDuration && Math.Abs(TurnInput.x) >= inputDeadzone) 
 			driftDirection = (int)Mathf.Sign(TurnInput.x);
 
 		driftThetaTarget = 0;
-		if(stateMgr.state == KartState.DRIFTING && driftDirection != 0 && Mathf.Abs(TurnInput.x) >= inputDeadzone) { 
+		if(kartStateManager.state == KartState.DRIFTING && driftDirection != 0 && Mathf.Abs(TurnInput.x) >= inputDeadzone) { 
 			driftThetaTarget = Mathf.Sign(driftDirection)*driftAngleMin;
 			if(SteeringWheelMatchesDrift) 
 			if(SteeringWheelMatchesDrift) 
@@ -253,7 +247,7 @@ public class KartController : MonoBehaviour
 				break;
 			case KartState.DRIFTING:
 				if(!CanDriftEngage) {
-					stateMgr.state = KartState.DRIVING;
+					kartStateManager.state = KartState.DRIVING;
 					break;
 				}
 
@@ -331,12 +325,12 @@ public class KartController : MonoBehaviour
 	}
 
 	public bool DriftInput { 
-		get { return CanMove && stateMgr.state == KartState.DRIFTING; } 
+		get { return CanMove && kartStateManager.state == KartState.DRIFTING; } 
 		set {
-			if(value && stateMgr.state == KartState.DRIVING && Grounded() && !ActivelyBoosting)
-				stateMgr.state = KartState.DRIFTING;
-			else if(!value && stateMgr.state == KartState.DRIFTING)
-				stateMgr.state = KartState.DRIVING;
+			if(value && kartStateManager.state == KartState.DRIVING && Grounded() && !ActivelyBoosting)
+				kartStateManager.state = KartState.DRIFTING;
+			else if(!value && kartStateManager.state == KartState.DRIFTING)
+				kartStateManager.state = KartState.DRIVING;
 		}
 	}
 
@@ -345,7 +339,7 @@ public class KartController : MonoBehaviour
 		set {
 			if(value && !boosting && (boostAmount/maxBoost) >= requiredBoostPercentage) { 
 				boosting = true;
-				stateMgr.state = KartState.DRIVING;
+				kartStateManager.state = KartState.DRIVING;
 			} else if(!value) { 
 				if(boosting) boostAmount = 0;
 				boosting = false;
@@ -369,7 +363,7 @@ public class KartController : MonoBehaviour
 
 	public float CurrentMaxSpeed { get { return momentum == 1 ? (ActivelyBoosting ? maxBoostSpeed : maxSpeed) : maxSpeed/4f; } }
 	public float SpeedRatio { get { return TrackSpeed/CurrentMaxSpeed; } }
-	public bool CanMove { get { return GameplayManager.RaceManager.CanMove && pt.lapNumber < GameplayManager.RaceManager.settings.laps && damageCooldown <= 0; } }
+	public bool CanMove { get { return GameplayManager.RaceManager.CanMove && posTracker.lapNumber < GameplayManager.RaceManager.settings.laps && damageCooldown <= 0; } }
 
 	public bool SteeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	public bool SteeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }
@@ -379,11 +373,11 @@ public class KartController : MonoBehaviour
 	public bool ActivelyBoosting { get { return CanMove && boosting && boostAmount > 0;} }
 	public float BoostRatio { get { return boostAmount/maxBoost; } }
 	
-	public bool IsDriftEngaged { get { return stateMgr.state == KartState.DRIFTING && driftEngageTime == driftEngageDuration; } }
+	public bool IsDriftEngaged { get { return kartStateManager.state == KartState.DRIFTING && driftEngageTime == driftEngageDuration; } }
 	public float DriftTurnMultiplier { 
 		get { 
-			if(stateMgr.state == KartState.DRIFTING && IsDriftEngaged) {
-				float driftAgeRatio = stateMgr.timeInState/driftAge;
+			if(kartStateManager.state == KartState.DRIFTING && IsDriftEngaged) {
+				float driftAgeRatio = kartStateManager.timeInState/driftAge;
 				return SteeringWheelMatchesDrift ? 
 					Mathf.Lerp(turnMultiplierRangeDriftMatch.x, turnMultiplierRangeDriftMatch.y, 1-driftAgeRatio) :
 					Mathf.Lerp(turnMultiplierRangeDriftDiffer.x, turnMultiplierRangeDriftDiffer.y, 1-driftAgeRatio);

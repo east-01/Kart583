@@ -60,9 +60,9 @@ public class RaceManager : MonoBehaviour
     {  
 
         PlayerManager pm = GameplayManager.PlayerManager;
-        int botsInGame = pm.playerObjects.Count - pm.playerInputs.Count;
-        if(pm.PlayerCount < 8 && settings.bots && raceTime > -3f) {
-            for(int i = 0; i < 8-pm.PlayerCount && i < settings.botLimit-botsInGame; i++) {
+        if(settings.bots && raceTime > -3f) {
+            int botsToSpawn = Math.Min(settings.botLimit, PlayerManager.PlayerLimit-pm.KartCount);
+            for(int i = 0; i < botsToSpawn; i++) {
                 pm.SpawnBot();
             }
         }

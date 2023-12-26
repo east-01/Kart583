@@ -50791,6 +50791,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -3051389880945243554, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}
+      propertyPath: m_CustomSkybox
+      value: 
+      objectReference: {fileID: 2100000, guid: 142397bd25cf70c4a9fe0c954934f343, type: 2}
     - target: {fileID: 3753355222670578129, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -50839,6 +50843,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: RaceCamera
       objectReference: {fileID: 0}
+    - target: {fileID: 6976801468129761730, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}
+      propertyPath: m_CustomSkybox
+      value: 
+      objectReference: {fileID: 2100000, guid: 142397bd25cf70c4a9fe0c954934f343, type: 2}
     m_RemovedComponents:
     - {fileID: 3753355222047834736, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}

@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class HeldItem : MonoBehaviour
+public class HeldItem : KartBehavior
 {
     
     public void Show(Item item) 

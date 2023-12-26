@@ -22,6 +22,7 @@ public class GameplayManager : MonoBehaviour
     private PlayerManager pm;
     private PlayerInputManager pim;
     private ItemAtlas ia;
+    private LevelAtlas la;
 
     private SpawnPositions spawnPositions;
     private Waypoints waypoints;
@@ -43,6 +44,7 @@ public class GameplayManager : MonoBehaviour
         pm = GetComponent<PlayerManager>();
         pim = GetComponent<PlayerInputManager>();
         ia = GetComponent<ItemAtlas>();
+        la = GetComponent<LevelAtlas>();
 
         GameObject spo = GameObject.Find("SpawnPositions");
         if(spo != null) spawnPositions = spo.GetComponent<SpawnPositions>();
@@ -63,6 +65,7 @@ public class GameplayManager : MonoBehaviour
         if(pm == null) problems.Add("GameplayManager object doesn't have a PlayerManager script component!");
         if(pim == null) problems.Add("GameplayManager object doesn't have a PlayerInputManager script/input component!");
         if(ia == null) problems.Add("GameplayManager object doesn't have an ItemAtlas script component!");
+        if(la == null) problems.Add("GameplayManager object doesn't have a LevelAtlas script component!");
         if(spawnPositions == null) problems.Add("Failed to find SpawnPositions. " + (spo == null ? "No spawn position object found." : "Game object found, no SpawnPositions script component though."));
         if(waypoints == null) problems.Add("Failed to find Waypoints. " + (wpo == null ? "No waypoint object found." : "Game object found, no Waypoints script component though."));
         if(raceCamera == null) warnings.Add("Failed to find Race Camera. " + (rco == null ? "No race camera object found." : "Game object found, no RaceCamera script component though."));
@@ -85,6 +88,7 @@ public class GameplayManager : MonoBehaviour
     public static PlayerManager PlayerManager { get { return Instance.GetPlayerManager(); } }
     public static PlayerInputManager PlayerInputManager { get { return Instance.GetPlayerInputManager(); } }
     public static ItemAtlas ItemAtlas { get { return Instance.GetItemAtlas(); } }
+    public static LevelAtlas LevelAtlas { get { return Instance.GetLevelAtlas(); } }
     public static SpawnPositions SpawnPositions { get { return Instance.GetSpawnPositions(); }}
     public static Waypoints Waypoints { get { return Instance.GetWaypoints(); }}
     public static RaceCamera RaceCamera { get { return Instance.GetRaceCamera(); } }
@@ -95,6 +99,7 @@ public class GameplayManager : MonoBehaviour
     public PlayerManager GetPlayerManager() { return pm; }
     public PlayerInputManager GetPlayerInputManager() { return pim; }
     public ItemAtlas GetItemAtlas() { return ia; }
+    public LevelAtlas GetLevelAtlas() { return la; }
 
     public SpawnPositions GetSpawnPositions() { return spawnPositions; }
     public Waypoints GetWaypoints() { return waypoints; }

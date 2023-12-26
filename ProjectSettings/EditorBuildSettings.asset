@@ -6,13 +6,16 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/3-Scenes/Menus/Old Title Screen.unity
-    guid: 99f65232ded56604f910506bb4fedb94
-  - enabled: 1
-    path: Assets/3-Scenes/Tracks/A'Tuin Shipyard.unity
-    guid: b3411823744ce704d95cc88eea8f90cc
+    path: Assets/3-Scenes/Menus/TitleScreen.unity
+    guid: 2e9897c3d1bc2e04fbab6bc807305670
   - enabled: 1
     path: Assets/3-Scenes/Menus/MapSelect.unity
     guid: 45f81701ee4eb01439dd748284d5dc9a
+  - enabled: 1
+    path: Assets/3-Scenes/Tracks/TestTrack.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/3-Scenes/Tracks/ATuinShipyard.unity
+    guid: b3411823744ce704d95cc88eea8f90cc
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: db11999420f0e5945bbbe3d2760a5a7b, type: 2}

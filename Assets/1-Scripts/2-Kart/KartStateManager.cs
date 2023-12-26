@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 		   being set.
 	  2. Passive state changes: These state changes usually
 		   happen when the player ISN'T performing input. */
-public class KartStateManager : MonoBehaviour
+public class KartStateManager : KartBehavior
 {
 
 	public float timeInState { get; private set; }
@@ -26,13 +26,9 @@ public class KartStateManager : MonoBehaviour
 		} 
 	}
 
-	private KartController kc;
-
     void Start()
     {
         
-		kc = GetComponent<KartController>();
-
 		state = KartState.DRIVING;
 		
 		/* Active state changes - Player inputs (make requests) */
@@ -47,7 +43,7 @@ public class KartStateManager : MonoBehaviour
 		/* Active state changes - Recieve requests */
 
 		/* Passive state changes */
-		if(state == KartState.DRIFTING && ((kc.Grounded() && kc.steeringWheelDirection == 0 && timeInState >= 0.15f) || !kc.CanDriftEngage)) { 
+		if(state == KartState.DRIFTING && ((kartCtrl.Grounded() && kartCtrl.steeringWheelDirection == 0 && timeInState >= 0.15f) || !kartCtrl.CanDriftEngage)) { 
 			state = KartState.DRIVING;
 		}
 

@@ -1,263 +1,67 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &7775119190005058117
+--- !u!1001 &3498332184694449969
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 3608140939005531148, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
-      propertyPath: m_Name
-      value: Kart_Bot
+    - target: {fileID: 761985607284333580, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.51
+      value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 17.81
+      value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7504855781678858529, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+    - target: {fileID: 2091730334078156947, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5130578726108140990, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
+      propertyPath: m_Name
+      value: Kart
+      objectReference: {fileID: 0}
+    - target: {fileID: 7733809655012709343, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
---- !u!1 &6481934012597870153 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3608140939005531148, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
-  m_PrefabInstance: {fileID: 7775119190005058117}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &6472771340023598635
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6481934012597870153}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e201ae3e84db5704297821df3ce6d9d7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  waypointPositions: []
-  randomizeWaypoints: 1
-  drawBotPath: 0
-  drawResolution: 50
-  drawFrequency: 0.1
-  scale: 13
-  pathLength: 0
---- !u!114 &8601565547112359052
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6481934012597870153}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8d0455521fcd0814785f8e259692b7d0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  dotProductToTurn:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.5
-      value: 1
-      inSlope: -0
-      outSlope: 0.13450646
-      tangentMode: 5
-      weightedMode: 0
-      inWeight: 0.07572038
-      outWeight: 0.139485
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  dotProductToDriftTurn:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0.004699707
-      inSlope: -1.9793236
-      outSlope: -1.9793236
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.04506439
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  dotProductToThrottle:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0.4
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  tfThresholdCalcFrequency: 0.33
-  stuckAnimationDuration: 0.2
-  driftVision:
-    startWaypoint: 0
-    startProgress: 0
-    startOffset: 0
-    distance: 10
-    points: 40
-    weightFunction:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  driftThreshold: 2.2
-  throttleVision:
-    startWaypoint: 0
-    startProgress: 0
-    startOffset: 10
-    distance: 60
-    points: 40
-    weightFunction:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0.5
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 0.5
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: -2.6957486
-        outSlope: -2.6957486
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.07725322
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  throttleThreshold: 2.5
-  throttleVisionExtents: {x: 30, y: 60}
-  turnInput: {x: 0, y: 0}
-  throttleInput: 0
-  driftInput: 0
-  boostInput: 0
-  throttleSight: 0
-  driftSight: 0
-  distanceFromPath: 0
-  dot: 0
-  turnLR: 0
-  turnValue: 0
-  averageTrackSpeed: 0
-  stuck: 0
-  stuckAnimTime: 0
+  m_SourcePrefab: {fileID: 100100000, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
