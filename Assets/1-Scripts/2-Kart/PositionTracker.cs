@@ -16,6 +16,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
     public int lapNumber;
     public int racePos;
     public bool hasStartedRace;
+    public float raceFinishTime;
 
     void Start() 
     {
@@ -32,6 +33,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
 
         hasStartedRace = false;
         lapNumber = 0;
+        raceFinishTime = -1;
     }
 
     void OnTriggerEnter(Collider other) 
@@ -47,6 +49,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
         if(!hasStartedRace) {
             hasStartedRace = true;
             lapNumber = 0;
+            raceFinishTime = -1;
         } else if(advancedLapCompleted) 
             lapNumber += 1;
     }
@@ -60,6 +63,12 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
         segmentCompletion = GetSegmentCompletion();
         lapCompletion = GetLapCompletion();
         raceCompletion = GetRaceCompletion();
+    
+        if(raceCompletion >= 1 && raceFinishTime == -1) {
+            raceFinishTime = GameplayManager.RaceManager.raceTime;
+            print("completed race in " + raceFinishTime);
+        }
+    
     }
 
     public Waypoints GetWaypoints() { return waypoints; }

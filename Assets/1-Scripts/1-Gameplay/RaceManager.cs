@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -53,6 +54,14 @@ public class RaceManager : MonoBehaviour
             ensureRCCheck -= Time.deltaTime;
             if(ensureRCCheck <= 0) EnsureRaceConditions();
         }
+
+        if(RaceFinished) {
+            running = false;
+
+            GameplayManager.ScreenManager.ResultsBuilder.ShowResults();
+            print("shown results");
+        }
+
     }
 
     /** Check on everything in the race and if anything's wrong fix it or exit. */
@@ -79,6 +88,16 @@ public class RaceManager : MonoBehaviour
     public bool CanPlayersJoin { get { 
         if(GameplayManager.HasRaceCamera && GameplayManager.RaceCamera.Animating) return false;
         return raceTime <= -3f; 
+    } }
+
+    public bool RaceFinished { get {
+        foreach(PlayerInput pl in GameplayManager.PlayerManager.playerInputs) {
+            KartManager km = pl.gameObject.GetComponentInParent<KartManager>();
+            if(km.GetPositionTracker().raceCompletion < 1) {
+                return false;
+            }
+        }
+        return true;
     } }
 
 }
