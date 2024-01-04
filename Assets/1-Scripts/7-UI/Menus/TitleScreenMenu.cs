@@ -25,7 +25,9 @@ public class TitleScreenMenu : MonoBehaviour
 
     public void ClickedStart() 
     {
-        SceneManager.LoadScene("MapSelect");
+        GameObject tmo = GameObject.Find("TransitionManager");
+        tmo.GetComponent<TransitionManager>().LoadScene("MapSelect");
+        // SceneManager.LoadScene("MapSelect");
     }
 
     public void ClickedOptions() 

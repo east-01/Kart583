@@ -63,7 +63,6 @@ public class ResultsBuilder : MonoBehaviour
                 throw new InvalidOperationException("Failed to select next fastest kart!");
 
             unsorted.Remove(smallestKM);
-            print("unsorted objs left: " + unsorted.Count);
             sorted.Add(smallestKM);
         }
 
@@ -72,18 +71,6 @@ public class ResultsBuilder : MonoBehaviour
         sorted.ForEach(km => { finalPositions[i] = km; i++; });
         dnf.ForEach(km => { finalPositions[i] = km; i++; });
 
-        // DEBUG CODE
-        StringBuilder sb = new();
-        foreach(KartManager manager in finalPositions) {
-            if(manager == null) {
-                sb.Append("null, ");
-                continue;
-            }
-            sb.Append(manager.GetPositionTracker().raceFinishTime + ", ");
-        }
-        print("sorted racers: " + sb.ToString());
-        // END DEBUG
-
         // Delete old menu elements
         menuElements?.ForEach(e => Destroy(e));
         menuElements = new List<GameObject>();
@@ -91,21 +78,16 @@ public class ResultsBuilder : MonoBehaviour
         float rowW = placementRowPrefab.GetComponent<RectTransform>().rect.width;
         float rowH = placementRowPrefab.GetComponent<RectTransform>().rect.height;
 
-        float pageHeightPx = kartCount*rowH + (kartCount-1)*rowH;
-        resultsContainer.sizeDelta = new Vector2(rowW, pageHeightPx);
-        resultsContainer.anchoredPosition = Vector2.zero;
-
         for(i = 0; i < kartCount; i++) {
             KartManager manager = finalPositions[i];
-            print(i + " " + manager);
             if(manager == null) break;
             GameObject newObj = Instantiate(placementRowPrefab, resultsContainer);
-            newObj.GetComponent<PlacementRow>().UpdateVisuals(manager);
-            newObj.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, i*rowH + Math.Max(0, i-1)*paddingV);
+            newObj.GetComponent<PlacementRow>().UpdateVisuals(manager, i+1);
+
+            float newY = i * (rowH + paddingV);
+            newObj.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -newY);
 
             menuElements.Add(newObj);
-
-            i++;
         }
 
         gameObject.SetActive(true);
