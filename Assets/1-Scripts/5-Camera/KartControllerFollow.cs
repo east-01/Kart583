@@ -11,6 +11,7 @@ public class KartControllerFollow : MonoBehaviour
 	public float distance = 5f;
 	public float height = 3f;
 	public float fov = 65;
+	public float angleSpeed = 6.75f;
 
 	/* ----- Runtime fields ----- */
 	public Vector3 targetPosition;
@@ -36,16 +37,8 @@ public class KartControllerFollow : MonoBehaviour
 		GetComponent<Camera>().fieldOfView = displayFov;
 
 		Vector3 currentAngle = kc.RemoveUpComponent(subject.gameObject.transform.position-transform.position).normalized;
-		Vector3 targetAngle = Vector3.zero;
+        Vector3 angle = Vector3.Lerp(currentAngle, kc.KartForward, angleSpeed*Time.deltaTime);
 
-		if(kc.TrackSpeed > 0.1f) {
-			float ratio = Mathf.Clamp01(kc.timeSinceLastCollision/5f);
-			targetAngle = kc.RemoveUpComponent(Vector3.Lerp(kc.GetComponent<Rigidbody>().velocity, kc.KartForward, ratio*ratio).normalized);
-		} else {
-			targetAngle = kc.KartForward;
-		}
-
-        Vector3 angle = Vector3.Lerp(currentAngle, targetAngle, 0.3f);
 		Vector3 targetPos = kc.gameObject.transform.position - (angle.normalized * distance);
 		targetPos.y = kc.gameObject.transform.position.y + height;
 

@@ -51,12 +51,18 @@ public class BotPath : KartBehavior
     /** For each checkpoint bounding box, we'll pick a random point inside it. 
       * In order for a point to be valid, two conditions have to be met:
       *   1. The previous waypoint has a line of sight to the picked one.
-      *   2. The waypoint has a clear nm radius where n can be chosen by editor. */
+      *   2. The waypoint has a clear n meter radius where n can be chosen by editor. */
     public void PickPath() 
     {
         int i = 0;
         foreach(Transform pos in GameplayManager.Waypoints.transform) {
+            Collider coll = pos.gameObject.GetComponent<Collider>();
             bool foundPoint = false;
+            // Track the fail count for each attempt, helps illuminate problems with a waypoint.
+            int fcGround = 0;
+            int fcDistance = 0;
+            int fcObstruction = 0;
+            List<string> obstructions = new List<string>();
             for(int pickAttempt = 0; pickAttempt < 100; pickAttempt++) {
 
                 // Pick point
@@ -65,14 +71,22 @@ public class BotPath : KartBehavior
 
                 float randomX = UnityEngine.Random.Range(center.x - size.x/2f, center.x + size.x/2f);
                 float randomZ = UnityEngine.Random.Range(center.z - size.z/2f, center.z + size.z/2f);
+
+                // Check if there's floor there
                 RaycastHit hit;
                 Physics.Raycast(new Vector3(randomX, center.y, randomZ), -Vector3.up, out hit, 10f);
-                if(hit.point == null) continue;
+                if(hit.point == null || !hit.collider.CompareTag("Ground")) {
+                    fcGround++;
+                    continue;
+                }
                 
                 Vector3 testPos = new(randomX, pos.position.y, randomZ);
 
                 // Check if point is within radius of checkpoint
-                if(Vector3.Distance(pos.position, testPos) >= (Math.Max(size.x, size.z)*0.6f)/2f) continue;
+                if(Vector3.Distance(pos.position, testPos) >= (Math.Max(size.x, size.z)*0.6f)/2f) {
+                    fcDistance++;
+                    continue;
+                }
 
                 // Check if point has line of sight
                 // RaycastHit losHit;
@@ -83,10 +97,11 @@ public class BotPath : KartBehavior
                 bool hasObstruction = false;
                 Collider[] colliders = Physics.OverlapSphere(center, 2.5f);
                 foreach(Collider c in colliders) {
-                    bool isGround = Math.Abs(c.gameObject.transform.position.y) < 0.1f;
-                    List<string> tagWhitelist = new string[] {"Kart", "Waypoint", "Item"}.ToList();
-                    if(!isGround && !tagWhitelist.Contains(c.gameObject.tag)) {
+                    List<string> tagWhitelist = new string[] {"Ground", "Kart", "Waypoint", "Item"}.ToList();
+                    if(!tagWhitelist.Contains(c.gameObject.tag)) {
                         hasObstruction = true;
+                        fcObstruction++;
+                        if(!obstructions.Contains(c.gameObject.name)) obstructions.Add(c.gameObject.name);
                         break;
                     }
                 } 
@@ -101,7 +116,9 @@ public class BotPath : KartBehavior
             }
 
             if(!foundPoint) {
-                // Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
+                Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
+                Debug.LogError("  Missed ground checks: " + fcGround + "; Missed distance checks: " + fcDistance + ", Missed obstruction checks: " + fcObstruction);
+                Debug.LogError("  Obstructions found: " + obstructions);
                 waypointPositions.Add(pos.position);
             }
             i++;

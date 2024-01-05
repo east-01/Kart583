@@ -60,8 +60,11 @@ public class RaceManager : MonoBehaviour
     {  
 
         PlayerManager pm = GameplayManager.PlayerManager;
-        if(settings.bots && raceTime > -3f) {
+        if(settings.bots &&
+           raceTime > -3f && // TODO, spawn bots on load after player select menu is completed
+           pm.BotPlayerCount == 0) { // Use pm.BotPlayerCount == 0 so that we don't spawn more bots after we've already spawned them.
             int botsToSpawn = Math.Min(settings.botLimit, PlayerManager.PlayerLimit-pm.KartCount);
+            print("Spawning " + botsToSpawn + " bot(s).");
             for(int i = 0; i < botsToSpawn; i++) {
                 pm.SpawnBot();
             }

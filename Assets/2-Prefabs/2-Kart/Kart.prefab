@@ -937,7 +937,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   waypointPositions: []
   randomizeWaypoints: 1
-  drawBotPath: 0
+  drawBotPath: 1
   drawResolution: 50
   drawFrequency: 0.1
   scale: 13

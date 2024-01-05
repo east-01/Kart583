@@ -58,6 +58,9 @@ public class BotDriver : KartBehavior
       * The goal is to stay on the orange line. This will be done using the tangent to the line at that position */
     void Update() 
     {
+
+        Transform transform = kartCtrl.transform;
+
         /* Average speed */
         if(secondClock > 0) {
             secondClock -= Time.deltaTime;
@@ -113,6 +116,8 @@ public class BotDriver : KartBehavior
 
         /* Manage stuck */
         if(stuck && stuckAnimTime > 0) {
+            targetForward = (closestPathPoint-transform.position).normalized;
+            Debug.DrawRay(transform.position, targetForward, Color.red);
             transform.forward = Vector3.Lerp(transform.forward, targetForward, 1-(stuckAnimTime/stuckAnimationDuration));
             stuckAnimTime -= Time.deltaTime;
             if(stuckAnimTime <= 0) {
@@ -123,12 +128,9 @@ public class BotDriver : KartBehavior
         }
 
         if(!stuck && averageTrackSpeedCount == averageTrackSpeedCountLimit && averageTrackSpeed <= 0.33f) {
-            if(dot < 0.9) {
-                stuckAnimTime = stuckAnimationDuration;
-                stuck = true;
-            } else {
-                GetComponentInParent<Rigidbody>().AddForce((closestPathPoint-transform.position).normalized*25f, ForceMode.Acceleration);
-            }
+            stuckAnimTime = stuckAnimationDuration;
+            stuck = true; 
+            averageTrackSpeedCount = 0;
         }
 
         /* Items */
