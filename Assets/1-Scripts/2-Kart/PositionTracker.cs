@@ -66,7 +66,6 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
     
         if(raceCompletion >= 1 && raceFinishTime == -1) {
             raceFinishTime = GameplayManager.RaceManager.raceTime;
-            print("completed race in " + raceFinishTime);
         }
     
     }

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Unity.VisualStudio.Editor;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /** The Level atlas will hold all Level data for each Level enum. Properties are filled
   *   in the GameplayManager of the scene, where this LevelAtlas script should belong. */

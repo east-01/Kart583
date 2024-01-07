@@ -52,7 +52,6 @@ public class ResultsBuilder : MonoBehaviour
             foreach(KartManager manager in unsorted) {
                 PositionTracker pt = manager.GetPositionTracker();
                 // Check if this is the lowest finish time
-                print(pt.raceFinishTime + " compared to " + smallestRaceTime);
                 if(pt.raceFinishTime < smallestRaceTime) {
                     smallestRaceTime = pt.raceFinishTime;
                     smallestKM = manager;

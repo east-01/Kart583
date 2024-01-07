@@ -57,9 +57,7 @@ public class RaceManager : MonoBehaviour
 
         if(RaceFinished) {
             running = false;
-
             GameplayManager.ScreenManager.ResultsBuilder.ShowResults();
-            print("shown results");
         }
 
     }
