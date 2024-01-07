@@ -29,11 +29,7 @@ public class KartBehavior : MonoBehaviour
     {
 
         // Find manager
-        kartManager = GetComponent<KartManager>();
-        if(kartManager == null) {
-            kartManager = GetComponentInParent<KartManager>();
-            if(kartManager == null) throw new InvalidOperationException("KartBehaviour failed to find the KartManager.");
-        }
+        kartManager = LocateManager(gameObject);
 
         // Objects on the same as manager
         rb = kartManager.GetComponent<Rigidbody>();
@@ -49,6 +45,15 @@ public class KartBehavior : MonoBehaviour
         botPath = kartManager.GetComponentInChildren<BotPath>();
         humanDriver = kartManager.GetComponentInChildren<HumanDriver>();
 
+    }
+
+    public static KartManager LocateManager(GameObject kartObject) {
+        KartManager manager = kartObject.GetComponent<KartManager>();
+        if(manager == null) {
+            manager = kartObject.GetComponentInParent<KartManager>();
+            if(manager == null) throw new InvalidOperationException("KartBehaviour failed to find the KartManager.");
+        }
+        return manager;
     }
 
     public KartManager GetKartManager() { return kartManager; }

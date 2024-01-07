@@ -7,13 +7,13 @@ public class UIInputDelegate : EventTrigger
 {
 
     private Vector2 mousePos;
-    private bool mouseMode;
+    // private bool mouseMode;
 
     void Update()
     {
         if(Vector2.Distance(mousePos, Input.mousePosition) > 1f) {
             mousePos = Input.mousePosition;
-            mouseMode = true;
+            // mouseMode = true;
             EventSystem.current.SetSelectedGameObject(null);
         }
     }
@@ -25,7 +25,7 @@ public class UIInputDelegate : EventTrigger
     public void InputAction() 
     {
         print("recieved action");
-        mouseMode = false;
+        // mouseMode = false;
         EventSystem.current.SetSelectedGameObject(EventSystem.current.firstSelectedGameObject);
     }
 
