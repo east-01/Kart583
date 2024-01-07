@@ -8,14 +8,12 @@ using UnityEngine;
 public class BotDriver : KartBehavior
 {
 
-    /** Dot product == 1 when vectors match, Dot product == 0 when vectors are orthogonal */
     [Header("Bot Settings")]
     public AnimationCurve dotProductToTurn;
     public AnimationCurve dotProductToDriftTurn;
     public AnimationCurve dotProductToThrottle;
     public float tfThresholdCalcFrequency = 0.33f;
     public float stuckAnimationDuration = 0.2f;
-    public Vector2 itemReleaseTimes = new Vector2(1f, 10f); // Min and max time (in seconds) it takes bot to drop item, randomly selected in range
 
     private float secondClock;
 
@@ -25,6 +23,8 @@ public class BotDriver : KartBehavior
     public PathAnalysisSettings throttleVision;
     public float throttleThreshold = 300;
     public Vector2 throttleVisionExtents;
+    public PathAnalysisSettings boostVision;
+    public float boostThreshold = 200;
 
     /* ------- Inputs to controller ------ */
     [Header("Input"), SerializeField] private Vector2 turnInput;
@@ -33,7 +33,7 @@ public class BotDriver : KartBehavior
     [SerializeField] private bool boostInput;
 
     /* ----- Fields used in Update() ----- */
-    [Header("Bot Brain"), SerializeField] private float throttleSight, driftSight;
+    [Header("Bot Brain"), SerializeField] private float throttleSight, driftSight, boostSight;
     [SerializeField] private float distanceFromPath;
     [SerializeField] private float dot; // Dot product to target direction
 
@@ -45,8 +45,6 @@ public class BotDriver : KartBehavior
 
     [SerializeField] private bool stuck;
     [SerializeField] private float stuckAnimTime;
-
-    [SerializeField] private float itemReleaseTime; // Timer counting down seconds until bot releases item
     /* ----------------------------------- */
 
     void Start()
@@ -81,7 +79,8 @@ public class BotDriver : KartBehavior
         distanceFromPath = Vector3.Distance(transform.position, closestPathPoint);
         float distanceFromPathFactor = Mathf.Clamp01(distanceFromPath/1.5f);
 
-        /* If the bot is far away from their path, move the target position forward further along the path
+        /* Turning:
+         * If the bot is far away from their path, move the target position forward further along the path
          *   to smooth out our return path. */
         (int, float) posOffsetByDFP = botPath.MoveAlongPath(8f*distanceFromPathFactor, posTracker.waypointIndex, progressEstimate);
         (Vector3, Vector3) pathData = botPath.ReadPath(posOffsetByDFP.Item2, posOffsetByDFP.Item1);
@@ -89,15 +88,18 @@ public class BotDriver : KartBehavior
         Vector3 pathTangent = pathData.Item2;
         Vector3 targetForward = Vector3.Lerp(pathTangent, (pathPosition-transform.position).normalized, distanceFromPathFactor);
 
+        Debug.DrawRay(transform.position, targetForward, Color.cyan, Time.deltaTime);
+
         dot = Vector3.Dot(targetForward, transform.forward);
         turnLR = (int)Mathf.Sign(Vector3.Cross(kartCtrl.KartForward, targetForward).y); // Get turn direction, +1 for right, -1 for left
 
-        if(!kartCtrl.DriftInput) {
-            turnValue = turnLR * dotProductToTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
+        if(dot > 0) {
+            float eval = kartCtrl.DriftInput ? dotProductToDriftTurn.Evaluate(Mathf.Abs(dot)) : dotProductToTurn.Evaluate(Mathf.Abs(dot));
+            turnValue = turnLR * eval;
         } else {
-            // Drift engaged, ensure that turn input matches drift direction
-            turnValue = turnLR * dotProductToDriftTurn.Evaluate(Mathf.Abs(dot)); // Convert turnLR into a turn value for use in turn input
+            turnValue = -Mathf.Sign(Vector3.Cross(targetForward, transform.forward).y);
         }
+
         kartCtrl.TurnInput = new(turnValue, 0);
 
         /* Throttle */
@@ -112,12 +114,18 @@ public class BotDriver : KartBehavior
 
         /* Drift */
         driftSight = botPath.AnalyzePathFromCurrentPosition(driftVision);
-        kartCtrl.DriftInput = !stuck && driftSight > driftThreshold;
+        
+        bool driftingWrongWay = kartCtrl.DriftInput && kartCtrl.driftDirection != turnLR;
+        kartCtrl.DriftInput = !stuck && !driftingWrongWay && driftSight > driftThreshold;
+
+        /* Boost */
+        boostSight = botPath.AnalyzePathFromCurrentPosition(boostVision);
+        kartCtrl.BoostInput = !stuck && !kartCtrl.DriftInput && kartCtrl.boostAmount > 0 && boostSight <= boostThreshold;
 
         /* Manage stuck */
         if(stuck && stuckAnimTime > 0) {
             targetForward = (closestPathPoint-transform.position).normalized;
-            Debug.DrawRay(transform.position, targetForward, Color.red);
+
             transform.forward = Vector3.Lerp(transform.forward, targetForward, 1-(stuckAnimTime/stuckAnimationDuration));
             stuckAnimTime -= Time.deltaTime;
             if(stuckAnimTime <= 0) {
@@ -130,30 +138,12 @@ public class BotDriver : KartBehavior
         if(!stuck && averageTrackSpeedCount == averageTrackSpeedCountLimit && averageTrackSpeed <= 0.33f) {
             stuckAnimTime = stuckAnimationDuration;
             stuck = true; 
+            // Reset the avg track speed count so we don't get stuck again on the next frame
             averageTrackSpeedCount = 0;
         }
 
-        /* Items */
-        if(kartManager.HasHeldItem && itemReleaseTime > 0f) {
-            itemReleaseTime -= Time.deltaTime;
-            if(itemReleaseTime <= 0) {
-                kartManager.PerformItemInput(false);
-            }
-        }
-
-        if(kartManager.HasSlotItem && !kartManager.HasHeldItem && itemReleaseTime < 0.001f) 
-        {
-            kartManager.PerformItemInput(true);
-            itemReleaseTime = itemReleaseTimes.x + (float)(new System.Random().NextDouble()*(itemReleaseTimes.y-itemReleaseTimes.x));
-        }
-
-        // Debug code
-        // Red = direction to waypoint
-        // Blue = forward
-        // Green = Line to target position
-        Debug.DrawLine(transform.position, pathPosition, new(1f, 0.5f, 0));
+        Debug.DrawLine(transform.position, pathPosition, new(1f, 0.75f, 0));
         Debug.DrawRay(pathPosition, pathTangent, new(1f, 0.5f, 0));
-        // End debug code
 
     }
 

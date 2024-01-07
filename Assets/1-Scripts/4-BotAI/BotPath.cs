@@ -193,6 +193,15 @@ public class BotPath : KartBehavior
     /** Analyze the second derivative of the bezier curve at the specified progress point on the
       *   specified waypoint's segment. This function will return the magnitude of the second
       *   derivative vector. */
+    public float AnalyzeDerivative(int waypoint, float progress) 
+    {
+        if(!curveSegments.ContainsKey(waypoint)) return 0;
+        return curveSegments[waypoint].CalculateBezierDerivative(progress).magnitude;
+    }
+
+    /** Analyze the second derivative of the bezier curve at the specified progress point on the
+      *   specified waypoint's segment. This function will return the magnitude of the second
+      *   derivative vector. */
     public float AnalyzeSecondDerivative(int waypoint, float progress) 
     {
         if(!curveSegments.ContainsKey(waypoint)) return 0;
@@ -214,7 +223,7 @@ public class BotPath : KartBehavior
         float accumulator = 0;
         float totalWeight = 0;
         for(int i = 0; i < settings.points; i++) {
-            float derivativeMagnitude = AnalyzeSecondDerivative(waypoint, prog);
+            float derivativeMagnitude = AnalyzeDerivative(waypoint, prog);
             float weight = settings.weightFunction.Evaluate(i / (float)settings.points);
 
             accumulator += derivativeMagnitude * weight;

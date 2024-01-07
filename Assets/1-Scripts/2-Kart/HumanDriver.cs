@@ -11,9 +11,7 @@ public class HumanDriver : KartBehavior
     void Update() 
     {
         if(posTracker.raceCompletion >= 1) {
-            botPath.enabled = true;
-            botDriver.enabled = true;
-            humanDriver.enabled = false;
+            kartManager.SwitchToBotBrain();
         }
     }
 

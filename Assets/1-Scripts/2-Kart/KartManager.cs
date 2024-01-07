@@ -25,6 +25,14 @@ public class KartManager : KartBehavior
 		heldItemImage.gameObject.SetActive(false);
 	}
 
+	public void SwitchToBotBrain() 
+	{
+		botPath.enabled = true;
+		botDriver.enabled = true;
+		botItemManager.enabled = true;
+		humanDriver.enabled = false;
+	}
+
 	/** Callback for when a player hits an item box. 
 	    Return true if item successfully recieved, false if not. */
 	public bool HitItemBox(GameObject itemBox) 

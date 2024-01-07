@@ -402,6 +402,8 @@ GameObject:
   - component: {fileID: 3497271038773842349}
   - component: {fileID: 2751771631386326976}
   - component: {fileID: 7979329536450047049}
+  - component: {fileID: 2088108346145602241}
+  - component: {fileID: 9035622293703636930}
   - component: {fileID: 5114485855354017640}
   - component: {fileID: 4518181260819848706}
   - component: {fileID: 8556894197583946043}
@@ -493,8 +495,36 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 0.6, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!136 &2088108346145602241
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.25
+  m_Height: 1
+  m_Direction: 0
+  m_Center: {x: 0, y: -0.09, z: 0.5}
+--- !u!136 &9035622293703636930
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.25
+  m_Height: 1
+  m_Direction: 0
+  m_Center: {x: 0, y: -0.09, z: -0.5}
 --- !u!54 &5114485855354017640
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -506,7 +536,7 @@ Rigidbody:
   m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -719,6 +749,7 @@ GameObject:
   - component: {fileID: 9101915779885251598}
   - component: {fileID: 7733809655012709343}
   - component: {fileID: 761985607284333580}
+  - component: {fileID: 3487345005974195579}
   m_Layer: 0
   m_Name: Brain
   m_TagString: Untagged
@@ -1037,7 +1068,6 @@ MonoBehaviour:
     m_RotationOrder: 4
   tfThresholdCalcFrequency: 0.33
   stuckAnimationDuration: 0.2
-  itemReleaseTimes: {x: 1, y: 10}
   driftVision:
     startWaypoint: 0
     startProgress: 0
@@ -1110,12 +1140,44 @@ MonoBehaviour:
       m_RotationOrder: 4
   throttleThreshold: 2.5
   throttleVisionExtents: {x: 30, y: 60}
+  boostVision:
+    startWaypoint: 0
+    startProgress: 0
+    startOffset: 10
+    distance: 100
+    points: 20
+    weightFunction:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  boostThreshold: 2
   turnInput: {x: 0, y: 0}
   throttleInput: 0
   driftInput: 0
   boostInput: 0
   throttleSight: 0
   driftSight: 0
+  boostSight: 0
   distanceFromPath: 0
   dot: 0
   turnLR: 0
@@ -1123,6 +1185,19 @@ MonoBehaviour:
   averageTrackSpeed: 0
   stuck: 0
   stuckAnimTime: 0
+--- !u!114 &3487345005974195579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5479924275931452875}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4efa80f650ebff74bb29f2fc5e3bb727, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemReleaseTimes: {x: 1, y: 10}
   itemReleaseTime: 0
 --- !u!1 &5525763595316109383
 GameObject:

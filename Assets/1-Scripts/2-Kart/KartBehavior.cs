@@ -21,6 +21,7 @@ public class KartBehavior : MonoBehaviour
 
     // Brain
     protected BotDriver botDriver;
+    protected BotItemManager botItemManager;
     protected BotPath botPath;
     protected HumanDriver humanDriver;
 
@@ -44,6 +45,7 @@ public class KartBehavior : MonoBehaviour
 
         // Objects on children of manager
         botDriver = kartManager.GetComponentInChildren<BotDriver>();
+        botItemManager = kartManager.GetComponentInChildren<BotItemManager>();
         botPath = kartManager.GetComponentInChildren<BotPath>();
         humanDriver = kartManager.GetComponentInChildren<HumanDriver>();
 

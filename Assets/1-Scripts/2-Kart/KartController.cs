@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Runtime.InteropServices.WindowsRuntime;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
@@ -76,7 +77,6 @@ public class KartController : KartBehavior
 
     private void Start()
     {
-
 		if(kartModel != null) 
 			initKartModelY = kartModel.localPosition.y;
 		else
@@ -91,7 +91,7 @@ public class KartController : KartBehavior
 		if(grounded) { 
 			airtime = 0;
 		} else { 
-			if(this.grounded) airtime = 0;
+			if(this.grounded) airtime = 0; // We've just gone airborne, reset airtime
 			airtime += Time.deltaTime;	
 		}
 		this.grounded = grounded;
@@ -194,13 +194,24 @@ public class KartController : KartBehavior
 		/* Up force: It should always be that transform.up == up, add a torque to match this */
 		float upDot = Vector3.Dot(up, transform.up);
 		if(upDot < 0.975f) {
-            // Quaternion.FromToRotation(transform.up, up).ToAngleAxis(out float angle, out Vector3 axis);
-            // rb.AddTorque(axis * angle * Mathf.Deg2Rad * 25f, ForceMode.Acceleration);
-			rb.MoveRotation(Quaternion.FromToRotation(transform.up, up) * rb.rotation);
+			// Code found here https://gamedev.stackexchange.com/questions/194641/how-to-set-transform-up-without-locking-the-y-axis
+			// I wish I understood it. Someday.
+			Quaternion zToUp = Quaternion.LookRotation(up, -transform.forward);
+			Quaternion yToz = Quaternion.Euler(90, 0, 0);
+			transform.rotation = zToUp * yToz;
+			rb.angularVelocity = IsolateUpComponent(rb.angularVelocity);
 		}
 
+		rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, IsolateUpComponent(rb.angularVelocity), 3f*Time.deltaTime);
+
+		/* Apply gravity */
+		rb.AddForce(-up.normalized*Physics.gravity.magnitude);
+
 		/* Player might be stuck in ground, get em out */
-		if(airtime > 0.5f && rb.velocity.y == 0) rb.MovePosition(transform.position+Vector3.up*0.1f);
+		// if(airtime > 0.5f && Mathf.Abs(rb.velocity.y) < 0.01f) {
+		// 	print("player stuck in ground");
+		// 	rb.MovePosition(transform.position+Vector3.up*0.1f);
+		// }
 
 	}
 
@@ -210,8 +221,8 @@ public class KartController : KartBehavior
 	{
 		DrawVector(KartForward, Color.blue);
 		DrawVector(rb.velocity, Color.cyan);
+		DrawVector(up, Color.green);
 
-		// Momentum gets updated first, then kartForward second
 		momentum = TrackSpeed > 0.1f ? (Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1) : 0;
 
 		Vector3 throttleForce = (ActivelyBoosting ? 1f : ThrottleInput) * (ActivelyBoosting ? acceleration*5f : acceleration) * transform.forward;
@@ -303,9 +314,19 @@ public class KartController : KartBehavior
 
 	public bool Grounded() 
 	{ 
-		float distance = 0.1f;
-		Vector3 raycastOrigin = new(transform.position.x, GetComponent<BoxCollider>().bounds.min.y+0.01f, transform.position.z);
-		return Physics.Raycast(raycastOrigin, Vector3.down, distance);
+		// TODO: Move raycast origin to the front/back of the kart depending on the momentum
+		//   so we can read changes in the up direction sooner
+		Vector3 collSize = GetComponent<BoxCollider>().size;
+		Vector3 raycastOrigin = transform.position + momentum*(collSize.z/2f)*KartForward;
+		RaycastHit hit;
+		Physics.Raycast(raycastOrigin, -transform.up, out hit, collSize.y);
+		if(hit.collider != null && hit.collider.CompareTag("Ground")) {
+			up = hit.normal;
+			return true;
+		} else {
+			up = Vector3.up;
+			return false;
+		}
 	}
 
 	/* Input */
@@ -363,7 +384,7 @@ public class KartController : KartBehavior
 
 	public float CurrentMaxSpeed { get { return momentum == 1 ? (ActivelyBoosting ? maxBoostSpeed : maxSpeed) : maxSpeed/4f; } }
 	public float SpeedRatio { get { return TrackSpeed/CurrentMaxSpeed; } }
-	public bool CanMove { get { return GameplayManager.RaceManager.CanMove && posTracker.lapNumber < GameplayManager.RaceManager.settings.laps && damageCooldown <= 0; } }
+	public bool CanMove { get { return GameplayManager.RaceManager.CanMove && damageCooldown <= 0; } }
 
 	public bool SteeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	public bool SteeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }
