@@ -53,15 +53,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5130578726108140990, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
       propertyPath: m_Name
-      value: Kart
-      objectReference: {fileID: 0}
-    - target: {fileID: 7564573480733894252, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 9101915779885251598, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
-      propertyPath: m_Enabled
-      value: 1
+      value: Kart_Player
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}

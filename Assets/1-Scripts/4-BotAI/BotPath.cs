@@ -118,7 +118,11 @@ public class BotPath : KartBehavior
             if(!foundPoint) {
                 Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
                 Debug.LogError("  Missed ground checks: " + fcGround + "; Missed distance checks: " + fcDistance + ", Missed obstruction checks: " + fcObstruction);
-                Debug.LogError("  Obstructions found: " + obstructions);
+                if(obstructions.Count > 0) {
+                    string obslist = "";
+                    obstructions.ForEach(s => obslist += s + ", ");
+                    Debug.LogError("  Obstructions found: " + obslist.Substring(0, obslist.Length-2));
+                }
                 waypointPositions.Add(pos.position);
             }
             i++;

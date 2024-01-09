@@ -49,7 +49,7 @@ public class ItemBoxAnimator : MonoBehaviour
 	{
 		if(cooldownTime > 0) { 
 			KartManager pm = other.GetComponent<KartManager>();
-			bool awardedItem = pm != null && pm.HitItemBox(other.gameObject);
+			bool awardedItem = pm != null && pm.GetKartItemManager().HitItemBox(other.gameObject);
 
 			Show(false);
 			

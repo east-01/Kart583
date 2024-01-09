@@ -71,15 +71,10 @@ public class RaceManager : MonoBehaviour
            raceTime > -3f && // TODO, spawn bots on load after player select menu is completed
            pm.BotPlayerCount == 0) { // Use pm.BotPlayerCount == 0 so that we don't spawn more bots after we've already spawned them.
             int botsToSpawn = Math.Min(settings.botLimit, PlayerManager.PlayerLimit-pm.KartCount);
-            print("Spawning " + botsToSpawn + " bot(s).");
             for(int i = 0; i < botsToSpawn; i++) {
                 pm.SpawnBot();
             }
         }
-        
-        // String positions = "";
-        // pm.playerPositions.ForEach(pt => positions += ((int)Math.Round(pt.raceCompletion*10000)/10000f) + ", ");
-        // if(positions.Length > 2) print(positions.Substring(0, positions.Length-2));
 
         // Reset ensureRCCheck timer
         ensureRCCheck = raceTime < 0 ? 1 : 5;

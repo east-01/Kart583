@@ -1,11 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using JetBrains.Annotations;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.AI;
 
 /** This class will build the results rows out of the ResultRow prefabs. */
 public class ResultsBuilder : MonoBehaviour
@@ -34,7 +29,9 @@ public class ResultsBuilder : MonoBehaviour
         int i;
 
         List<KartManager> unsorted = new();
-        List<KartManager> dnf = new(); // The people who don't have raceCompletion >= 1
+        List<KartManager> dnf = new(); 
+        
+        // Separate people that finished/didn't finish
         GameplayManager.PlayerManager.kartObjects.ForEach(ko => {
             KartManager km = KartBehavior.LocateManager(ko);
             if(km.GetPositionTracker().raceCompletion < 1)
@@ -42,10 +39,11 @@ public class ResultsBuilder : MonoBehaviour
             else
                 unsorted.Add(km);
         });
+
         List<KartManager> sorted = new();
 
-        // Sort everyone by race time
-        for(i = 0; i < unsorted.Count; i++) {
+        // Sort finished racers by time
+        while(unsorted.Count > 0) {
             float smallestRaceTime = float.MaxValue;
             KartManager smallestKM = null;
 
@@ -59,16 +57,32 @@ public class ResultsBuilder : MonoBehaviour
             }
 
             if(smallestKM == null)
-                throw new InvalidOperationException("Failed to select next fastest kart!");
+                throw new InvalidOperationException("Failed to select next fastest kart.");
 
             unsorted.Remove(smallestKM);
             sorted.Add(smallestKM);
         }
 
-        KartManager[] finalPositions = new KartManager[kartCount];
-        i = 0;
-        sorted.ForEach(km => { finalPositions[i] = km; i++; });
-        dnf.ForEach(km => { finalPositions[i] = km; i++; });
+        // Sort unfinished racers by race completion
+        while(dnf.Count > 0) {
+            float highestRaceCompletion = float.MinValue;
+            KartManager hrcKM = null;
+
+            foreach(KartManager manager in dnf) {
+                PositionTracker pt = manager.GetPositionTracker();
+                // Check if this is the lowest finish time
+                if(pt.raceCompletion > highestRaceCompletion) {
+                    highestRaceCompletion = pt.raceCompletion;
+                    hrcKM = manager;
+                }
+            }
+
+            if(hrcKM == null)
+                throw new InvalidOperationException("Failed to select next highest race completion.");
+
+            dnf.Remove(hrcKM);
+            sorted.Add(hrcKM);
+        }
 
         // Delete old menu elements
         menuElements?.ForEach(e => Destroy(e));
@@ -78,8 +92,10 @@ public class ResultsBuilder : MonoBehaviour
         float rowH = placementRowPrefab.GetComponent<RectTransform>().rect.height;
 
         for(i = 0; i < kartCount; i++) {
-            KartManager manager = finalPositions[i];
-            if(manager == null) break;
+            KartManager manager = sorted[i];
+            if(manager == null) 
+                throw new InvalidOperationException("Manager cannot be null.");
+                
             GameObject newObj = Instantiate(placementRowPrefab, resultsContainer);
             newObj.GetComponent<PlacementRow>().UpdateVisuals(manager, i+1);
 

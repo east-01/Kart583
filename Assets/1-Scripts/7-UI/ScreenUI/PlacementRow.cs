@@ -16,7 +16,7 @@ public class PlacementRow : MonoBehaviour
     public void UpdateVisuals(KartManager kart, int placement) 
     {
         placeText.text = placement + ".";
-        nameText.text = "Player";
+        nameText.text = kart.GetPlayerData().name;
         timeText.text = FormatTime(kart.GetPositionTracker().raceFinishTime);
     }
 

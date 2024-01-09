@@ -754,9 +754,9 @@ MonoBehaviour:
   distance: 5
   height: 2
   fov: 65
+  angleSpeed: 6.75
   targetPosition: {x: 0, y: 0, z: 0}
   fovInterpolationFactor: 3
-  targetAngle: {x: 0, y: 0, z: 0}
 --- !u!114 &1360352757535883145
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1319,6 +1319,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6129501024455554250, guid: 5c3bdbc52bd848548bb071c0dcd20d5f, type: 3}
+      propertyPath: itemSlotManager
+      value: 
+      objectReference: {fileID: 7748857200631258720}
     - target: {fileID: 8017334981513231633, guid: 5c3bdbc52bd848548bb071c0dcd20d5f, type: 3}
       propertyPath: itemSlotManager
       value: 

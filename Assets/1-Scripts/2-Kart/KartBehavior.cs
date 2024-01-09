@@ -17,6 +17,7 @@ public class KartBehavior : MonoBehaviour
     protected KartManager kartManager;
     protected KartController kartCtrl;
     protected KartStateManager kartStateManager;
+    protected KartItemManager kartItemManager;
     protected PositionTracker posTracker;
 
     // Brain
@@ -37,6 +38,7 @@ public class KartBehavior : MonoBehaviour
 
         kartCtrl = kartManager.GetComponent<KartController>();
         kartStateManager = kartManager.GetComponent<KartStateManager>();
+        kartItemManager = kartManager.GetComponent<KartItemManager>();
         posTracker = kartManager.GetComponent<PositionTracker>();
 
         // Objects on children of manager
@@ -59,6 +61,7 @@ public class KartBehavior : MonoBehaviour
     public KartManager GetKartManager() { return kartManager; }
     public KartController GetKartController() { return kartCtrl; }
     public KartStateManager GetKartStateManager() { return kartStateManager; }
+    public KartItemManager GetKartItemManager() { return kartItemManager; }
     public PositionTracker GetPositionTracker() { return posTracker; }
     public BotDriver GetBotDriver() { return botDriver; }
     public BotPath GetBotPath() { return botPath; }

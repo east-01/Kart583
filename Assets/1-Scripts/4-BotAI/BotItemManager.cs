@@ -9,15 +9,15 @@ public class BotItemManager : KartBehavior {
     void Update() 
     {
 
-        if(kartManager.HasHeldItem && itemReleaseTime > 0f) {
+        if(kartItemManager.HasHeldItem && itemReleaseTime > 0f) {
             itemReleaseTime -= Time.deltaTime;
             if(itemReleaseTime <= 0) {
-                kartManager.PerformItemInput(false);
+                kartItemManager.PerformItemInput(false);
             }
         }
 
-        if(kartManager.HasSlotItem && !kartManager.HasHeldItem && itemReleaseTime < 0.001f) {
-            kartManager.PerformItemInput(true);
+        if(kartItemManager.HasSlotItem && !kartItemManager.HasHeldItem && itemReleaseTime < 0.001f) {
+            kartItemManager.PerformItemInput(true);
             itemReleaseTime = UnityEngine.Random.Range(itemReleaseTimes.x, itemReleaseTimes.y);
         }
 

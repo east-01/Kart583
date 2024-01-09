@@ -408,6 +408,7 @@ GameObject:
   - component: {fileID: 4518181260819848706}
   - component: {fileID: 8556894197583946043}
   - component: {fileID: 364749038001437997}
+  - component: {fileID: 351521495102920665}
   - component: {fileID: 1348276822467886517}
   m_Layer: 0
   m_Name: Kart
@@ -553,8 +554,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc70dc3e8c25b2f4ba7be4834073166f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemSlotManager: {fileID: 0}
-  heldItemImage: {fileID: 8537382284469897725}
 --- !u!114 &8556894197583946043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -618,6 +617,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _state: 0
+--- !u!114 &351521495102920665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3da2711004a73e94dacd077841e9a59f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemSlotManager: {fileID: 0}
+  heldItemImage: {fileID: 8537382284469897725}
 --- !u!114 &1348276822467886517
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -637,6 +650,7 @@ MonoBehaviour:
   lapNumber: 0
   racePos: 0
   hasStartedRace: 0
+  raceFinishTime: 0
 --- !u!1 &5366759461558529120
 GameObject:
   m_ObjectHideFlags: 0
@@ -779,7 +793,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5479924275931452875}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
   m_Name: 
@@ -883,8 +897,8 @@ MonoBehaviour:
     m_ActionName: Gameplay/Join[/Keyboard/anyKey]
   - m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4518181260819848706}
-        m_TargetAssemblyTypeName: KartManager, Assembly-CSharp
+      - m_Target: {fileID: 351521495102920665}
+        m_TargetAssemblyTypeName: KartItemManager, Assembly-CSharp
         m_MethodName: OnItem
         m_Mode: 0
         m_Arguments:
@@ -949,7 +963,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5479924275931452875}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d5bc62db68b2ac42a6c4ca6e6c4b9b7, type: 3}
   m_Name: 

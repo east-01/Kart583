@@ -3320,9 +3320,9 @@ PrefabInstance:
       propertyPath: defaultSettings.laps
       value: 2
       objectReference: {fileID: 0}
-    - target: {fileID: 5244667296191878687, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
-      propertyPath: defaultSettings.startDelay
-      value: 10
+    - target: {fileID: 6795377866323719207, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
+      propertyPath: playStartAnimation
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
@@ -12945,7 +12945,7 @@ GameObject:
   - component: {fileID: 512885147}
   m_Layer: 0
   m_Name: Plane
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

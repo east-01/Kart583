@@ -7,6 +7,13 @@ public class PlayerManager : MonoBehaviour
 {
 
 	public static readonly int PlayerLimit = 8;
+	public static readonly string[] rlBotNames = { // luv u rl
+		"Armstrong", "Bandit", "Beast", "Boomer", "Buzz", "C-Block", "Casper", "Caveman", "Centice", "Chipper",
+		"Cougar", "Dude", "Foamer", "Fury", "Gerwin", "Goose", "Heater", "Hollywood", "Hound", "Iceman", "Imp",
+		"Jester", "Junker", "Khan", "Marley", "Maverick", "Merlin", "Middy", "Mountain", "Myrtle", "Outlaw", "Poncho",
+		"Rainmaker", "Raja", "Rex", "Roundhouse", "Sabretooth", "Saltie", "Samara", "Scout", "Shepard", "Slider",
+		"Squall", "Sticks", "Stinger", "Storm", "Sultan", "Sundown", "Swabbie", "Tex", "Tusk", "Viper", "Wolfman", "Yuri"
+	};
 
 	public GameObject kartBotPrefab;
 
@@ -85,8 +92,13 @@ public class PlayerManager : MonoBehaviour
 			player.camera.GetComponent<AudioListener>().enabled = false;
 		}
 		playerInputs.Add(player);
-		joinQueue.Add(player.gameObject.GetComponentInParent<KartManager>());
-		// AddKart(player.gameObject.GetComponentInParent<KartManager>());
+
+		KartManager pkm = KartBehavior.LocateManager(player.gameObject);
+		PlayerData pdata = new PlayerData();
+		pdata.name = "Player " + (player.playerIndex + 1);
+		pkm.SetPlayerData(pdata);
+
+		joinQueue.Add(pkm);
 	}
 
 	void PlayerLeft(PlayerInput player) 
@@ -97,7 +109,13 @@ public class PlayerManager : MonoBehaviour
 	public void SpawnBot() 
 	{
 		GameObject obj = Instantiate(kartBotPrefab);
-		AddKart(obj.GetComponent<KartManager>());
+		
+		KartManager bkm = KartBehavior.LocateManager(obj);
+		PlayerData bdata = new PlayerData();
+		bdata.name = rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)] + " (Bot)";
+		bkm.SetPlayerData(bdata);
+		
+		AddKart(bkm);
 	}
 
 	public int KartCount { get { return kartObjects.Count; } }

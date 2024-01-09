@@ -10,12 +10,11 @@ public class RaceCamera : MonoBehaviour
 
     public AnimationCurve titleFade;
     public TMP_Text mapTitleText;
-    public float startAnimationDuration;
     public float startAnimationTimeLeft;
 
-    void Awake() 
+    void Start() 
     {
-        StartAnimation();
+        if(GameplayManager.Instance.playStartAnimation) StartAnimation();
     }
 
     void Update()
@@ -24,8 +23,8 @@ public class RaceCamera : MonoBehaviour
             startAnimationTimeLeft -= Time.deltaTime;
         }
 
-        if(startAnimationDuration <= 0) {
-            startAnimationDuration = 0;
+        if(startAnimationTimeLeft < 0) {
+            startAnimationTimeLeft = 0;
             mapTitleText.enabled = false;
             return;
         }
@@ -33,17 +32,20 @@ public class RaceCamera : MonoBehaviour
         RaceManager rm = GameplayManager.RaceManager;
         if(rm.raceTime > 0) return;
 
-        float animProgress = 1-(startAnimationTimeLeft/startAnimationDuration);
+        float animProgress = 1-(startAnimationTimeLeft/GameplayManager.Instance.startAnimationDuration);
 
         mapTitleText.alpha = titleFade.Evaluate(animProgress);
+
         if(GameplayManager.IntroCamData != null) {
             transform.position = Vector3.Lerp(GameplayManager.IntroCamData.CamStartPos.position, GameplayManager.IntroCamData.CamEndPos.position, animProgress);
         }
     }
 
     public void StartAnimation() {
-        startAnimationTimeLeft = startAnimationDuration;
-        mapTitleText.enabled = true;
+        startAnimationTimeLeft = GameplayManager.Instance.startAnimationDuration;
+        if(startAnimationTimeLeft > 0) {
+            mapTitleText.enabled = true;
+        }
     }
 
     public bool Animating { get { return startAnimationTimeLeft > 0; } }

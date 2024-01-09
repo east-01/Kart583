@@ -15,7 +15,10 @@ public class GameplayManager : MonoBehaviour
 
     [Header("Settings")]
     public bool showWarnings = false;
+    public bool playStartAnimation = true;
+    public float startAnimationDuration = 3.0f;
 
+    [Header("Runtime")]
     public bool ready;
 
     private RaceManager rm;
@@ -62,8 +65,8 @@ public class GameplayManager : MonoBehaviour
         if(icdo != null) introCamData = icdo.GetComponent<IntroCamData>();
 
         // Check if everything is in order
-        List<String> problems = new List<String>();
-        List<String> warnings = new List<String>();
+        List<string> problems = new();
+        List<string> warnings = new();
         if(rm == null) problems.Add("GameplayManager object doesn't have a RaceManager script component!");
         if(pm == null) problems.Add("GameplayManager object doesn't have a PlayerManager script component!");
         if(pim == null) problems.Add("GameplayManager object doesn't have a PlayerInputManager script/input component!");
@@ -75,9 +78,9 @@ public class GameplayManager : MonoBehaviour
         if(raceCamera == null) problems.Add("Failed to find Race Camera. " + (rco == null ? "No race camera object found." : "Game object found, no RaceCamera script component though."));
         if(introCamData == null) warnings.Add("Failed to find IntroCamData. " + (icdo == null ? "No intro cam data object found." : "Game object found, no IntroCamData script component though."));
 
-        if(warnings.Count > 0) {
+        if(warnings.Count > 0 && showWarnings) {
             Debug.Log("GameplayManager experienced " + warnings.Count + " warning(s).");
-            if(showWarnings) warnings.ForEach(warning => Debug.LogError(" - " + warning));
+            warnings.ForEach(warning => Debug.LogError(" - " + warning));
         }
 
         ready = problems.Count == 0;
