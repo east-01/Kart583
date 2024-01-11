@@ -43,6 +43,7 @@ public class KartController : KartBehavior
 	public float boostGain = 1f;
 	public float passiveBoostDrain = 3f;
 	public float activeBoostDrain = 1.75f;
+	public AnimationCurve boostDecayCurve; // Converts the boost decay time into a [0,1] float representing the speed of passive boost drain
 
 	[Header("Misc")]
 	public bool drawVectors = false;
@@ -62,6 +63,7 @@ public class KartController : KartBehavior
 	public float airtime;
 	public float steeringWheelDirection; // A [-1, 1] range float indicating the amount the steering wheel is turned and the direction.
 	public float boostAmount;
+	public float boostDecayTime; // Time counting how long its been for the boost to drain
 
 	public float modelTheta;
 
@@ -131,12 +133,15 @@ public class KartController : KartBehavior
 
 		/* Boosting */
 		if(ActivelyBoosting) {
+			boostDecayTime = 0;
 			boostAmount = Mathf.Max(boostAmount - activeBoostDrain*Time.deltaTime, 0); 
 		} else if(driftParticles && SteeringWheelMatchesDrift) {
+			boostDecayTime = 0;
 			boostAmount += boostGain*Time.deltaTime;
 			if(boostAmount > maxBoost) boostAmount = maxBoost;
 		} else { 
-			boostAmount = Mathf.Max(boostAmount - passiveBoostDrain*Time.deltaTime, 0);									
+			boostDecayTime += Time.deltaTime;
+			boostAmount = Mathf.Max(boostAmount - boostDecayCurve.Evaluate(boostDecayTime)*passiveBoostDrain*Time.deltaTime, 0);									
 		}
 
 		if(GameplayManager.RaceManager.raceTime <= 0) {

@@ -588,6 +588,39 @@ MonoBehaviour:
   boostGain: 1
   passiveBoostDrain: 3
   activeBoostDrain: 1.75
+  boostDecayCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.06829434
+      outSlope: 0.06829434
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.28967643
+    - serializedVersion: 3
+      time: 1.25
+      value: 1
+      inSlope: 1.3431635
+      outSlope: 0
+      tangentMode: 65
+      weightedMode: 0
+      inWeight: 0.042948533
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   drawVectors: 0
   turn: {x: 0, y: 0}
   throttle: 0
@@ -599,6 +632,7 @@ MonoBehaviour:
   airtime: 0
   steeringWheelDirection: 0
   boostAmount: 0
+  boostDecayTime: 0
   modelTheta: 0
   driftDirection: 0
   driftParticles: 0
