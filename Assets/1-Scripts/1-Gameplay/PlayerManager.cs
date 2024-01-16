@@ -15,30 +15,16 @@ public class PlayerManager : MonoBehaviour
 		"Squall", "Sticks", "Stinger", "Storm", "Sultan", "Sundown", "Swabbie", "Tex", "Tusk", "Viper", "Wolfman", "Yuri"
 	};
 
-	public GameObject kartBotPrefab;
+	[SerializeField] private GameObject kartPrefab;
+	[SerializeField] private GameObject playerObjectInGamePrefab;
 
-	public List<GameObject> kartObjects = new List<GameObject>(); // This could include bots as well
-	public List<PlayerInput> playerInputs = new List<PlayerInput>();
-	public List<PositionTracker> playerPositions = new List<PositionTracker>();
+	public List<GameObject> kartObjects = new(); // This could include bots as well
+	public List<PlayerInput> playerInputs = new();
+	public List<PositionTracker> playerPositions = new();
 
-	private PlayerInputManager controls;
-	private List<KartManager> joinQueue = new List<KartManager>();
-
-	private void Awake()
+	void Start() 
 	{
-		controls = GetComponent<PlayerInputManager>();
-	}
-
-	void OnEnable()
-    {
-		controls.onPlayerJoined += PlayerJoined;
-        controls.onPlayerLeft += PlayerLeft;
-    }
-
-	private void OnDisable()
-	{
-		controls.onPlayerJoined -= PlayerJoined;
-        controls.onPlayerLeft -= PlayerLeft;		
+		PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
 	}
 
 	void Update()
@@ -46,27 +32,10 @@ public class PlayerManager : MonoBehaviour
 		playerPositions = playerPositions.OrderByDescending(o=>o.raceCompletion).ToList();
 		int i = 0;
 		playerPositions.ForEach(pt => { pt.racePos = i; i++; });
-
-		// Use a join queue so that we only add karts that are ready
-		// Without this, the kart wouldn't be completely initialized by the time we use AddKart(), so we have to wait.
-		List<KartManager> toRemove = new List<KartManager>();
-		joinQueue.ForEach(km => {
-			if(km.GetPositionTracker() != null) {
-				AddKart(km);
-				toRemove.Add(km);
-			}
-		});
-
-		toRemove.ForEach(km => joinQueue.Remove(km));
     }
 
 	void AddKart(KartManager kart) 
 	{	
-		if(kartObjects.Count == 0) {
-			// TODO: Load settings from menu
-			GameplayManager.RaceManager.Activate(null);
-		}
-		
 		if(kartObjects.Count >= 8) {
 			Debug.LogError("Tried to add a new player even though there is already 8 (or more) players.");
 			Destroy(kart);
@@ -79,42 +48,41 @@ public class PlayerManager : MonoBehaviour
 
 		kartObjects.Add(kart.gameObject);
 		playerPositions.Add(kart.GetPositionTracker());
-	
 	}
 
-	void PlayerJoined(PlayerInput player)
+	void SpawnPlayer(PlayerObject player)
 	{
-
-		if(playerInputs.Count == 0) {
-			Camera.main.GetComponent<AudioListener>().enabled = false;
-			Camera.main.enabled = false; 
-		} else { // Player one's camera always gets the audio listener
-			player.camera.GetComponent<AudioListener>().enabled = false;
-		}
-		playerInputs.Add(player);
-
-		KartManager pkm = KartBehavior.LocateManager(player.gameObject);
-		PlayerData pdata = new PlayerData();
-		pdata.name = "Player " + (player.playerIndex + 1);
-		pkm.SetPlayerData(pdata);
-
-		joinQueue.Add(pkm);
-	}
-
-	void PlayerLeft(PlayerInput player) 
-	{ 
 		
+		// Spawn player object in game prefab
+		GameObject poig = Instantiate(playerObjectInGamePrefab);
+		KartManager pkm = KartBehavior.LocateManager(poig.GetComponent<POIGDelegate>().KartObject);
+
+		// Make connections for PlayerInput
+		Camera pcam = poig.GetComponent<POIGDelegate>().Camera;
+		pcam.enabled = false;
+		pcam.GetComponent<AudioListener>().enabled = false;
+		player.input.camera = pcam;
+
+		playerInputs.Add(player.input);
+
+		// Connect player kart manager to player object
+		pkm.SetPlayerData(player.data);
+		pkm.UseHumanDriver(player.input);
+
+		AddKart(pkm);
 	}
 
 	public void SpawnBot() 
 	{
-		GameObject obj = Instantiate(kartBotPrefab);
+		GameObject obj = Instantiate(kartPrefab);
 		
 		KartManager bkm = KartBehavior.LocateManager(obj);
-		PlayerData bdata = new PlayerData();
-		bdata.name = rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)] + " (Bot)";
-		bkm.SetPlayerData(bdata);
-		
+        PlayerData bdata = new() {
+            name = rlBotNames[Random.Range(0, rlBotNames.Length)] + " (Bot)"
+        };
+        bkm.SetPlayerData(bdata);
+		bkm.UseBotDriver();
+
 		AddKart(bkm);
 	}
 

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 /** This class will build the map select menu out of the LevelIcon prefabs
       using the MapAtlas information on the Gameplaymanager prefab.
@@ -21,11 +22,6 @@ public class MapSelectBuilder : MonoBehaviour
 
     private int page;
     private List<GameObject> menuElements;
-
-    public void Start() 
-    {
-        ReloadMenu();
-    }
 
     public void ReloadMenu() 
     {
@@ -121,5 +117,7 @@ public class MapSelectBuilder : MonoBehaviour
     } }
 
     public int MaxPageSize { get { return maxPageWidth*maxPageHeight; } }
+
+    public List<GameObject> MenuElements { get { return menuElements; } }
 
 }

@@ -41,10 +41,10 @@ public class CountdownDisplay : MonoBehaviour
     void Update()
     {
 
-        if(rm.raceTime < 1) {
+        if(rm.RaceTime < 1) {
             // -1.2f --> |_-1.2_| == -2 --> |-2 - -1.2| --> 0.8 correct, -1.2 does represent 80% progress through 0.8
-            raceFloor = (int)Math.Floor(rm.raceTime);
-            secondProgress = Math.Abs(raceFloor-rm.raceTime);
+            raceFloor = (int)Math.Floor(rm.RaceTime);
+            secondProgress = Math.Abs(raceFloor-rm.RaceTime);
 
             if(secondProgress < delay) return;
 

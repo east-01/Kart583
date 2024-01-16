@@ -108,4 +108,6 @@ public class ResultsBuilder : MonoBehaviour
         gameObject.SetActive(true);
 
     }
+
+    public bool ResultsShown { get { return gameObject.activeSelf; } }
 }
