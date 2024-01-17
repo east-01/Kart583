@@ -50,7 +50,7 @@ public class PlayerManager : MonoBehaviour
 		playerPositions.Add(kart.GetPositionTracker());
 	}
 
-	void SpawnPlayer(PlayerObject player)
+	public void SpawnPlayer(PlayerObject player)
 	{
 		
 		// Spawn player object in game prefab

@@ -29,7 +29,7 @@ public class RaceCamera : MonoBehaviour
             return;
         }
 
-        // Ensure that the camer is active while animating, the PlayerInputManager likes to disable these early
+        // Ensure that the camera is active while animating, the PlayerInputManager likes to disable these early
         if(Animating) {
             GetComponent<Camera>().enabled = true;
             GetComponent<AudioListener>().enabled = true;

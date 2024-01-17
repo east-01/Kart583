@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class PlayerObjectManager : MonoBehaviour
 {
@@ -45,15 +46,20 @@ public class PlayerObjectManager : MonoBehaviour
 
         PlayerObject obj = new();
         obj.input = input;
-        obj.data = new();
-        obj.data.name = "Player " + (obj.PlayerIndex+1);
+        obj.data = new() {
+            name = "Player " + (obj.PlayerIndex + 1)
+        };
 
         playerObjects.Add(obj);
 
-        GameObject canv = GameObject.Find("PlayerMenuCanvas");
-        if(canv == null) throw new InvalidOperationException("Failed to find player menu canvas.");
+        if(SceneManager.GetActiveScene().name == "PlayerMenu") {
+            GameObject canv = GameObject.Find("PlayerMenuCanvas");
+            if(canv == null) throw new InvalidOperationException("Failed to find player menu canvas.");
 
-        canv.GetComponent<PlayerMenuController>().HandleJoin(obj);
+            canv.GetComponent<PlayerMenuController>().HandleJoin(obj);
+        } else if(GameplayManager.Instance != null) {
+            GameplayManager.PlayerManager.SpawnPlayer(obj);
+        }
 
     }
 

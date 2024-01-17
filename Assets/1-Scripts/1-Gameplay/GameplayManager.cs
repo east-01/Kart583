@@ -13,6 +13,9 @@ public class GameplayManager : MonoBehaviour
     /** Singleton instance of the Gameplay manager */
     public static GameplayManager Instance;
 
+    [Header("Prefabs")]
+    public GameObject playerObjectManagerPrefab;
+
     [Header("Settings")]
     public bool showWarnings = false;
     public bool playStartAnimation = true;
@@ -48,7 +51,7 @@ public class GameplayManager : MonoBehaviour
 
         // Connect to player object manager
         if(PlayerObjectManager.Instance == null) {
-            print("TODO: Load a playerObjectManager for late joining.");
+            Instantiate(playerObjectManagerPrefab);
         } else if(PlayerObjectManager.Instance.GetPlayerObjects().Count == 0) {
             problems.Add("PlayerObjectManager doesn't have any players! Was the GameplayManager loaded before a PlayerObjectManager?");
         }
