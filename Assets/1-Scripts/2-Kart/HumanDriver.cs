@@ -18,14 +18,9 @@ public class HumanDriver : KartBehavior
         }
     }
 
-    void OnEnable() 
-    {
-        if(input != null) input.onActionTriggered += ActionTriggered; // Re-connect the actions if we lose them
-    }
-
     void OnDisable() 
     {
-        input.onActionTriggered += ActionTriggered;
+        input.onActionTriggered -= ActionTriggered;
     }
 
     public void ConnectPlayerInput(PlayerInput input) 

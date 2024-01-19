@@ -1,5 +1,6 @@
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using System;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
@@ -8,6 +9,8 @@ using UnityEngine.UI;
 public class MapSelectMenu : MonoBehaviour
 {
     
+    [SerializeField] List<GameObject> toolTips;
+
     void Start() 
     {
         // Find player 1's input and let them control
@@ -20,6 +23,9 @@ public class MapSelectMenu : MonoBehaviour
         builder.ReloadMenu();  
         Button toSelect = builder.MenuElements[0].GetComponent<Button>();
         toSelect.Select();
+
+        // Set observed inputs on tooltips
+        toolTips.ForEach(tt => tt.GetComponent<ToolTip>().SetObservedInput(p0));
     }
 
 }

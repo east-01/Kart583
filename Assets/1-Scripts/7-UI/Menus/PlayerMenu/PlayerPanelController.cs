@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -10,14 +9,15 @@ public class PlayerPanelController : MonoBehaviour
 {
 
     [SerializeField] TMP_Text titleText;
-
+    [SerializeField] List<GameObject> toolTips;
+    
     [SerializeField] GameObject colorSelect;
     [SerializeField] Button colorFirstSelection;
     [SerializeField] GameObject kartSelect;
     // [SerializeField] Button kartFirstSelection; 
     [SerializeField] Button readyButton;
     [SerializeField] GameObject readyText;
-    
+
     private PlayerObject playerObj;
     private PlayerControls controlsReference;
 
@@ -90,6 +90,8 @@ public class PlayerPanelController : MonoBehaviour
     { 
         playerObj = obj; 
         playerObj.input.onActionTriggered += ActionTriggered;  
+
+        toolTips.ForEach(tt => tt.GetComponent<ToolTip>().SetObservedInput(obj.input));
     }
 
     public void SetColor(string hexColor) 

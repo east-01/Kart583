@@ -77,6 +77,7 @@ public class RaceManager : MonoBehaviour
             case RacePhase.FINISHED:
                 if(!GameplayManager.ScreenManager.ResultsBuilder.ResultsShown) {
                     GameplayManager.ScreenManager.ResultsBuilder.ShowResults();
+                    GameplayManager.ScreenManager.ConnectPlayerInput(PlayerObjectManager.Instance.GetPlayerObjects()[0]);
                 }
                 break;
         }
