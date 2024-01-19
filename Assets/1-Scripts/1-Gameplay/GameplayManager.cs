@@ -13,6 +13,9 @@ public class GameplayManager : MonoBehaviour
     /** Singleton instance of the Gameplay manager */
     public static GameplayManager Instance;
 
+    [Header("Prefabs")]
+    public GameObject playerObjectManagerPrefab;
+
     [Header("Settings")]
     public bool showWarnings = false;
     public bool playStartAnimation = true;
@@ -43,10 +46,22 @@ public class GameplayManager : MonoBehaviour
 
         Instance = this;
 
+        List<string> problems = new();
+        List<string> warnings = new();
+
+        // Connect to player object manager
+        if(PlayerObjectManager.Instance == null) {
+            Instantiate(playerObjectManagerPrefab);
+        } else if(PlayerObjectManager.Instance.GetPlayerObjects().Count == 0) {
+            problems.Add("PlayerObjectManager doesn't have any players! Was the GameplayManager loaded before a PlayerObjectManager?");
+        }
+
+        pim = PlayerObjectManager.Instance.GetPlayerInputManager();
+        if(pim == null) problems.Add("GameplayManager object doesn't have a PlayerInputManager script/input component!");
+
         // Load everything
         rm = GetComponent<RaceManager>();
         pm = GetComponent<PlayerManager>();
-        pim = GetComponent<PlayerInputManager>();
         ia = GetComponent<ItemAtlas>();
         la = GetComponent<LevelAtlas>();
 
@@ -65,11 +80,8 @@ public class GameplayManager : MonoBehaviour
         if(icdo != null) introCamData = icdo.GetComponent<IntroCamData>();
 
         // Check if everything is in order
-        List<string> problems = new();
-        List<string> warnings = new();
         if(rm == null) problems.Add("GameplayManager object doesn't have a RaceManager script component!");
         if(pm == null) problems.Add("GameplayManager object doesn't have a PlayerManager script component!");
-        if(pim == null) problems.Add("GameplayManager object doesn't have a PlayerInputManager script/input component!");
         if(screenManager == null) problems.Add("GameplayManager object doesn't have a ScreenManager script component!");
         if(ia == null) problems.Add("GameplayManager object doesn't have an ItemAtlas script component!");
         if(la == null) problems.Add("GameplayManager object doesn't have a LevelAtlas script component!");

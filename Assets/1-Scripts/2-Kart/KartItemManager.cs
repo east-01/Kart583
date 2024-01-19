@@ -32,11 +32,6 @@ public class KartItemManager : KartBehavior
 		return true;
 	}
 
-	public void OnItem(InputAction.CallbackContext context) {
-		if(!context.performed && !context.canceled) return;
-		PerformItemInput(context.performed);
-	}
-
 	public void PerformItemInput(bool pressed) 
 	{
 		if(pressed && (itemSlotManager == null || !itemSlotManager.IsAnimating()) && slotItem != null && heldItem == null) {

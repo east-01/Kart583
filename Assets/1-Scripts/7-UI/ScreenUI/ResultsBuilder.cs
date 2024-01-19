@@ -6,8 +6,6 @@ using UnityEngine;
 public class ResultsBuilder : MonoBehaviour
 {
 
-    public float paddingV = 5;
-
     public GameObject placementRowPrefab;
     public RectTransform resultsContainer;
 
@@ -88,9 +86,6 @@ public class ResultsBuilder : MonoBehaviour
         menuElements?.ForEach(e => Destroy(e));
         menuElements = new List<GameObject>();
 
-        float rowW = placementRowPrefab.GetComponent<RectTransform>().rect.width;
-        float rowH = placementRowPrefab.GetComponent<RectTransform>().rect.height;
-
         for(i = 0; i < kartCount; i++) {
             KartManager manager = sorted[i];
             if(manager == null) 
@@ -99,13 +94,12 @@ public class ResultsBuilder : MonoBehaviour
             GameObject newObj = Instantiate(placementRowPrefab, resultsContainer);
             newObj.GetComponent<PlacementRow>().UpdateVisuals(manager, i+1);
 
-            float newY = i * (rowH + paddingV);
-            newObj.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -newY);
-
             menuElements.Add(newObj);
         }
 
         gameObject.SetActive(true);
 
     }
+
+    public bool ResultsShown { get { return gameObject.activeSelf; } }
 }

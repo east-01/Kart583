@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 5244667296191878686}
   - component: {fileID: 6795377866323719207}
   - component: {fileID: 5244667296191878687}
-  - component: {fileID: 5244667296191878684}
   - component: {fileID: 5244667296191878685}
   - component: {fileID: 1692848356265694792}
   - component: {fileID: 5387708413198328946}
@@ -49,6 +48,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06452b01267f42d469b244362fa4ec2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  playerObjectManagerPrefab: {fileID: 1451273396316291034, guid: 1d5be95719efe044689066dd96520717, type: 3}
   showWarnings: 0
   playStartAnimation: 1
   startAnimationDuration: 3
@@ -65,84 +65,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac19e8ff79f7aed43acbd9c37d97c1bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  running: 1
-  defaultSettings:
+  settings:
     laps: 3
     startDelay: 5
     startBoostPercent: 0.5
     bots: 1
     botLimit: 8
-  settings:
-    laps: 0
-    startDelay: 0
-    startBoostPercent: 0
-    bots: 0
-    botLimit: 0
+  phase: 0
   raceTime: 0
---- !u!114 &5244667296191878684
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5244667296191878682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 621567455fd1c4ceb811cc8a00b6a1a5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_NotificationBehavior: 3
-  m_MaxPlayerCount: 4
-  m_AllowJoining: 0
-  m_JoinBehavior: 1
-  m_PlayerJoinedEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 5244667296191878685}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 0
-  m_PlayerLeftEvent:
-    m_PersistentCalls:
-      m_Calls: []
-  m_JoinAction:
-    m_UseReference: 1
-    m_Action:
-      m_Name: Join
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 78a8eb75-f8d0-473e-98ad-afe017ad9ffe
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings:
-      - m_Name: 
-        m_Id: a90e1090-1ca3-451f-96fe-c262bd108050
-        m_Path: 
-        m_Interactions: 
-        m_Processors: 
-        m_Groups: 
-        m_Action: Join
-        m_Flags: 0
-      m_Flags: 0
-    m_Reference: {fileID: 2079105633858381657, guid: e0395e7a7eb280a4589b6661c768073f, type: 3}
-  m_PlayerPrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
-  m_SplitScreen: 1
-  m_MaintainAspectRatioInSplitScreen: 0
-  m_FixedNumberOfSplitScreens: -1
-  m_SplitScreenRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
 --- !u!114 &5244667296191878685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155,7 +85,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca4c712dce2bab0418157ba8d0bfb657, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  kartBotPrefab: {fileID: 8628871311036084879, guid: 2d620221a4041b14cab657429acfaa54, type: 3}
+  kartPrefab: {fileID: 5130578726108140990, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
+  playerObjectInGamePrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
   kartObjects: []
   playerInputs: []
   playerPositions: []

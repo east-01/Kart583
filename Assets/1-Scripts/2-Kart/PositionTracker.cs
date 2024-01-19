@@ -55,7 +55,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
     }
 
     void Update() {
-        if(GameplayManager.RaceManager.raceTime < 0) {
+        if(GameplayManager.RaceManager.RaceTime < 0) {
             waypointIndex = waypoints.Count-1;
             lapNumber = 0;
         }
@@ -65,7 +65,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
         raceCompletion = GetRaceCompletion();
     
         if(raceCompletion >= 1 && raceFinishTime == -1) {
-            raceFinishTime = GameplayManager.RaceManager.raceTime;
+            raceFinishTime = GameplayManager.RaceManager.RaceTime;
         }
     
     }

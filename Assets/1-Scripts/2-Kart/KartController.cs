@@ -144,7 +144,7 @@ public class KartController : KartBehavior
 			boostAmount = Mathf.Max(boostAmount - boostDecayCurve.Evaluate(boostDecayTime)*passiveBoostDrain*Time.deltaTime, 0);									
 		}
 
-		if(GameplayManager.RaceManager.raceTime <= 0) {
+		if(GameplayManager.RaceManager.RaceTime <= 0) {
 			boostAmount = GameplayManager.RaceManager.settings.startBoostPercent*maxBoost;
 		}
 

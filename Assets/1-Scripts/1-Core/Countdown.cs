@@ -20,13 +20,13 @@ public class Countdown : MonoBehaviour
     void Update()
     {
         RaceManager rm = GameplayManager.RaceManager;
-        if(rm.raceTime > 0) { 
+        if(rm.RaceTime > 0) { 
             Destroy(gameObject);
             return;
         }
 
-        bool changedNumbers = _currentNumber != (int)Mathf.Abs(rm.raceTime);
-        _currentNumber = (int)Mathf.Abs(rm.raceTime);
+        bool changedNumbers = _currentNumber != (int)Mathf.Abs(rm.RaceTime);
+        _currentNumber = (int)Mathf.Abs(rm.RaceTime);
 
         if (_currentNumber < _audioClips.Length && changedNumbers)
         {

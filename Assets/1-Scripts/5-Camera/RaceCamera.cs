@@ -29,8 +29,14 @@ public class RaceCamera : MonoBehaviour
             return;
         }
 
+        // Ensure that the camera is active while animating, the PlayerInputManager likes to disable these early
+        if(Animating) {
+            GetComponent<Camera>().enabled = true;
+            GetComponent<AudioListener>().enabled = true;
+        }
+
         RaceManager rm = GameplayManager.RaceManager;
-        if(rm.raceTime > 0) return;
+        if(rm.RaceTime > 0) return;
 
         float animProgress = 1-(startAnimationTimeLeft/GameplayManager.Instance.startAnimationDuration);
 

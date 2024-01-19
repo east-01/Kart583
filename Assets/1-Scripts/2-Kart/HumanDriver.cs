@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,37 +9,52 @@ using UnityEngine.InputSystem;
 public class HumanDriver : KartBehavior
 {
 
+    private PlayerInput input;
+
     void Update() 
     {
         if(posTracker.raceCompletion >= 1) {
-            kartManager.SwitchToBotBrain();
+            kartManager.UseBotDriver();
         }
     }
 
-    public void OnTurn(InputAction.CallbackContext context) 
+    void OnDisable() 
     {
-        kartCtrl.TurnInput = context.ReadValue<Vector2>();
+        input.onActionTriggered -= ActionTriggered;
     }
 
-    public void OnThrottle(InputAction.CallbackContext context) 
+    public void ConnectPlayerInput(PlayerInput input) 
     {
-        kartCtrl.ThrottleInput = context.ReadValue<float>();
+        this.input = input;
+        this.input.onActionTriggered += ActionTriggered;
+        this.input.SwitchCurrentActionMap("Gameplay");
     }
 
-    public void OnReverse(InputAction.CallbackContext context) 
-    {
-        kartCtrl.ThrottleInput = -context.ReadValue<float>();
-    }
-
-	public void OnDrift(InputAction.CallbackContext context) { 
-        if(!context.performed && !context.canceled) return;        
-        kartCtrl.DriftInput = context.performed;
-	}
-
-    public void OnBoost(InputAction.CallbackContext context) 
+    public void ActionTriggered(InputAction.CallbackContext context) 
     {
         if(!context.performed && !context.canceled) return;
-        kartCtrl.BoostInput = context.performed;
+        switch(context.action.name) {
+            case "Turn":
+                kartCtrl.TurnInput = context.ReadValue<Vector2>();
+                break;
+            case "Throttle":
+                kartCtrl.ThrottleInput = context.ReadValue<float>();
+                break;
+            case "Reverse":
+                kartCtrl.ThrottleInput = -context.ReadValue<float>();
+                break;
+            case "Drift":
+                kartCtrl.DriftInput = context.performed;
+                break;
+            case "Boost":
+                kartCtrl.BoostInput = context.performed;
+                break;
+            case "Item":
+                kartItemManager.PerformItemInput(context.performed);
+                break;
+            default:
+                break;
+        }
     }
 
 }
