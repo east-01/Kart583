@@ -75,7 +75,7 @@ public class BotPath : KartBehavior
                 // Check if there's floor there
                 RaycastHit hit;
                 Physics.Raycast(new Vector3(randomX, center.y, randomZ), -Vector3.up, out hit, 10f);
-                if(hit.point == null || !hit.collider.CompareTag("Ground")) {
+                if(hit.collider == null || !hit.collider.CompareTag("Ground")) {
                     fcGround++;
                     continue;
                 }
@@ -116,15 +116,18 @@ public class BotPath : KartBehavior
             }
 
             if(!foundPoint) {
-                Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
-                Debug.LogError("  Missed ground checks: " + fcGround + "; Missed distance checks: " + fcDistance + ", Missed obstruction checks: " + fcObstruction);
-                if(obstructions.Count > 0) {
-                    string obslist = "";
-                    obstructions.ForEach(s => obslist += s + ", ");
-                    Debug.LogError("  Obstructions found: " + obslist.Substring(0, obslist.Length-2));
+                if(GameplayManager.Instance.showBotPathWarnings) {
+                    Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
+                    Debug.LogError("  Missed ground checks: " + fcGround + "; Missed distance checks: " + fcDistance + ", Missed obstruction checks: " + fcObstruction);
+                    if(obstructions.Count > 0) {
+                        string obslist = "";
+                        obstructions.ForEach(s => obslist += s + ", ");
+                        Debug.LogError("  Obstructions found: " + obslist.Substring(0, obslist.Length-2));
+                    }
                 }
                 waypointPositions.Add(pos.position);
             }
+            
             i++;
         }
 
@@ -191,6 +194,7 @@ public class BotPath : KartBehavior
 
     public float EstimateProgress() 
     {
+        if(curveSegments == null) ReloadCurves();
         return curveSegments[posTracker.waypointIndex].ClosestEstimate(transform.position, 2, posTracker.segmentCompletion);
     }
 

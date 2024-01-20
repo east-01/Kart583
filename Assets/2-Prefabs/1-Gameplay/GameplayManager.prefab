@@ -50,6 +50,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerObjectManagerPrefab: {fileID: 1451273396316291034, guid: 1d5be95719efe044689066dd96520717, type: 3}
   showWarnings: 0
+  showBotPathWarnings: 0
   playStartAnimation: 1
   startAnimationDuration: 3
   ready: 0
@@ -104,19 +105,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   items:
   - item: 0
-    weight: 0
+    weight: 20
     itemIcon: {fileID: 21300000, guid: cf11399fd649b9b45ab5778b21fad2d8, type: 3}
     worldItem: {fileID: 8446460546308375123, guid: c2f8e977ae44f6647b8e3e35c9081237, type: 3}
   - item: 1
-    weight: 0
+    weight: 10
     itemIcon: {fileID: 21300000, guid: 370e255dcb51ec74b9a7174299de137d, type: 3}
     worldItem: {fileID: 4275335312303541124, guid: 30e28d96ce9313a40b247a83ec51dbd0, type: 3}
   - item: 2
-    weight: 0
+    weight: 15
     itemIcon: {fileID: 21300000, guid: 5dc160347e5856d489c2b4c6ab5f81ee, type: 3}
     worldItem: {fileID: 8446460546308375123, guid: 124eab082821c0b4ab22d8193bfe545a, type: 3}
   - item: 3
-    weight: 10
+    weight: 3
     itemIcon: {fileID: 21300000, guid: 08a1ffc05b174ea4390575b5ede5d078, type: 3}
     worldItem: {fileID: 8446460546308375123, guid: af03030099b0f4a4ba8f990ac7e51a45, type: 3}
 --- !u!114 &5387708413198328946

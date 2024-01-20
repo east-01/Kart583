@@ -18,6 +18,7 @@ public class GameplayManager : MonoBehaviour
 
     [Header("Settings")]
     public bool showWarnings = false;
+    public bool showBotPathWarnings = false;
     public bool playStartAnimation = true;
     public float startAnimationDuration = 3.0f;
 
