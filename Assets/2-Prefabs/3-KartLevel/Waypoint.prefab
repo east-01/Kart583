@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3654124824493552141}
   - component: {fileID: 3654124824493552140}
+  - component: {fileID: 3191558106413691766}
   m_Layer: 0
   m_Name: Waypoint
   m_TagString: Waypoint
@@ -45,3 +46,11 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 2, y: 12, z: 54}
   m_Center: {x: 0, y: 3, z: 0}
+--- !u!33 &3191558106413691766
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3654124824493552138}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}

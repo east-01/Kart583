@@ -1,0 +1,3 @@
+- Get shield percentage from on-track elements, kinda like rl mini boost pads
+- Raising shield lowers percentage
+- Different items take more shield percentage when up
