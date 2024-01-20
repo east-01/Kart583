@@ -52,14 +52,16 @@ public class PlayerObjectManager : MonoBehaviour
 
         playerObjects.Add(obj);
 
-        if(SceneManager.GetActiveScene().name == "PlayerMenu") {
+        if(SceneManager.GetActiveScene().name == SceneNames.MENU_PLAYER) {
             GameObject canv = GameObject.Find("PlayerMenuCanvas");
-            if(canv == null) throw new InvalidOperationException("Failed to find player menu canvas.");
+            if(canv == null) 
+                throw new InvalidOperationException("Failed to find player menu canvas.");
 
-            canv.GetComponent<PlayerMenuController>().HandleJoin(obj);
+            canv.GetComponent<MenuPlayerController>().HandleJoin(obj);
         } else if(GameplayManager.Instance != null) {
             GameplayManager.PlayerManager.SpawnPlayer(obj);
-        }
+        } else
+            Debug.LogError("Failed to handle a player input");
 
     }
 

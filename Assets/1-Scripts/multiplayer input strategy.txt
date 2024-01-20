@@ -1,6 +1,0 @@
-Player menu strategy:
-
-- USE MULTIPLAYER EVENT SYSTEM
-- Players join in the menu and get placed under a PlayerInputManager object
-  - PlayerInputManager will be a singleton placed into DoNotDestroyOnLoad to maintain input between scene changes.
-- Set PlayerInput#uiInputModule to the InputSystemUIInputModule that is a part of each player's menu canvas

@@ -31,11 +31,11 @@ public class LevelIcon : MonoBehaviour
     public void Clicked() 
     {
         int buildIndex = SceneUtility.GetBuildIndexByScenePath(data.sceneName);
-        if(buildIndex == -1) throw new InvalidOperationException("Scene \"" + data.sceneName + "\" doesn't exist (or doesn't have a build index at least)");
+        if(buildIndex == -1) 
+            throw new InvalidOperationException("Scene \"" + data.sceneName + "\" doesn't exist (or doesn't have a build index at least)");
         
         GameObject tmo = GameObject.Find("TransitionManager");
         tmo.GetComponent<TransitionManager>().LoadScene(data.sceneName);
-        // SceneManager.LoadScene(data.sceneName);
     }
 
 }

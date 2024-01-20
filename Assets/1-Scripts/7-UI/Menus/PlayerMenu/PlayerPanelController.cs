@@ -104,7 +104,7 @@ public class PlayerPanelController : MonoBehaviour
     {
         playerObj.data.ready = true;
         UpdatePanel();
-        GetComponentInParent<PlayerMenuController>().CheckReady();
+        GetComponentInParent<MenuPlayerController>().CheckReady();
     }
 
     public Color HexToColor(string hex)

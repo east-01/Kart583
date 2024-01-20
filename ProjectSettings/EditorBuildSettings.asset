@@ -6,13 +6,13 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/3-Scenes/Menus/TitleScreen.unity
+    path: Assets/3-Scenes/Menus/MenuTitle.unity
     guid: 2e9897c3d1bc2e04fbab6bc807305670
   - enabled: 1
-    path: Assets/3-Scenes/Menus/PlayerMenu.unity
+    path: Assets/3-Scenes/Menus/MenuPlayer.unity
     guid: 8ec96dd5c482e2f4e9523e5c798becc2
   - enabled: 1
-    path: Assets/3-Scenes/Menus/MapSelect.unity
+    path: Assets/3-Scenes/Menus/MenuMap.unity
     guid: 45f81701ee4eb01439dd748284d5dc9a
   - enabled: 1
     path: Assets/3-Scenes/Tracks/TestTrack.unity

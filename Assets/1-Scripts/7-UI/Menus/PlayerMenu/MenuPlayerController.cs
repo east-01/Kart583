@@ -10,7 +10,7 @@ using UnityEngineInternal;
 
 /** The PlayerMenuController will interface between the PlayerObjectManager and
       the child PlayerPanelControllers */
-public class PlayerMenuController : MonoBehaviour
+public class MenuPlayerController : MonoBehaviour
 {
 
     [SerializeField] private GameObject playerPanelPrefab;
@@ -20,6 +20,10 @@ public class PlayerMenuController : MonoBehaviour
     void Start() 
     {
         PlayerObjectManager.Instance.GetPlayerInputManager().EnableJoining();
+
+        // Spawn player menus for ppl already in the player input manager
+        if(PlayerObjectManager.Instance.GetPlayerObjects().Count > 0)
+            Debug.LogWarning("TODO: Handle existing player objects at start");
     }
 
     public void HandleJoin(PlayerObject obj) 
@@ -52,7 +56,7 @@ public class PlayerMenuController : MonoBehaviour
         if(!PlayerObjectManager.Instance.GetPlayerObjects().All(po => po.data.ready)) return;
 
         GameObject tmo = GameObject.Find("TransitionManager");
-        tmo.GetComponent<TransitionManager>().LoadScene("MapSelect");
+        tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_MAP);
 
         PlayerObjectManager.Instance.GetPlayerInputManager().DisableJoining();
     }

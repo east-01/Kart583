@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 /** This class is responsible for the overarching operation of the map select menu */
-public class MapSelectMenu : MonoBehaviour
+public class MenuMapController : MonoBehaviour
 {
     
     [SerializeField] List<GameObject> toolTips;
