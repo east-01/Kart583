@@ -42,7 +42,7 @@ public class ScreenManager : MonoBehaviour
 	{
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
 			GameObject tmo = GameObject.Find("TransitionManager");
-			tmo.GetComponent<TransitionManager>().LoadScene("MapSelect");
+			tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_MAP);
         }
 	}
 
