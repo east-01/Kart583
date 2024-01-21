@@ -9,28 +9,23 @@ public class MenuCameraDrift : MonoBehaviour
     private Vector3 rotVector;
     private float rotVectorSelectTime;
 
-    void Start() 
-    {
-        if(startRandomized) {
-            rotVector = RollNewVector(); 
-            transform.forward = rotVector;
-        }
-    }
-
     void Update()
     {
-        if(rotVectorSelectTime <= 0) {
-            rotVector = RollNewVector();
+        if(rotVectorSelectTime <= 0 || rotVector.magnitude <= 0.1f) {
+            SetRotationVector(RollNewVector());
             rotVectorSelectTime = Random.Range(15, 45);
         } else {
             rotVectorSelectTime -= Time.deltaTime;
         }
        
         // Rotate the camera slowly around its up axis plus the random rotation vector
-        transform.Rotate(Vector3.up, (rotationSpeed*Random.Range(-maxRandomOffset, maxRandomOffset)) * Time.deltaTime);
+        transform.Rotate(Vector3.up, rotationSpeed*Random.Range(-maxRandomOffset, maxRandomOffset) * Time.deltaTime);
         transform.Rotate(rotVector * Time.deltaTime);
-
     }
+
+    public Vector3 GetRotationVector() { return rotVector; }
+    public void SetRotationVector(Vector3 rotVector) { this.rotVector = rotVector; }
+    public void SetRotationVectorSelectTime(float rotVectorSelectTIme) { this.rotVectorSelectTime = rotVectorSelectTIme; }
 
     public Vector3 RollNewVector() 
     {

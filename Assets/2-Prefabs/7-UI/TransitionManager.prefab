@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 4015501026377116772}
   - component: {fileID: 4015501026377116773}
   - component: {fileID: 4015501026377116794}
-  - component: {fileID: 1821988725470671436}
   m_Layer: 0
   m_Name: Image
   m_TagString: Untagged
@@ -90,26 +89,6 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!95 &1821988725470671436
-Animator:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4015501026377116792}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 5d467d72c9bf42644bc7c37e98ca5a31, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
 --- !u!1 &4015501026701868516
 GameObject:
   m_ObjectHideFlags: 0
@@ -277,6 +256,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9395cc8cb730454ea2367fe6ef71ff2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  transitionDelegatePrefab: {fileID: 5333599230197407075, guid: 952df3a1fd0d2504c93a399641221b5b, type: 3}
   transition: {fileID: 4015501026701868515}
   child: {fileID: 4015501026701868516}
   transitionTime: 0.5
