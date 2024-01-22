@@ -37,7 +37,7 @@ public class TransitionManager : MonoBehaviour
             menuCamera.transform.rotation = transitionDelegate.rotation;
             MenuCameraDrift mcd = menuCamera.GetComponent<MenuCameraDrift>();
             mcd.SetRotationVector(transitionDelegate.rotVector);
-            mcd.SetRotationVectorSelectTime(Random.Range(1, 3));
+            mcd.SetRotationVectorSelectTime(Random.Range(15, 25));
         }
 
         /* Wake up animation */
@@ -69,6 +69,10 @@ public class TransitionManager : MonoBehaviour
             GameObject menuCamera = GameObject.Find("MenuCamera");
             transitionDelegate.rotation = menuCamera.transform.rotation;
             transitionDelegate.rotVector = menuCamera.GetComponent<MenuCameraDrift>().GetRotationVector();
+
+            if(SceneManager.GetActiveScene().name == SceneNames.MENU_TITLE) {
+                
+            }
         }
 
         SceneManager.LoadScene(sceneName);
