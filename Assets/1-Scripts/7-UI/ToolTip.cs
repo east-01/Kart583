@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -8,7 +9,12 @@ using UnityEngine.UI;
 public class ToolTip : MonoBehaviour
 {
 
-    [SerializeField] private Sprite gamepadImage;
+    [Header("Settings")] public float spacing = 5f;
+
+    [Header("Components"), SerializeField] private Image img;
+    [SerializeField] private TMP_Text text;
+
+    [Header("Images"), SerializeField] private Sprite gamepadImage;
     [SerializeField] private Sprite keyboardMouseImage;
 
     private Image childImage;
@@ -21,12 +27,20 @@ public class ToolTip : MonoBehaviour
             throw new InvalidOperationException("Failed to find child image.");
     }
 
-    /* Yeah, this isn't really efficient. It would be better to do with events but led
-         to problems when I tried it. If efficiency really becomes an issue I'll look into
-         it again. */
+    /* Yeah, this isn't really efficient. It would be better to do with OnControlsChanged event but led
+         to problems when I tried it. If efficiency really becomes an issue I'll look into it again. */
     void Update() 
     {
+        if(observedInput == null) return;
+
         childImage.sprite = observedInput.devices[0] is Gamepad ? gamepadImage : keyboardMouseImage;
+
+        float totalWidth = GetComponent<RectTransform>().sizeDelta.x;
+        float imgWidth = -img.gameObject.GetComponent<RectTransform>().sizeDelta.x;
+
+        Vector4 margins = text.margin;
+        margins.x = totalWidth-imgWidth+spacing;
+        text.margin = margins;
     }
 
     public void SetObservedInput(PlayerInput input) 

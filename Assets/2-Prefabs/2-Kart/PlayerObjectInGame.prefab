@@ -1275,6 +1275,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   kartObject: {fileID: 2022079765270294068}
   camera: {fileID: 283636494426046530}
+  hud: {fileID: 4824761267746949821}
 --- !u!1001 &6574310968387107722
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1330,6 +1331,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4518181260819848706, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+      propertyPath: poigDelegate
+      value: 
+      objectReference: {fileID: 6701961317443103116}
     - target: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
       propertyPath: m_Name
       value: Kart

@@ -65,9 +65,18 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
         raceCompletion = GetRaceCompletion();
     
         if(raceCompletion >= 1 && raceFinishTime == -1) {
-            raceFinishTime = GameplayManager.RaceManager.RaceTime;
+            RaceFinished();
         }
     
+    }
+
+    void RaceFinished() 
+    {
+        raceFinishTime = GameplayManager.RaceManager.RaceTime;
+
+        if(kartManager.HasPOIGDelegate) {
+            kartManager.POIGDelegate.HUD.enabled = false;
+        }
     }
 
     public Waypoints GetWaypoints() { return waypoints; }

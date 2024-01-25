@@ -2,10 +2,11 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/** This class will be responsible for one player.
-    Manages items currently */
+/** Responsible for managing kart operations. */
 public class KartManager : KartBehavior 
 {
+
+	[SerializeField] private POIGDelegate poigDelegate;
 
 	private PlayerData data;
 	private bool isHuman;
@@ -45,6 +46,9 @@ public class KartManager : KartBehavior
 	public PlayerData GetPlayerData() { return data; }
 	public bool IsHuman { get { return isHuman; } }
 	public bool IsBot { get { return !isHuman; } }
+
+	public bool HasPOIGDelegate { get { return poigDelegate != null; } }
+	public POIGDelegate POIGDelegate { get { return poigDelegate; } }
 
 }
 
