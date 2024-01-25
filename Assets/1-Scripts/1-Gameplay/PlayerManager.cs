@@ -46,6 +46,10 @@ public class PlayerManager : MonoBehaviour
 		Vector3 spawnPos = GameplayManager.SpawnPositions.transform.GetChild(kartObjects.Count).position;
 		kart.transform.position = spawnPos;
 
+		kart.gameObject.name = "Kart-" + kart.GetPlayerData().name;
+		if(kart.IsHuman)
+			kart.gameObject.transform.parent.gameObject.name = kart.GetPlayerData().name + " (InGameObject)";
+
 		kartObjects.Add(kart.gameObject);
 		playerPositions.Add(kart.GetPositionTracker());
 	}
@@ -54,7 +58,7 @@ public class PlayerManager : MonoBehaviour
 	{
 		
 		// Spawn player object in game prefab
-		GameObject poig = Instantiate(playerObjectInGamePrefab);
+		GameObject poig = Instantiate(playerObjectInGamePrefab, GameplayManager.KartContainer);
 		KartManager pkm = KartBehavior.LocateManager(poig.GetComponent<POIGDelegate>().KartObject);
 
 		// Make connections for PlayerInput
@@ -74,7 +78,7 @@ public class PlayerManager : MonoBehaviour
 
 	public void SpawnBot() 
 	{
-		GameObject obj = Instantiate(kartPrefab);
+		GameObject obj = Instantiate(kartPrefab, GameplayManager.KartContainer);
 		
 		KartManager bkm = KartBehavior.LocateManager(obj);
         PlayerData bdata = new() {

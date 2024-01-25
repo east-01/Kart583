@@ -59,7 +59,7 @@ public class KartItemManager : KartBehavior
 			// If an error occured we don't want to instantiate a new item.
 			if(err != null) { Debug.Log(err); return; } 
 
-			Instantiate(worldItemPrefab).GetComponent<WorldItem>().ActivateItem(gameObject, kartCtrl.TurnInput);
+			Instantiate(worldItemPrefab, GameplayManager.ItemContainer).GetComponent<WorldItem>().ActivateItem(gameObject, kartCtrl.TurnInput);
 
 		}
 	}

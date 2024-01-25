@@ -33,6 +33,8 @@ public class GameplayManager : MonoBehaviour
 
     private SpawnPositions spawnPositions;
     private Waypoints waypoints;
+    private Transform kartContainer;
+    private Transform itemContainer;
     private RaceCamera raceCamera;
     private ScreenManager screenManager;
     private IntroCamData introCamData;
@@ -72,6 +74,12 @@ public class GameplayManager : MonoBehaviour
         GameObject wpo = GameObject.Find("Waypoints");
         if(wpo != null) waypoints = wpo.GetComponent<Waypoints>();
 
+        GameObject kco = GameObject.Find("KartContainer");
+        if(kco != null) kartContainer = kco.transform;
+
+        GameObject ico = GameObject.Find("ItemContainer");
+        if(ico != null) itemContainer = ico.transform;
+
         GameObject rco = GameObject.Find("RaceCamera");
         if(rco != null) raceCamera = rco.GetComponent<RaceCamera>();
 
@@ -83,11 +91,13 @@ public class GameplayManager : MonoBehaviour
         // Check if everything is in order
         if(rm == null) problems.Add("GameplayManager object doesn't have a RaceManager script component!");
         if(pm == null) problems.Add("GameplayManager object doesn't have a PlayerManager script component!");
-        if(screenManager == null) problems.Add("GameplayManager object doesn't have a ScreenManager script component!");
+        if(screenManager == null) problems.Add("RaceCamera object doesn't have a ScreenManager script component!");
         if(ia == null) problems.Add("GameplayManager object doesn't have an ItemAtlas script component!");
         if(la == null) problems.Add("GameplayManager object doesn't have a LevelAtlas script component!");
         if(spawnPositions == null) problems.Add("Failed to find SpawnPositions. " + (spo == null ? "No spawn position object found." : "Game object found, no SpawnPositions script component though."));
         if(waypoints == null) problems.Add("Failed to find Waypoints. " + (wpo == null ? "No waypoint object found." : "Game object found, no Waypoints script component though."));
+        if(kartContainer == null) problems.Add("Failed to find KartContainer. Add an empty object named KartContainer as a child of KartLevel.");
+        if(itemContainer == null) problems.Add("Failed to find ItemContainer. Add an empty object named ItemContainer as a child of KartLevel. ");
         if(raceCamera == null) problems.Add("Failed to find Race Camera. " + (rco == null ? "No race camera object found." : "Game object found, no RaceCamera script component though."));
         if(introCamData == null) warnings.Add("Failed to find IntroCamData. " + (icdo == null ? "No intro cam data object found." : "Game object found, no IntroCamData script component though."));
 
@@ -110,8 +120,10 @@ public class GameplayManager : MonoBehaviour
     public static ScreenManager ScreenManager { get { return Instance.GetScreenManager(); } }
     public static ItemAtlas ItemAtlas { get { return Instance.GetItemAtlas(); } }
     public static LevelAtlas LevelAtlas { get { return Instance.GetLevelAtlas(); } }
-    public static SpawnPositions SpawnPositions { get { return Instance.GetSpawnPositions(); }}
-    public static Waypoints Waypoints { get { return Instance.GetWaypoints(); }}
+    public static SpawnPositions SpawnPositions { get { return Instance.GetSpawnPositions(); } }
+    public static Waypoints Waypoints { get { return Instance.GetWaypoints(); } }
+    public static Transform KartContainer { get { return Instance.GetKartContainer(); } }
+    public static Transform ItemContainer { get { return Instance.GetItemContainer(); } }
     public static RaceCamera RaceCamera { get { return Instance.GetRaceCamera(); } }
     public static bool HasRaceCamera { get { return RaceCamera != null; } }
     public static IntroCamData IntroCamData { get { return Instance.GetIntroCamData();} }
@@ -125,6 +137,8 @@ public class GameplayManager : MonoBehaviour
 
     public SpawnPositions GetSpawnPositions() { return spawnPositions; }
     public Waypoints GetWaypoints() { return waypoints; }
+    public Transform GetKartContainer() { return kartContainer; }
+    public Transform GetItemContainer() { return itemContainer; }
     public RaceCamera GetRaceCamera() { return raceCamera; }
     public IntroCamData GetIntroCamData() { return introCamData; }
 
