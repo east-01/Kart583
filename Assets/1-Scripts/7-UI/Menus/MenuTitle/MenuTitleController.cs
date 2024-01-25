@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class MenuTitleController : MonoBehaviour
 {
+    public TitleShipFlight titleShip;
+
     public void ClickedStart() 
     {
         GameObject tmo = GameObject.Find("TransitionManager");

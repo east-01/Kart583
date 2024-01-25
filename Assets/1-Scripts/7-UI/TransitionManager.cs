@@ -54,6 +54,11 @@ public class TransitionManager : MonoBehaviour
 
     IEnumerator LoadWithAnimation(string sceneName) 
     {
+
+        if(SceneManager.GetActiveScene().name == SceneNames.MENU_TITLE) {
+            GameObject.Find("MenuCanvas").GetComponent<MenuTitleController>().titleShip.fly = true;
+        }
+
         bool isMenuTransition = SceneManager.GetActiveScene().name.StartsWith("Menu") && sceneName.StartsWith("Menu");
         if(isMenuTransition) {
             menuTransition.SetTrigger("Animate");
@@ -69,10 +74,6 @@ public class TransitionManager : MonoBehaviour
             GameObject menuCamera = GameObject.Find("MenuCamera");
             transitionDelegate.rotation = menuCamera.transform.rotation;
             transitionDelegate.rotVector = menuCamera.GetComponent<MenuCameraDrift>().GetRotationVector();
-
-            if(SceneManager.GetActiveScene().name == SceneNames.MENU_TITLE) {
-                
-            }
         }
 
         SceneManager.LoadScene(sceneName);

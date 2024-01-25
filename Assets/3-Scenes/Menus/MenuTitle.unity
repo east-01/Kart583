@@ -622,6 +622,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9545b9c1f86217342944702b0cfcbea1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  titleShip: {fileID: 1718099842}
 --- !u!1001 &1627728046
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -816,6 +817,22 @@ MonoBehaviour:
   rotationSpeed: 0.01
   maxRandomOffset: 5
   startRandomized: 1
+--- !u!114 &1718099842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1718099840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a44ac98985e69254abccf45b3ce2eaea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flightSpeed: 22.5
+  rotateSpeed: 7.5
+  accelerationTime: 0.15
+  fly: 0
 --- !u!1 &1994395405
 GameObject:
   m_ObjectHideFlags: 0
