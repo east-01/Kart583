@@ -43,6 +43,7 @@ public class TransitionManager : MonoBehaviour
         /* Wake up animation */
         if(!transitionDelegate.precedingScene.StartsWith("Menu") ||
            transitionDelegate.precedingScene == SceneNames.MENU_MAP) {
+            transition.SetTrigger("FadeFromBlack");
         }
 
     }
