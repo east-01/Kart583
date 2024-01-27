@@ -16,6 +16,9 @@ public class KartController : KartBehavior
 	public float inputDeadzone = 0.1f;
 	public float wheelSlideTorque = 60;
 	public float damageStateSpinSpeed = 5f;
+	public float rideHeight = 0.75f;
+	public float velocityDecay = 10f;
+	public float angularVelocityDecay = 20f;
 
 	[Header("Speed")]
 	public float maxSpeed = 20f;
@@ -60,6 +63,7 @@ public class KartController : KartBehavior
 	[SerializeField] private Vector3 velocity;
 	public int momentum;
 	public bool grounded; // Stores last update's grounded status
+	public float distanceFromGround;
 	public float airtime;
 	public float steeringWheelDirection; // A [-1, 1] range float indicating the amount the steering wheel is turned and the direction.
 	public float boostAmount;
@@ -172,11 +176,14 @@ public class KartController : KartBehavior
 	private void FixedUpdate() 
 	{
 
+		this.grounded = Grounded();
+
 		HandleVelocity();
+		DecayVelocity();
 		
 		/* Tire force: Since we're simulating tires rolling, the velocity direction
 		 *   should be in the direction of the transform.forward. */
-		if(Grounded()) {
+		if(grounded) {
 			Vector3 forward = RemoveUpComponent(transform.forward);
 			Vector3 vel  = TrackVelocity;
 			float dot = Vector3.Dot(forward, vel);
@@ -210,7 +217,12 @@ public class KartController : KartBehavior
 		rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, IsolateUpComponent(rb.angularVelocity), 3f*Time.deltaTime);
 
 		/* Apply gravity */
-		rb.AddForce(-up.normalized*Physics.gravity.magnitude);
+		if(!grounded)
+			rb.AddForce(-up.normalized*Physics.gravity.magnitude);
+
+		/* Check if player is stuck in ground*/
+		if(distanceFromGround < rideHeight)
+			transform.position += up*(rideHeight-distanceFromGround);
 
 		/* Player might be stuck in ground, get em out */
 		// if(airtime > 0.5f && Mathf.Abs(rb.velocity.y) < 0.01f) {
@@ -226,6 +238,7 @@ public class KartController : KartBehavior
 	{
 		DrawVector(KartForward, Color.blue);
 		DrawVector(rb.velocity, Color.cyan);
+		DrawVector(rb.angularVelocity, Color.cyan);
 		DrawVector(up, Color.green);
 
 		momentum = TrackSpeed > 0.1f ? (Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1) : 0;
@@ -243,12 +256,21 @@ public class KartController : KartBehavior
 			kartTurnSpeed * 															
 			steeringWheelDirection *		
 			DriftTurnMultiplier * 
-			catchupFactor *					// If our angular momentum is really slow, add extra torque
+			// catchupFactor *					// If our angular momentum is really slow, add extra torque
 			(momentum != -1 ? 1 : -1) *
 			up;
 		
 		rb.AddRelativeTorque(turnForce, ForceMode.Acceleration);
 		DrawVector(turnForce, Color.red);
+
+	}
+
+	/** Simulate the decay of velocity from friction provided by the track */
+	private void DecayVelocity() 
+	{
+
+		rb.AddForce(-rb.velocity.normalized*velocityDecay*Time.deltaTime, ForceMode.VelocityChange);
+		rb.AddTorque(-rb.angularVelocity.normalized*angularVelocityDecay*Time.deltaTime, ForceMode.VelocityChange);
 
 	}
 
@@ -319,17 +341,18 @@ public class KartController : KartBehavior
 
 	public bool Grounded() 
 	{ 
-		// TODO: Move raycast origin to the front/back of the kart depending on the momentum
-		//   so we can read changes in the up direction sooner
 		Vector3 collSize = GetComponent<BoxCollider>().size;
 		Vector3 raycastOrigin = transform.position + momentum*(collSize.z/2f)*KartForward;
 		RaycastHit hit;
 		Physics.Raycast(raycastOrigin, -transform.up, out hit, collSize.y);
 		if(hit.collider != null && hit.collider.CompareTag("Ground")) {
 			up = hit.normal;
-			return true;
+			distanceFromGround = hit.distance;
+			print("distance from ground " + distanceFromGround);
+			return distanceFromGround < rideHeight;
 		} else {
 			up = Vector3.up;
+			distanceFromGround = -1;
 			return false;
 		}
 	}

@@ -554,6 +554,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc70dc3e8c25b2f4ba7be4834073166f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  poigDelegate: {fileID: 0}
 --- !u!114 &8556894197583946043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -570,10 +571,13 @@ MonoBehaviour:
   inputDeadzone: 0.1
   wheelSlideTorque: 1000
   damageStateSpinSpeed: 5
+  rideHeight: 0.75
+  velocityDecay: 5
+  angularVelocityDecay: 15
   maxSpeed: 35
   maxBoostSpeed: 45
   acceleration: 30
-  kartTurnSpeed: 52.5
+  kartTurnSpeed: 25
   steeringWheelTurnSpeed: 5
   turnMultiplierRangeDriftMatch: {x: 1.35, y: 2.5}
   turnMultiplierRangeDriftDiffer: {x: -0.2, y: 0.35}
@@ -629,6 +633,7 @@ MonoBehaviour:
   velocity: {x: 0, y: 0, z: 0}
   momentum: 0
   grounded: 0
+  distanceFromGround: 0
   airtime: 0
   steeringWheelDirection: 0
   boostAmount: 0
