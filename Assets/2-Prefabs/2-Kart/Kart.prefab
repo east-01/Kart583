@@ -174,7 +174,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &7921181488372193326
 Transform:
   m_ObjectHideFlags: 0
@@ -450,7 +450,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5130578726108140990}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -572,14 +572,15 @@ MonoBehaviour:
   wheelSlideTorque: 1000
   damageStateSpinSpeed: 5
   rideHeight: 0.75
-  velocityDecay: 5
-  angularVelocityDecay: 15
+  velocityDecay: 15
+  angularVelocityDecay: 20
+  angularVelocityMax: 1.75
   maxSpeed: 35
   maxBoostSpeed: 45
   acceleration: 30
-  kartTurnSpeed: 25
+  kartTurnSpeed: 15
   steeringWheelTurnSpeed: 5
-  turnMultiplierRangeDriftMatch: {x: 1.35, y: 2.5}
+  turnMultiplierRangeDriftMatch: {x: 1.15, y: 1.75}
   turnMultiplierRangeDriftDiffer: {x: -0.2, y: 0.35}
   driftAge: 4
   driftAngleMin: 0.225
@@ -625,7 +626,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  drawVectors: 0
+  drawVectors: 1
   turn: {x: 0, y: 0}
   throttle: 0
   boosting: 0

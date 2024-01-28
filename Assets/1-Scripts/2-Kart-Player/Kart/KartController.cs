@@ -1,6 +1,8 @@
 using UnityEngine;
 using System;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Unity.VisualScripting;
+using UnityEngine.Pool;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
@@ -19,6 +21,7 @@ public class KartController : KartBehavior
 	public float rideHeight = 0.75f;
 	public float velocityDecay = 10f;
 	public float angularVelocityDecay = 20f;
+	public float angularVelocityMax = 1.75f;
 
 	[Header("Speed")]
 	public float maxSpeed = 20f;
@@ -176,10 +179,52 @@ public class KartController : KartBehavior
 	private void FixedUpdate() 
 	{
 
-		this.grounded = Grounded();
+		DrawVector(KartForward, Color.blue);
+		DrawVector(rb.velocity, Color.cyan);
+		DrawVector(rb.angularVelocity, Color.cyan);
+		DrawVector(up, Color.green);
 
-		HandleVelocity();
-		DecayVelocity();
+		grounded = Grounded();
+		momentum = TrackSpeed > 0.1f ? (Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1) : 0;
+
+		/* To handle velocity/angular velocity we'll either be adding to each (when the proper input is applied)
+		 *   or we'll be decaying each since the kart doesn't slide on the ground. */
+		/* Forward/backward velocity */
+		if(Mathf.Abs(throttle) > inputDeadzone) {
+			// Adding
+			Vector3 throttleForce = (ActivelyBoosting ? 1f : ThrottleInput) * (ActivelyBoosting ? acceleration*5f : acceleration) * transform.forward;
+
+			if(grounded && TrackSpeed <= CurrentMaxSpeed) {
+				rb.AddForce(throttleForce, ForceMode.Acceleration);	
+				DrawVector(throttleForce, Color.yellow);
+			}
+		} else {
+			// Decay
+			rb.AddForce(-rb.velocity.normalized*velocityDecay*Time.deltaTime, ForceMode.VelocityChange);
+		}
+
+		/* Angular velocity */
+		// print("angular vel |" + rb.angularVelocity.magnitude + "| " + rb.angularVelocity);
+		if(Mathf.Abs(turn.x) > inputDeadzone) {
+			// Adding
+			Vector3 turnForce = 
+				kartTurnSpeed * 															
+				steeringWheelDirection *		
+				DriftTurnMultiplier * 
+				(momentum != -1 ? 1 : -1) * // If momentum == 0, automatically use 1
+				up;
+
+			int angularVelocityDirection = (int)Mathf.Sign(Vector3.Dot(rb.angularVelocity, up));
+			bool steeringOpposesAVel = angularVelocityDirection != Mathf.Sign(steeringWheelDirection);
+			print("avd: " + angularVelocityDirection + " swd: " + steeringWheelDirection);
+			if(rb.angularVelocity.magnitude < angularVelocityMax || steeringOpposesAVel) {
+				rb.AddRelativeTorque(turnForce, ForceMode.Acceleration);
+				DrawVector(turnForce, Color.red);
+			}
+		} else {
+			// Decay
+			rb.AddTorque(-rb.angularVelocity.normalized*angularVelocityDecay*Time.deltaTime, ForceMode.VelocityChange);
+		}
 		
 		/* Tire force: Since we're simulating tires rolling, the velocity direction
 		 *   should be in the direction of the transform.forward. */
@@ -204,15 +249,15 @@ public class KartController : KartBehavior
 		}
 
 		/* Up force: It should always be that transform.up == up, add a torque to match this */
-		float upDot = Vector3.Dot(up, transform.up);
-		if(upDot < 0.975f) {
+		// float upDot = Vector3.Dot(up, transform.up);
+		// if(upDot < 0.975f) {
 			// Code found here https://gamedev.stackexchange.com/questions/194641/how-to-set-transform-up-without-locking-the-y-axis
 			// I wish I understood it. Someday.
 			Quaternion zToUp = Quaternion.LookRotation(up, -transform.forward);
 			Quaternion yToz = Quaternion.Euler(90, 0, 0);
 			transform.rotation = zToUp * yToz;
 			rb.angularVelocity = IsolateUpComponent(rb.angularVelocity);
-		}
+		// }
 
 		rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, IsolateUpComponent(rb.angularVelocity), 3f*Time.deltaTime);
 
@@ -229,48 +274,6 @@ public class KartController : KartBehavior
 		// 	print("player stuck in ground");
 		// 	rb.MovePosition(transform.position+Vector3.up*0.1f);
 		// }
-
-	}
-
-	/** Handle the current state of the velocity along with the user inputs to produce new
-	  *   velocity/rotation. */
-	private void HandleVelocity()
-	{
-		DrawVector(KartForward, Color.blue);
-		DrawVector(rb.velocity, Color.cyan);
-		DrawVector(rb.angularVelocity, Color.cyan);
-		DrawVector(up, Color.green);
-
-		momentum = TrackSpeed > 0.1f ? (Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1) : 0;
-
-		Vector3 throttleForce = (ActivelyBoosting ? 1f : ThrottleInput) * (ActivelyBoosting ? acceleration*5f : acceleration) * transform.forward;
-
-		if(Grounded() && Mathf.Abs(throttle) > inputDeadzone && TrackSpeed <= CurrentMaxSpeed) {
-			rb.AddForce(throttleForce, ForceMode.Acceleration);	
-			DrawVector(throttleForce, Color.yellow);
-		}
-
-		float maxAngularVel = 2f;
-		float catchupFactor = 2f*(1-Mathf.Clamp01(rb.angularVelocity.magnitude/maxAngularVel));
-		Vector3 turnForce = 
-			kartTurnSpeed * 															
-			steeringWheelDirection *		
-			DriftTurnMultiplier * 
-			// catchupFactor *					// If our angular momentum is really slow, add extra torque
-			(momentum != -1 ? 1 : -1) *
-			up;
-		
-		rb.AddRelativeTorque(turnForce, ForceMode.Acceleration);
-		DrawVector(turnForce, Color.red);
-
-	}
-
-	/** Simulate the decay of velocity from friction provided by the track */
-	private void DecayVelocity() 
-	{
-
-		rb.AddForce(-rb.velocity.normalized*velocityDecay*Time.deltaTime, ForceMode.VelocityChange);
-		rb.AddTorque(-rb.angularVelocity.normalized*angularVelocityDecay*Time.deltaTime, ForceMode.VelocityChange);
 
 	}
 
@@ -348,7 +351,7 @@ public class KartController : KartBehavior
 		if(hit.collider != null && hit.collider.CompareTag("Ground")) {
 			up = hit.normal;
 			distanceFromGround = hit.distance;
-			print("distance from ground " + distanceFromGround);
+			// print("distance from ground " + distanceFromGround);
 			return distanceFromGround < rideHeight;
 		} else {
 			up = Vector3.up;
