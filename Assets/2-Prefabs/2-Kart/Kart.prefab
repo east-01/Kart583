@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 234111407029324591}
   m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0.537, y: -0.49625003, z: 0.333}
+  m_LocalPosition: {x: 0.537, y: -0.29999998, z: 0.333}
   m_LocalScale: {x: 0.62499994, y: 0.1, z: 0.2}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -174,7 +174,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &7921181488372193326
 Transform:
   m_ObjectHideFlags: 0
@@ -218,7 +218,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2799433741780807883}
   m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -0.537, y: -0.49625003, z: -0.3}
+  m_LocalPosition: {x: -0.537, y: -0.3, z: -0.3}
   m_LocalScale: {x: 0.62499994, y: 0.1, z: 0.2}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -402,8 +402,6 @@ GameObject:
   - component: {fileID: 3497271038773842349}
   - component: {fileID: 2751771631386326976}
   - component: {fileID: 7979329536450047049}
-  - component: {fileID: 2088108346145602241}
-  - component: {fileID: 9035622293703636930}
   - component: {fileID: 5114485855354017640}
   - component: {fileID: 4518181260819848706}
   - component: {fileID: 8556894197583946043}
@@ -450,7 +448,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5130578726108140990}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -496,36 +494,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.6, y: 1, z: 1}
+  m_Size: {x: 0.6, y: 0.5, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!136 &2088108346145602241
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5130578726108140990}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.25
-  m_Height: 1
-  m_Direction: 0
-  m_Center: {x: 0, y: -0.09, z: 0.5}
---- !u!136 &9035622293703636930
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5130578726108140990}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.25
-  m_Height: 1
-  m_Direction: 0
-  m_Center: {x: 0, y: -0.09, z: -0.5}
 --- !u!54 &5114485855354017640
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -571,16 +541,17 @@ MonoBehaviour:
   inputDeadzone: 0.1
   wheelSlideTorque: 1000
   damageStateSpinSpeed: 5
-  rideHeight: 0.75
+  rideHeight: 0.35
   velocityDecay: 15
   angularVelocityDecay: 20
   angularVelocityMax: 1.75
+  minimumVelocityThreshold: 0.1
   maxSpeed: 35
   maxBoostSpeed: 45
-  acceleration: 30
-  kartTurnSpeed: 15
+  acceleration: 22.5
+  kartTurnSpeed: 1.15
   steeringWheelTurnSpeed: 5
-  turnMultiplierRangeDriftMatch: {x: 1.15, y: 1.75}
+  turnMultiplierRangeDriftMatch: {x: 1.35, y: 1.55}
   turnMultiplierRangeDriftDiffer: {x: -0.2, y: 0.35}
   driftAge: 4
   driftAngleMin: 0.225
@@ -626,7 +597,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  drawVectors: 1
+  drawVectors: 0
   turn: {x: 0, y: 0}
   throttle: 0
   boosting: 0
@@ -5933,7 +5904,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6845593104280229444}
   m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0.537, y: -0.49625003, z: -0.3}
+  m_LocalPosition: {x: 0.537, y: -0.29999998, z: -0.3}
   m_LocalScale: {x: 0.62499994, y: 0.1, z: 0.2}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6030,7 +6001,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6952530175769808874}
   m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -0.537, y: -0.49625003, z: 0.333}
+  m_LocalPosition: {x: -0.537, y: -0.29999998, z: 0.333}
   m_LocalScale: {x: 0.62499994, y: 0.1, z: 0.2}
   m_ConstrainProportionsScale: 0
   m_Children: []

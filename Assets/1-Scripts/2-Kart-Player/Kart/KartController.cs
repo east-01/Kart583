@@ -22,6 +22,7 @@ public class KartController : KartBehavior
 	public float velocityDecay = 10f;
 	public float angularVelocityDecay = 20f;
 	public float angularVelocityMax = 1.75f;
+	public float minimumVelocityThreshold = 0.1f; // If the angular/regular velocity of the rigidbody is less than this, set to zero
 
 	[Header("Speed")]
 	public float maxSpeed = 20f;
@@ -66,6 +67,7 @@ public class KartController : KartBehavior
 	[SerializeField] private Vector3 velocity;
 	public int momentum;
 	public bool grounded; // Stores last update's grounded status
+	public RaycastHit groundHit;
 	public float distanceFromGround;
 	public float airtime;
 	public float steeringWheelDirection; // A [-1, 1] range float indicating the amount the steering wheel is turned and the direction.
@@ -96,14 +98,14 @@ public class KartController : KartBehavior
     {
 
 		/* Grounded */
-		bool grounded = Grounded();
+		bool lastFrameGrounded = this.grounded;
+		grounded = Grounded();
 		if(grounded) { 
 			airtime = 0;
 		} else { 
-			if(this.grounded) airtime = 0; // We've just gone airborne, reset airtime
+			if(lastFrameGrounded) airtime = 0; // We've just gone airborne, reset airtime
 			airtime += Time.deltaTime;	
 		}
-		this.grounded = grounded;
 
 		/* Steering wheel direction modification */
 		if(Mathf.Abs(TurnInput.x) > 0) { 
@@ -129,7 +131,6 @@ public class KartController : KartBehavior
 		driftThetaTarget = 0;
 		if(kartStateManager.state == KartState.DRIFTING && driftDirection != 0 && Mathf.Abs(TurnInput.x) >= inputDeadzone) { 
 			driftThetaTarget = Mathf.Sign(driftDirection)*driftAngleMin;
-			if(SteeringWheelMatchesDrift) 
 			if(SteeringWheelMatchesDrift) 
 				driftThetaTarget += steeringWheelDirection*(driftAngleMax-driftAngleMin);
 		}			
@@ -187,45 +188,46 @@ public class KartController : KartBehavior
 		grounded = Grounded();
 		momentum = TrackSpeed > 0.1f ? (Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1) : 0;
 
-		/* To handle velocity/angular velocity we'll either be adding to each (when the proper input is applied)
-		 *   or we'll be decaying each since the kart doesn't slide on the ground. */
 		/* Forward/backward velocity */
-		if(Mathf.Abs(throttle) > inputDeadzone) {
+		if(Mathf.Abs(throttle) > inputDeadzone && (TrackSpeed <= CurrentMaxSpeed || Mathf.Sign(ThrottleInput) != momentum)) {
 			// Adding
 			Vector3 throttleForce = (ActivelyBoosting ? 1f : ThrottleInput) * (ActivelyBoosting ? acceleration*5f : acceleration) * transform.forward;
 
-			if(grounded && TrackSpeed <= CurrentMaxSpeed) {
+			if(grounded) {
 				rb.AddForce(throttleForce, ForceMode.Acceleration);	
 				DrawVector(throttleForce, Color.yellow);
 			}
 		} else {
 			// Decay
-			rb.AddForce(-rb.velocity.normalized*velocityDecay*Time.deltaTime, ForceMode.VelocityChange);
-		}
-
-		/* Angular velocity */
-		// print("angular vel |" + rb.angularVelocity.magnitude + "| " + rb.angularVelocity);
-		if(Mathf.Abs(turn.x) > inputDeadzone) {
-			// Adding
-			Vector3 turnForce = 
-				kartTurnSpeed * 															
-				steeringWheelDirection *		
-				DriftTurnMultiplier * 
-				(momentum != -1 ? 1 : -1) * // If momentum == 0, automatically use 1
-				up;
-
-			int angularVelocityDirection = (int)Mathf.Sign(Vector3.Dot(rb.angularVelocity, up));
-			bool steeringOpposesAVel = angularVelocityDirection != Mathf.Sign(steeringWheelDirection);
-			print("avd: " + angularVelocityDirection + " swd: " + steeringWheelDirection);
-			if(rb.angularVelocity.magnitude < angularVelocityMax || steeringOpposesAVel) {
-				rb.AddRelativeTorque(turnForce, ForceMode.Acceleration);
-				DrawVector(turnForce, Color.red);
+			if(rb.velocity.magnitude > minimumVelocityThreshold) {
+				rb.AddForce(-rb.velocity.normalized*velocityDecay*Time.deltaTime, ForceMode.VelocityChange);
+			} else {
+				rb.velocity = Vector3.zero;
 			}
-		} else {
-			// Decay
-			rb.AddTorque(-rb.angularVelocity.normalized*angularVelocityDecay*Time.deltaTime, ForceMode.VelocityChange);
 		}
-		
+
+		/* Turning: Each frame, we want to change transform.forward by a certain amount specified by the steeringWheelDirection. */
+		if(Math.Abs(steeringWheelDirection) > inputDeadzone) {
+			float turnForce = steeringWheelDirection*
+							  kartTurnSpeed*
+							  DriftTurnMultiplier*
+							  (momentum != -1 ? 1 : -1);
+
+			if(!grounded) 
+				turnForce *= 0.25f; // Air turn speed is a quarter of ground turn speed
+				
+			rb.angularVelocity = up*turnForce;
+		} else
+			rb.angularVelocity = Vector3.zero;
+
+		/* Up force: It should always be that transform.up == up, add a torque to match this */
+		// Code found here https://gamedev.stackexchange.com/questions/194641/how-to-set-transform-up-without-locking-the-y-axis
+		// I wish I understood it. Someday.
+		// Quaternion zToUp = Quaternion.LookRotation(up, -(transform.forward + transform.right.normalized*steeringWheelDirection*kartTurnSpeed));
+		Quaternion zToUp = Quaternion.LookRotation(up, -transform.forward);
+		Quaternion yToz = Quaternion.Euler(90, 0, 0);
+		transform.rotation = zToUp * yToz;
+
 		/* Tire force: Since we're simulating tires rolling, the velocity direction
 		 *   should be in the direction of the transform.forward. */
 		if(grounded) {
@@ -248,32 +250,23 @@ public class KartController : KartBehavior
 			}
 		}
 
-		/* Up force: It should always be that transform.up == up, add a torque to match this */
-		// float upDot = Vector3.Dot(up, transform.up);
-		// if(upDot < 0.975f) {
-			// Code found here https://gamedev.stackexchange.com/questions/194641/how-to-set-transform-up-without-locking-the-y-axis
-			// I wish I understood it. Someday.
-			Quaternion zToUp = Quaternion.LookRotation(up, -transform.forward);
-			Quaternion yToz = Quaternion.Euler(90, 0, 0);
-			transform.rotation = zToUp * yToz;
-			rb.angularVelocity = IsolateUpComponent(rb.angularVelocity);
-		// }
-
-		rb.angularVelocity = Vector3.Lerp(rb.angularVelocity, IsolateUpComponent(rb.angularVelocity), 3f*Time.deltaTime);
+		/* Check if player is stuck in ground*/
+		// print("is: " + Vector3.Dot(rb.velocity, up));
+		if(grounded && distanceFromGround < rideHeight && distanceFromGround != -1) {
+			// print("updating pos " + distanceFromGround);
+			transform.position = groundHit.point + up*rideHeight;
+		}
 
 		/* Apply gravity */
+		if(!grounded) {
+			// print("applying gravity");
+			Debug.DrawRay(transform.position, -up.normalized, Color.blue, 10f);
+			rb.AddForce(-up.normalized*Physics.gravity.magnitude, ForceMode.Acceleration);
+		}
+
+		/* Interpolate up vector back to default if we're not grounded */
 		if(!grounded)
-			rb.AddForce(-up.normalized*Physics.gravity.magnitude);
-
-		/* Check if player is stuck in ground*/
-		if(distanceFromGround < rideHeight)
-			transform.position += up*(rideHeight-distanceFromGround);
-
-		/* Player might be stuck in ground, get em out */
-		// if(airtime > 0.5f && Mathf.Abs(rb.velocity.y) < 0.01f) {
-		// 	print("player stuck in ground");
-		// 	rb.MovePosition(transform.position+Vector3.up*0.1f);
-		// }
+			up = Vector3.Lerp(up, Vector3.up, airtime/0.5f);
 
 	}
 
@@ -345,19 +338,17 @@ public class KartController : KartBehavior
 	public bool Grounded() 
 	{ 
 		Vector3 collSize = GetComponent<BoxCollider>().size;
-		Vector3 raycastOrigin = transform.position + momentum*(collSize.z/2f)*KartForward;
-		RaycastHit hit;
-		Physics.Raycast(raycastOrigin, -transform.up, out hit, collSize.y);
-		if(hit.collider != null && hit.collider.CompareTag("Ground")) {
-			up = hit.normal;
-			distanceFromGround = hit.distance;
-			// print("distance from ground " + distanceFromGround);
-			return distanceFromGround < rideHeight;
-		} else {
-			up = Vector3.up;
-			distanceFromGround = -1;
-			return false;
+		Vector3 raycastOrigin = transform.position;
+		Physics.Raycast(raycastOrigin, -transform.up, out groundHit, collSize.y);
+		if(groundHit.collider != null && groundHit.collider.CompareTag("Ground")) {
+			distanceFromGround = groundHit.distance;
+			if(distanceFromGround <= rideHeight) {
+				up = groundHit.normal;
+				return true;
+			}
 		}
+		distanceFromGround = -1;
+		return false;
 	}
 
 	/* Input */
@@ -437,5 +428,10 @@ public class KartController : KartBehavior
 				return 1f;
 		} 
 	}
+
+}
+
+public struct KartSettings 
+{
 
 }
