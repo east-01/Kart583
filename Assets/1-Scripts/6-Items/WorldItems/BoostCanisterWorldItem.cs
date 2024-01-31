@@ -9,7 +9,7 @@ public class BoostCanisterWorldItem : WorldItem
 
         KartController kc = KartBehavior.LocateManager(owner).GetKartController();
         kc.boostDecayTime = 0;
-        kc.boostAmount = kc.maxBoost;
+        kc.boostAmount = kc.settings.maxBoost;
 
         Destroy(gameObject);
     }

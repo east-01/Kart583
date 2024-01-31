@@ -14,23 +14,17 @@ public class KartController : KartBehavior
 	/* ----- Settings variables ----- */
 	public Transform kartModel;
 
-	[Header("General")]
+	public KartSettings settings;
+
+	[Space, Header("General")]
 	public float inputDeadzone = 0.1f;
 	public float wheelSlideTorque = 60;
 	public float damageStateSpinSpeed = 5f;
 	public float rideHeight = 0.75f;
 	public float velocityDecay = 10f;
-	public float angularVelocityDecay = 20f;
-	public float angularVelocityMax = 1.75f;
 	public float minimumVelocityThreshold = 0.1f; // If the angular/regular velocity of the rigidbody is less than this, set to zero
 
-	[Header("Speed")]
-	public float maxSpeed = 20f;
-	public float maxBoostSpeed = 30f;
-    public float acceleration = 5f;
-
 	[Header("Turning")]
-	public float kartTurnSpeed = 2f;
 	public float steeringWheelTurnSpeed = 5f;
 	public Vector2 turnMultiplierRangeDriftMatch = new(1.5f, 2f); // Turn boost for drift that matches joystick
 	public Vector2 turnMultiplierRangeDriftDiffer = new(-0.2f, 0.35f); // Turn decrease for drift that doesn't match joystick
@@ -46,7 +40,6 @@ public class KartController : KartBehavior
 
 	[Header("Boost")]
 	public float requiredBoostPercentage = 0.3f;
-	public float maxBoost = 3f; // Boost will be time in seconds
 	public float boostGain = 1f;
 	public float passiveBoostDrain = 3f;
 	public float activeBoostDrain = 1.75f;
@@ -146,14 +139,14 @@ public class KartController : KartBehavior
 		} else if(driftParticles && SteeringWheelMatchesDrift) {
 			boostDecayTime = 0;
 			boostAmount += boostGain*Time.deltaTime;
-			if(boostAmount > maxBoost) boostAmount = maxBoost;
+			if(boostAmount > settings.maxBoost) boostAmount = settings.maxBoost;
 		} else { 
 			boostDecayTime += Time.deltaTime;
 			boostAmount = Mathf.Max(boostAmount - boostDecayCurve.Evaluate(boostDecayTime)*passiveBoostDrain*Time.deltaTime, 0);									
 		}
 
 		if(GameplayManager.RaceManager.RaceTime <= 0) {
-			boostAmount = GameplayManager.RaceManager.settings.startBoostPercent*maxBoost;
+			boostAmount = GameplayManager.RaceManager.settings.startBoostPercent*settings.maxBoost;
 		}
 
 		/* Damage effects */
@@ -191,7 +184,7 @@ public class KartController : KartBehavior
 		/* Forward/backward velocity */
 		if(Mathf.Abs(throttle) > inputDeadzone && (TrackSpeed <= CurrentMaxSpeed || Mathf.Sign(ThrottleInput) != momentum)) {
 			// Adding
-			Vector3 throttleForce = (ActivelyBoosting ? 1f : ThrottleInput) * (ActivelyBoosting ? acceleration*5f : acceleration) * transform.forward;
+			Vector3 throttleForce = (ActivelyBoosting ? 1f : ThrottleInput) * (ActivelyBoosting ? settings.acceleration*5f : settings.acceleration) * transform.forward;
 
 			if(grounded) {
 				rb.AddForce(throttleForce, ForceMode.Acceleration);	
@@ -209,7 +202,7 @@ public class KartController : KartBehavior
 		/* Turning: Each frame, we want to change transform.forward by a certain amount specified by the steeringWheelDirection. */
 		if(Math.Abs(steeringWheelDirection) > inputDeadzone) {
 			float turnForce = steeringWheelDirection*
-							  kartTurnSpeed*
+							  settings.turnSpeed*
 							  DriftTurnMultiplier*
 							  (momentum != -1 ? 1 : -1);
 
@@ -238,13 +231,10 @@ public class KartController : KartBehavior
 				// Forward is close enough in line with velocity, switch velocity to match foward
 				Vector3 targetVel = forward*dot;
 				rb.AddForce(targetVel-vel, ForceMode.VelocityChange);
-			} else {
+			} else if(SpeedRatio > 0 && SpeedRatio != Mathf.Infinity) {
 				// Forward is sliding sideways in relation to velocity
 				// Apply a torque that rotates the car to be in line with the velocity
-				float minSR = 0f;
-				float sr = SpeedRatio;
-				if(sr < minSR) sr = minSR;
-				Vector3 rawTorque = wheelSlideTorque*Math.Max(Mathf.Abs(dot), sr)*-Vector3.Cross(rb.velocity.normalized, transform.forward);
+				Vector3 rawTorque = wheelSlideTorque*Math.Max(Mathf.Abs(dot), SpeedRatio)*-Vector3.Cross(rb.velocity.normalized, transform.forward);
 				Vector3 torque = up.normalized*Vector3.Dot(rawTorque, up);
 				rb.AddTorque(torque, ForceMode.Acceleration);
 			}
@@ -296,12 +286,23 @@ public class KartController : KartBehavior
 	{
 		if(collision.collider.isTrigger) return;
 
+		// Check if it's a wall collision
 		for(int i = 0; i < collision.contactCount; i++) { 
 			Vector3 norm = collision.GetContact(i).normal;
 			if(Vector3.Dot(up, norm) < 0.5) { 
 				timeSinceLastCollision = 0;
-				return;
+				break;
 			}
+		}
+
+		// Kart on kart collision has bounce effect
+		if(collision.gameObject.CompareTag("Kart")) {
+			Vector3 collPoint = collision.GetContact(0).point;
+			
+			kartEffectManager.SpawnBumpEffect(collPoint);
+
+			rb.velocity += RemoveUpComponent(transform.position-collPoint)*15f + up*2f;
+			collision.rigidbody.velocity += RemoveUpComponent(collision.transform.position-collPoint)*15f + up*2f;
 		}
 
 	}
@@ -380,7 +381,7 @@ public class KartController : KartBehavior
 	public bool BoostInput {
 		get { return CanMove && boosting; }
 		set {
-			if(value && !boosting && (boostAmount/maxBoost) >= requiredBoostPercentage) { 
+			if(value && !boosting && (boostAmount/settings.maxBoost) >= requiredBoostPercentage) { 
 				boosting = true;
 				kartStateManager.state = KartState.DRIVING;
 			} else if(!value) { 
@@ -404,7 +405,7 @@ public class KartController : KartBehavior
 	/** The velocity magnitude tangential to the up vector */
 	public float TrackSpeed { get { return TrackVelocity.magnitude; } }
 
-	public float CurrentMaxSpeed { get { return momentum == 1 ? (ActivelyBoosting ? maxBoostSpeed : maxSpeed) : maxSpeed/4f; } }
+	public float CurrentMaxSpeed { get { return momentum == 1 ? (ActivelyBoosting ? settings.maxBoostSpeed : settings.maxSpeed) : settings.maxSpeed/4f; } }
 	public float SpeedRatio { get { return TrackSpeed/CurrentMaxSpeed; } }
 	public bool CanMove { get { return GameplayManager.RaceManager.CanMove && damageCooldown <= 0; } }
 
@@ -414,7 +415,7 @@ public class KartController : KartBehavior
 	public bool CanDriftEngage { get { return SpeedRatio >= driftEngageSpeedPercent && momentum == 1 && CanMove; } }
 
 	public bool ActivelyBoosting { get { return CanMove && boosting && boostAmount > 0;} }
-	public float BoostRatio { get { return boostAmount/maxBoost; } }
+	public float BoostRatio { get { return boostAmount/settings.maxBoost; } }
 	
 	public bool IsDriftEngaged { get { return kartStateManager.state == KartState.DRIFTING && driftEngageTime == driftEngageDuration; } }
 	public float DriftTurnMultiplier { 
@@ -431,7 +432,12 @@ public class KartController : KartBehavior
 
 }
 
+[Serializable]
 public struct KartSettings 
 {
-
+	public float maxSpeed;
+	public float maxBoost;
+	public float maxBoostSpeed;
+	public float acceleration;
+	public float turnSpeed;
 }

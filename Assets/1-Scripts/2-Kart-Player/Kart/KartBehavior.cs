@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 /** This class will be a superclass to all going on the Kart. 
@@ -19,6 +17,7 @@ public class KartBehavior : MonoBehaviour
     protected KartStateManager kartStateManager;
     protected KartItemManager kartItemManager;
     protected PositionTracker posTracker;
+    protected KartEffectManager kartEffectManager;
 
     // Brain
     protected BotDriver botDriver;
@@ -40,6 +39,7 @@ public class KartBehavior : MonoBehaviour
         kartStateManager = kartManager.GetComponent<KartStateManager>();
         kartItemManager = kartManager.GetComponent<KartItemManager>();
         posTracker = kartManager.GetComponent<PositionTracker>();
+        kartEffectManager = kartManager.GetComponent<KartEffectManager>();
 
         // Objects on children of manager
         botDriver = kartManager.GetComponentInChildren<BotDriver>();
@@ -63,6 +63,7 @@ public class KartBehavior : MonoBehaviour
     public KartStateManager GetKartStateManager() { return kartStateManager; }
     public KartItemManager GetKartItemManager() { return kartItemManager; }
     public PositionTracker GetPositionTracker() { return posTracker; }
+    public KartEffectManager GetKartEffectManager() { return kartEffectManager; }
     public BotDriver GetBotDriver() { return botDriver; }
     public BotPath GetBotPath() { return botPath; }
     public HumanDriver GetHumanDriver() { return humanDriver; }
