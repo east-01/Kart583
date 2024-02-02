@@ -12,7 +12,7 @@ public class KartController : KartBehavior
 {
 
 	/* ----- Settings variables ----- */
-	public Transform kartModel;
+	private Transform kartModel;
 
 	public KartSettings settings;
 
@@ -81,6 +81,15 @@ public class KartController : KartBehavior
 
     private void Start()
     {
+
+		// Setup kartmodel from settings
+		if(settings.kartModelPrefab == null) 
+			throw new InvalidOperationException("There is no kart model prefab assigned in settings.");
+
+		GameObject newKartModel = Instantiate(settings.kartModelPrefab, transform);
+		newKartModel.GetComponent<KartModel>().SetKartController(this);
+		kartModel = newKartModel.transform;
+
 		if(kartModel != null) 
 			initKartModelY = kartModel.localPosition.y;
 		else
@@ -240,23 +249,18 @@ public class KartController : KartBehavior
 			}
 		}
 
+		/* Apply gravity */
+		if(!grounded) 
+			rb.AddForce(-up.normalized*Physics.gravity.magnitude, ForceMode.Acceleration);
+
 		/* Check if player is stuck in ground*/
 		// print("is: " + Vector3.Dot(rb.velocity, up));
-		if(grounded && distanceFromGround < rideHeight && distanceFromGround != -1) {
-			// print("updating pos " + distanceFromGround);
+		if(grounded && distanceFromGround < rideHeight-0.015f && distanceFromGround != -1)
 			transform.position = groundHit.point + up*rideHeight;
-		}
-
-		/* Apply gravity */
-		if(!grounded) {
-			// print("applying gravity");
-			Debug.DrawRay(transform.position, -up.normalized, Color.blue, 10f);
-			rb.AddForce(-up.normalized*Physics.gravity.magnitude, ForceMode.Acceleration);
-		}
 
 		/* Interpolate up vector back to default if we're not grounded */
 		if(!grounded)
-			up = Vector3.Lerp(up, Vector3.up, airtime/0.5f);
+			up = Vector3.Lerp(up, Vector3.up, Mathf.Clamp01(airtime/0.5f));
 
 	}
 
@@ -338,9 +342,7 @@ public class KartController : KartBehavior
 
 	public bool Grounded() 
 	{ 
-		Vector3 collSize = GetComponent<BoxCollider>().size;
-		Vector3 raycastOrigin = transform.position;
-		Physics.Raycast(raycastOrigin, -transform.up, out groundHit, collSize.y);
+		Physics.Raycast(transform.position, -transform.up, out groundHit, rideHeight);
 		if(groundHit.collider != null && groundHit.collider.CompareTag("Ground")) {
 			distanceFromGround = groundHit.distance;
 			if(distanceFromGround <= rideHeight) {
@@ -435,6 +437,7 @@ public class KartController : KartBehavior
 [Serializable]
 public struct KartSettings 
 {
+	public GameObject kartModelPrefab;
 	public float maxSpeed;
 	public float maxBoost;
 	public float maxBoostSpeed;
