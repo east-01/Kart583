@@ -1,7 +1,9 @@
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Linq;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -70,6 +72,8 @@ public class PlayerManager : MonoBehaviour
 		playerInputs.Add(player.input);
 
 		// Connect player kart manager to player object
+		player.data.kartName = SelectRandomKartName();
+		print("TODO (REMOVE): Set player's kart randomly to " + player.data.kartName);
 		pkm.SetPlayerData(player.data);
 		pkm.UseHumanDriver(player.input);
 
@@ -82,12 +86,19 @@ public class PlayerManager : MonoBehaviour
 		
 		KartManager bkm = KartBehavior.LocateManager(obj);
         PlayerData bdata = new() {
-            name = rlBotNames[Random.Range(0, rlBotNames.Length)] + " (Bot)"
+            name = rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)] + " (Bot)",
+			kartName = SelectRandomKartName()
         };
         bkm.SetPlayerData(bdata);
 		bkm.UseBotDriver();
 
 		AddKart(bkm);
+	}
+
+	private KartName SelectRandomKartName() 
+	{
+		Array enumVals = Enum.GetValues(typeof(KartName));
+		return (KartName)enumVals.GetValue(new System.Random().Next(enumVals.Length));
 	}
 
 	public int KartCount { get { return kartObjects.Count; } }

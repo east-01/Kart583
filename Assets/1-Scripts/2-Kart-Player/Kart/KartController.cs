@@ -3,6 +3,7 @@ using System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Unity.VisualScripting;
 using UnityEngine.Pool;
+using UnityEditor;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
@@ -82,11 +83,10 @@ public class KartController : KartBehavior
     private void Start()
     {
 
-		// Setup kartmodel from settings
-		if(settings.kartModelPrefab == null) 
-			throw new InvalidOperationException("There is no kart model prefab assigned in settings.");
-
-		GameObject newKartModel = Instantiate(settings.kartModelPrefab, transform);
+		KartDataPackage kdp = GameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartName);
+		settings = kdp.settings;
+	
+		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);
 		newKartModel.GetComponent<KartModel>().SetKartController(this);
 		kartModel = newKartModel.transform;
 
@@ -437,7 +437,6 @@ public class KartController : KartBehavior
 [Serializable]
 public struct KartSettings 
 {
-	public GameObject kartModelPrefab;
 	public float maxSpeed;
 	public float maxBoost;
 	public float maxBoostSpeed;

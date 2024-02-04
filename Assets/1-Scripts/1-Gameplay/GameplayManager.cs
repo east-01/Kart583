@@ -30,6 +30,7 @@ public class GameplayManager : MonoBehaviour
     private PlayerInputManager pim;
     private ItemAtlas ia;
     private LevelAtlas la;
+    private KartAtlas ka;
 
     private SpawnPositions spawnPositions;
     private Waypoints waypoints;
@@ -67,6 +68,7 @@ public class GameplayManager : MonoBehaviour
         pm = GetComponent<PlayerManager>();
         ia = GetComponent<ItemAtlas>();
         la = GetComponent<LevelAtlas>();
+        ka = GetComponent<KartAtlas>();
 
         GameObject spo = GameObject.Find("SpawnPositions");
         if(spo != null) spawnPositions = spo.GetComponent<SpawnPositions>();
@@ -94,6 +96,7 @@ public class GameplayManager : MonoBehaviour
         if(screenManager == null) problems.Add("RaceCamera object doesn't have a ScreenManager script component!");
         if(ia == null) problems.Add("GameplayManager object doesn't have an ItemAtlas script component!");
         if(la == null) problems.Add("GameplayManager object doesn't have a LevelAtlas script component!");
+        if(ka == null) problems.Add("GameplayManager object doesn't have a KartAtlas script component!");
         if(spawnPositions == null) problems.Add("Failed to find SpawnPositions. " + (spo == null ? "No spawn position object found." : "Game object found, no SpawnPositions script component though."));
         if(waypoints == null) problems.Add("Failed to find Waypoints. " + (wpo == null ? "No waypoint object found." : "Game object found, no Waypoints script component though."));
         if(kartContainer == null) problems.Add("Failed to find KartContainer. Add an empty object named KartContainer as a child of KartLevel.");
@@ -120,6 +123,7 @@ public class GameplayManager : MonoBehaviour
     public static ScreenManager ScreenManager { get { return Instance.GetScreenManager(); } }
     public static ItemAtlas ItemAtlas { get { return Instance.GetItemAtlas(); } }
     public static LevelAtlas LevelAtlas { get { return Instance.GetLevelAtlas(); } }
+    public static KartAtlas KartAtlas { get { return Instance.GetKartAtlas(); } }
     public static SpawnPositions SpawnPositions { get { return Instance.GetSpawnPositions(); } }
     public static Waypoints Waypoints { get { return Instance.GetWaypoints(); } }
     public static Transform KartContainer { get { return Instance.GetKartContainer(); } }
@@ -134,6 +138,7 @@ public class GameplayManager : MonoBehaviour
     public ScreenManager GetScreenManager() { return screenManager; } 
     public ItemAtlas GetItemAtlas() { return ia; }
     public LevelAtlas GetLevelAtlas() { return la; }
+    public KartAtlas GetKartAtlas() { return ka; }
 
     public SpawnPositions GetSpawnPositions() { return spawnPositions; }
     public Waypoints GetWaypoints() { return waypoints; }
