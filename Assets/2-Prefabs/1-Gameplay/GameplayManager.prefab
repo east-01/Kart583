@@ -159,6 +159,7 @@ MonoBehaviour:
   Karts:
   - name: The Stang
     model: {fileID: 112918798818135259, guid: e06d4f75d3d102f4c99a2bad7b15807d, type: 3}
+    image: {fileID: 21300000, guid: cff783a6d979d5e4c800984f7deba31a, type: 3}
     settings:
       maxSpeed: 35
       maxBoost: 3
@@ -167,6 +168,7 @@ MonoBehaviour:
       turnSpeed: 1.25
   - name: The Jambori
     model: {fileID: 112918798818135259, guid: 8589472832489834a8244a615fe4d112, type: 3}
+    image: {fileID: 21300000, guid: d80e94f73aa862348b8ec40c6487ee6a, type: 3}
     settings:
       maxSpeed: 40
       maxBoost: 2

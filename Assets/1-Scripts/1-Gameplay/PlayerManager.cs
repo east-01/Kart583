@@ -67,13 +67,17 @@ public class PlayerManager : MonoBehaviour
 		Camera pcam = poig.GetComponent<POIGDelegate>().Camera;
 		pcam.enabled = false;
 		pcam.GetComponent<AudioListener>().enabled = false;
+
 		player.input.camera = pcam;
+		player.input.uiInputModule = null; // Destroy menu player input module
 
 		playerInputs.Add(player.input);
 
+		// Player was spawned via late join, give them a random kart name
+		if(!player.data.kartName.HasValue) 
+			player.data.kartName = SelectRandomKartName();
+
 		// Connect player kart manager to player object
-		player.data.kartName = SelectRandomKartName();
-		print("TODO (REMOVE): Set player's kart randomly to " + player.data.kartName);
 		pkm.SetPlayerData(player.data);
 		pkm.UseHumanDriver(player.input);
 

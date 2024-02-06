@@ -55,6 +55,6 @@ public class KartManager : KartBehavior
 public struct PlayerData {
 	public string name;
 	public string hexColor;
-	public KartName kartName;
+	public KartName? kartName;
 	public bool ready;
 }

@@ -1,13 +1,9 @@
 using UnityEngine;
 using System;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Unity.VisualScripting;
-using UnityEngine.Pool;
-using UnityEditor;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
- * Kart ControllerV3.5 by Ethan Mullen
+ * Kart ControllerV? by Ethan Mullen
  */
 public class KartController : KartBehavior
 {
@@ -80,10 +76,20 @@ public class KartController : KartBehavior
 
 	public float damageCooldown; // When >0, no input goes to the kart
 
+	/*
+	KartController issues:
+	- Variable audit, we can probably clean some things up
+	- Floating kart on spawn
+	- Braking takes forever
+	*/
+
     private void Start()
     {
 
-		KartDataPackage kdp = GameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartName);
+		if(kartManager.GetPlayerData().kartName == null) 
+			throw new InvalidOperationException("Player data doesn't have a kart name");
+
+		KartDataPackage kdp = GameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartName.Value);
 		settings = kdp.settings;
 	
 		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);

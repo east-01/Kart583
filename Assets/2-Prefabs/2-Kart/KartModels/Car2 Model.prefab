@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6080821b9393f67419ddb4ccc38be83b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  drawTireRadiusWireFrames: 0
+  drawTireRadiusWireFrames: 1
   frontTireRadius: 0.185
   frontTires:
   - {fileID: 23213358800692191}
