@@ -207,8 +207,8 @@ public class KartController : KartBehavior
 			}
 		} else {
 			// Decay
-			if(rb.velocity.magnitude > minimumVelocityThreshold) {
-				rb.AddForce(-rb.velocity.normalized*velocityDecay*Time.deltaTime, ForceMode.VelocityChange);
+			if(TrackSpeed > minimumVelocityThreshold) {
+				rb.AddForce(-RemoveUpComponent(rb.velocity.normalized)*(velocityDecay*Time.deltaTime), ForceMode.VelocityChange);
 			} else {
 				rb.velocity = Vector3.zero;
 			}
@@ -228,10 +228,8 @@ public class KartController : KartBehavior
 		} else
 			rb.angularVelocity = Vector3.zero;
 
-		/* Up force: It should always be that transform.up == up, add a torque to match this */
+		/* Up force: It should always be that transform.up == up */
 		// Code found here https://gamedev.stackexchange.com/questions/194641/how-to-set-transform-up-without-locking-the-y-axis
-		// I wish I understood it. Someday.
-		// Quaternion zToUp = Quaternion.LookRotation(up, -(transform.forward + transform.right.normalized*steeringWheelDirection*kartTurnSpeed));
 		Quaternion zToUp = Quaternion.LookRotation(up, -transform.forward);
 		Quaternion yToz = Quaternion.Euler(90, 0, 0);
 		transform.rotation = zToUp * yToz;
@@ -257,10 +255,9 @@ public class KartController : KartBehavior
 
 		/* Apply gravity */
 		if(!grounded) 
-			rb.AddForce(-up.normalized*Physics.gravity.magnitude, ForceMode.Acceleration);
+			rb.AddForce(-up.normalized*Physics.gravity.magnitude);
 
 		/* Check if player is stuck in ground*/
-		// print("is: " + Vector3.Dot(rb.velocity, up));
 		if(grounded && distanceFromGround < rideHeight-0.015f && distanceFromGround != -1)
 			transform.position = groundHit.point + up*rideHeight;
 
