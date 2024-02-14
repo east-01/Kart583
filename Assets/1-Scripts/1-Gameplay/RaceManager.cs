@@ -1,9 +1,10 @@
 using System;
+using FishNet.Object;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(PlayerManager))]
-public class RaceManager : MonoBehaviour
+[RequireComponent(typeof(KartsIRManager))]
+public class RaceManager : NetworkBehaviour
 {
 
     /* ----- Settings fields ---- */
@@ -94,6 +95,7 @@ public class RaceManager : MonoBehaviour
     {
         // Enable player cameras and splitscreen, ensure we're on Gameplay control map
         PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => {
+            // po.input.enabled = true;
             po.input.SwitchCurrentActionMap("Gameplay");
             po.input.camera.enabled = true;
             if(po.PlayerIndex == 0) po.input.camera.GetComponent<AudioListener>().enabled = true;
@@ -109,9 +111,9 @@ public class RaceManager : MonoBehaviour
 
     public void SpawnBots() 
     {
-        PlayerManager pm = GameplayManager.PlayerManager;
+        KartsIRManager pm = GameplayManager.PlayerManager;
         if(settings.bots) { // Use pm.BotPlayerCount == 0 so that we don't spawn more bots after we've already spawned them.
-            int botsToSpawn = Math.Min(settings.botLimit, PlayerManager.PlayerLimit-pm.KartCount);
+            int botsToSpawn = Math.Min(settings.botLimit, KartsIRManager.PlayerLimit-pm.KartCount);
             for(int i = 0; i < botsToSpawn; i++) {
                 pm.SpawnBot();
             }

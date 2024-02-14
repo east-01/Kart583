@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class BoostDisplay : MonoBehaviour
 {
 
-	public KartController kartController;
+	public PlayerHUDCanvas parent;
 
 	[SerializeField] Image foregroundImage;
 
@@ -19,7 +19,7 @@ public class BoostDisplay : MonoBehaviour
 
 	[SerializeField] RectTransform minLine;
 
-	[SerializeField] float interpolationFactor = 10;
+	// [SerializeField] float interpolationFactor = 10;
 	[SerializeField] Gradient colors;
 	[SerializeField] AnimationCurve appearCurve, fadeCurve;
 	[SerializeField] float minHeight, maxHeight;
@@ -35,6 +35,10 @@ public class BoostDisplay : MonoBehaviour
 
     void Update()
     {
+
+		if(parent.subject == null) return;
+		KartController kartController = parent.subject.GetKartController();
+
 		/* Animations */
 		value = Mathf.Clamp01(kartController.BoostRatio);
 

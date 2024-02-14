@@ -1,13 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using FishNet.Connection;
+using FishNet.Object;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 /** The gameplay manager is responsible for general game loop mgmt.
   * It will check if everything is in order on Start(), printing out an error if it fails.
   * Other classes will refer to this to access game data. */
-public class GameplayManager : MonoBehaviour
+public class GameplayManager : NetworkBehaviour
 {
 
     /** Singleton instance of the Gameplay manager */
@@ -26,7 +29,7 @@ public class GameplayManager : MonoBehaviour
     public bool ready;
 
     private RaceManager rm;
-    private PlayerManager pm;
+    private KartsIRManager pm;
     private PlayerInputManager pim;
     private ItemAtlas ia;
     private LevelAtlas la;
@@ -39,6 +42,25 @@ public class GameplayManager : MonoBehaviour
     private RaceCamera raceCamera;
     private ScreenManager screenManager;
     private IntroCamData introCamData;
+
+    // public override void OnStartNetwork()
+    // {
+    //     print("Network started, is server: " + base.IsServer + " is client: " + base.IsClient);
+    //     base.OnStartNetwork();
+    //     base.ServerManager.Spawn(gameObject);
+    // }
+
+    [ServerRpc]
+    public void SpawnGameplayManagerOnServer() 
+    {
+
+    }
+
+    public override void OnStartClient() 
+    {
+        base.OnStartClient();
+        print("recieved on start client for gameplaymanager");
+    }
 
     void Start() 
     {
@@ -65,7 +87,7 @@ public class GameplayManager : MonoBehaviour
 
         // Load everything
         rm = GetComponent<RaceManager>();
-        pm = GetComponent<PlayerManager>();
+        pm = GetComponent<KartsIRManager>();
         ia = GetComponent<ItemAtlas>();
         la = GetComponent<LevelAtlas>();
         ka = GetComponent<KartAtlas>();
@@ -115,10 +137,30 @@ public class GameplayManager : MonoBehaviour
             problems.ForEach(problem => Debug.LogError(" - " + problem));
         }
 
+        print("Started GameplayManager");
+
+    }
+
+    [ServerRpc(RequireOwnership = false)] // Don't require ownership since the PlayerObjectManager belongs to server
+    public void SpawnPlayer(GameObject playerObject, NetworkConnection conn = null) 
+    {
+        print("Server is spawning player for " + conn.ClientId);
+        base.ServerManager.Spawn(playerObject, conn);
+    }
+
+    private float timeCounter;
+    void Update() 
+    {
+        if(timeCounter > 2f) {
+            // print("Gameplaymanager is active: " + gameObject.activeSelf);
+            timeCounter = 0;
+        } else {
+            timeCounter += Time.deltaTime;
+        }
     }
 
     public static RaceManager RaceManager { get { return Instance.GetRaceManager(); } }
-    public static PlayerManager PlayerManager { get { return Instance.GetPlayerManager(); } }
+    public static KartsIRManager PlayerManager { get { return Instance.GetPlayerManager(); } }
     public static PlayerInputManager PlayerInputManager { get { return Instance.GetPlayerInputManager(); } }
     public static ScreenManager ScreenManager { get { return Instance.GetScreenManager(); } }
     public static ItemAtlas ItemAtlas { get { return Instance.GetItemAtlas(); } }
@@ -133,7 +175,7 @@ public class GameplayManager : MonoBehaviour
     public static IntroCamData IntroCamData { get { return Instance.GetIntroCamData();} }
 
     public RaceManager GetRaceManager() { return rm; }
-    public PlayerManager GetPlayerManager() { return pm; }
+    public KartsIRManager GetPlayerManager() { return pm; }
     public PlayerInputManager GetPlayerInputManager() { return pim; }
     public ScreenManager GetScreenManager() { return screenManager; } 
     public ItemAtlas GetItemAtlas() { return ia; }

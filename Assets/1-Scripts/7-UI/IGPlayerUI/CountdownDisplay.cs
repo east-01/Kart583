@@ -21,7 +21,6 @@ public class CountdownDisplay : MonoBehaviour
     public float delay = 0.2f;
 
     /* ----- Runtime variables ----- */
-    private RaceManager rm;
     private RectTransform rt;
     [Header("Runtime fields")] public int displayedSecond;
     public int raceFloor;
@@ -30,16 +29,13 @@ public class CountdownDisplay : MonoBehaviour
     void Start() 
     {
         rt = GetComponent<RectTransform>();
-        rm = null;
-        GameObject rmo = GameObject.Find("GameplayManager");
-        if(rmo != null && !rmo.TryGetComponent<RaceManager>(out rm)) {
-            Debug.LogError("Countdown display failed to find race manager!");
-            gameObject.SetActive(false);
-        }
     }
 
     void Update()
     {
+
+        if(GameplayManager.Instance == null) return;
+        RaceManager rm = GameplayManager.RaceManager;
 
         if(rm.RaceTime < 1) {
             // -1.2f --> |_-1.2_| == -2 --> |-2 - -1.2| --> 0.8 correct, -1.2 does represent 80% progress through 0.8

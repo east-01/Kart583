@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5244667296191878686}
+  - component: {fileID: 7290347010873503086}
   - component: {fileID: 6795377866323719207}
   - component: {fileID: 5244667296191878687}
   - component: {fileID: 5244667296191878685}
@@ -37,6 +38,41 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7290347010873503086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5244667296191878682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <IsNested>k__BackingField: 0
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  _networkBehaviours:
+  - {fileID: 6795377866323719207}
+  - {fileID: 5244667296191878687}
+  - {fileID: 5244667296191878685}
+  <ParentNetworkObject>k__BackingField: {fileID: 0}
+  <ChildNetworkObjects>k__BackingField: []
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    LocalScale: {x: 1, y: 1, z: 1}
+  _isNetworked: 1
+  _isGlobal: 1
+  _initializeOrder: 0
+  _defaultDespawnType: 0
+  NetworkObserver: {fileID: 0}
+  <PrefabId>k__BackingField: 6
+  <SpawnableCollectionId>k__BackingField: 0
+  _scenePathHash: 0
+  <SceneId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 7358368157710502861
 --- !u!114 &6795377866323719207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49,6 +85,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06452b01267f42d469b244362fa4ec2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 7290347010873503086}
+  _networkObjectCache: {fileID: 7290347010873503086}
   playerObjectManagerPrefab: {fileID: 1451273396316291034, guid: 1d5be95719efe044689066dd96520717, type: 3}
   showWarnings: 0
   showBotPathWarnings: 0
@@ -67,6 +106,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac19e8ff79f7aed43acbd9c37d97c1bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 7290347010873503086}
+  _networkObjectCache: {fileID: 7290347010873503086}
   settings:
     laps: 3
     startDelay: 5
@@ -87,6 +129,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca4c712dce2bab0418157ba8d0bfb657, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 2
+  _addedNetworkObject: {fileID: 7290347010873503086}
+  _networkObjectCache: {fileID: 7290347010873503086}
   kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
   playerObjectInGamePrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
   kartObjects: []

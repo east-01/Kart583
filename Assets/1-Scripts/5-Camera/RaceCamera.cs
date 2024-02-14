@@ -14,11 +14,14 @@ public class RaceCamera : MonoBehaviour
 
     void Start() 
     {
-        if(GameplayManager.Instance.playStartAnimation) StartAnimation();
+        print("TODO: Play start animation after all players join");
+        // if(GameplayManager.Instance.playStartAnimation) StartAnimation();
     }
 
     void Update()
     {
+        if(GameplayManager.Instance == null) return;
+
         if(startAnimationTimeLeft > 0) {
             startAnimationTimeLeft -= Time.deltaTime;
         }

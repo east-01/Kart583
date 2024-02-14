@@ -10,7 +10,7 @@ using UnityEngine.UI;
 public class PositionDisplay : MonoBehaviour
 {
 
-    public PositionTracker positionTracker;
+    public PlayerHUDCanvas parent;
     /* ----- Settings variables ---- */
     [Header("Lap")] public TMP_Text lapText;
     public Color lapTextColor;
@@ -18,20 +18,13 @@ public class PositionDisplay : MonoBehaviour
     [Header("Race Position")]public TMP_Text positionText;
     public Color[] positionColors;
 
-    /* ----- Runtime variables ----- */
-    private RaceManager rm;
-    private PlayerManager pm;
-
-    private void Start() 
-    {
-        GameObject gm = GameObject.Find("GameplayManager");
-        if(gm == null) throw new InvalidOperationException("Failed to find GameplayManager in scene!");
-        rm = gm.GetComponent<RaceManager>();
-        pm = gm.GetComponent<PlayerManager>();
-    }
-
     private void Update() 
     {
+        if(GameplayManager.Instance == null) return;
+        if(parent.subject == null) return;
+        
+        RaceManager rm = GameplayManager.RaceManager;
+        PositionTracker positionTracker = parent.subject.GetPositionTracker();
 
         // Lap text
         lapText.text = "LAP " + Mathf.Clamp(positionTracker.lapNumber+1, 0, rm.settings.laps) + "/" + rm.settings.laps;
@@ -51,6 +44,8 @@ public class PositionDisplay : MonoBehaviour
 
     public Color GetTargetPositionColor() 
     {   
+        if(parent.subject == null) return positionColors[0];
+        PositionTracker positionTracker = parent.subject.GetPositionTracker();
         return positionColors[Mathf.Clamp(positionTracker.racePos, 0, positionColors.Length-1)];
     }
 
