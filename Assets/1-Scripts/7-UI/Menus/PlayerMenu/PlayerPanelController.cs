@@ -47,8 +47,8 @@ public class PlayerPanelController : MonoBehaviour
             // This will be the opposite order as specified in UpdateBuildPhase()
             if(playerObj.data.ready) {
                 playerObj.data.ready = false;
-            } else if(playerObj.data.kartName != null) {
-                playerObj.data.kartName = null;
+            } else if(playerObj.data.kartName != KartName.NONE) {
+                playerObj.data.kartName = KartName.NONE;
             } else if(playerObj.data.hexColor != null) {
                 playerObj.data.hexColor = null;
             }
@@ -76,7 +76,7 @@ public class PlayerPanelController : MonoBehaviour
             phase = PlayerBuildPhase.COLOR_SELECT;
             colorSelect.SetActive(true);
             colorFirstSelection.Select();
-        } else if(playerObj.data.kartName == null) {
+        } else if(playerObj.data.kartName == KartName.NONE) {
             phase = PlayerBuildPhase.VEHICLE_SELECT;
             kartSelect.SetActive(true);
         } else if(!playerObj.data.ready) {

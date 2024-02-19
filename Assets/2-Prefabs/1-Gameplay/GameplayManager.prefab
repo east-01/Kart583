@@ -113,7 +113,7 @@ MonoBehaviour:
     laps: 3
     startDelay: 5
     startBoostPercent: 0.5
-    bots: 1
+    bots: 0
     botLimit: 8
   phase: 0
   raceTime: 0
@@ -135,7 +135,6 @@ MonoBehaviour:
   kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
   playerObjectInGamePrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
   kartObjects: []
-  playerInputs: []
   playerPositions: []
 --- !u!114 &1692848356265694792
 MonoBehaviour:

@@ -41,8 +41,9 @@ public class KartAtlas : MonoBehaviour
 
 }
 
+[Serializable]
 public enum KartName {
-    STANDARD, SPEED
+    NONE, STANDARD, SPEED
 }
 
 [Serializable]

@@ -31,7 +31,7 @@ public class RaceManager : NetworkBehaviour
         // Spawn bots if we're not waiting on a late join
         // If we are waiting for a late join, the bots will be spawn after said player joins
         if(phase != RacePhase.LATE_JOIN) 
-            SpawnBots();
+            GameplayManager.PlayerManager.SpawnBots();
 
     }
 
@@ -47,7 +47,7 @@ public class RaceManager : NetworkBehaviour
                     pim.EnableJoining();
                 } else {
                     pim.DisableJoining();
-                    SpawnBots();
+                    GameplayManager.PlayerManager.SpawnBots();
                     phase = RacePhase.INTRO_ANIMATION;
                 }
                 break;
@@ -107,17 +107,6 @@ public class RaceManager : NetworkBehaviour
 
         // Load settings values
         raceTime = -Math.Abs(settings.startDelay);
-    }
-
-    public void SpawnBots() 
-    {
-        KartsIRManager pm = GameplayManager.PlayerManager;
-        if(settings.bots) { // Use pm.BotPlayerCount == 0 so that we don't spawn more bots after we've already spawned them.
-            int botsToSpawn = Math.Min(settings.botLimit, KartsIRManager.PlayerLimit-pm.KartCount);
-            for(int i = 0; i < botsToSpawn; i++) {
-                pm.SpawnBot();
-            }
-        }
     }
 
     public float RaceTime { get { return raceTime; }}

@@ -37,8 +37,8 @@ public class KartSelectController : MonoBehaviour
 
         highestStats = gameplayManagerPrefab.GetComponent<KartAtlas>().HighestStats;
 
-        if(parentPanel.PlayerObject.data.kartName.HasValue)
-            currentName = parentPanel.PlayerObject.data.kartName.Value;
+        if(parentPanel.PlayerObject.data.kartName != KartName.NONE)
+            currentName = parentPanel.PlayerObject.data.kartName;
         else
             currentName = 0;
 
@@ -78,10 +78,10 @@ public class KartSelectController : MonoBehaviour
     private KartName KartNameArithmetic(KartName current, int offset) {
         int kartCount = Enum.GetValues(typeof(KartName)).Length;
         current += offset;
-        if((int)current < 0) {
+        if((int)current < 1) {
             current = (KartName)(kartCount-1);
         } else if((int)current >= kartCount) {
-            current = 0;
+            current = (KartName)1;
         }
         return current;
     }

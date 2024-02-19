@@ -1,4 +1,5 @@
 using System;
+using FishNet.Object.Synchronizing;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,7 +9,10 @@ public class KartManager : KartBehavior
 
 	[SerializeField] private POIGDelegate poigDelegate;
 
+	[SerializeField] 
+	[SyncVar]
 	private PlayerData data;
+	[SyncVar] 
 	private bool isHuman;
 
 	public void SetPlayerData(PlayerData data) 
@@ -52,9 +56,10 @@ public class KartManager : KartBehavior
 
 }
 
+[Serializable]
 public struct PlayerData {
 	public string name;
 	public string hexColor;
-	public KartName? kartName;
+	public KartName kartName;
 	public bool ready;
 }

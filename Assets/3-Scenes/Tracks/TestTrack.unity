@@ -7307,21 +7307,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &7443408887346900434
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7443408887346900445}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 211a9f6ec51ddc14f908f5acc0cd0423, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _playerPrefab: {fileID: 0}
-  _addToDefaultScene: 1
-  Spawns: []
 --- !u!114 &7443408887346900444
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7353,7 +7338,6 @@ GameObject:
   - component: {fileID: 7443408887346900444}
   - component: {fileID: 1541786874}
   - component: {fileID: 7443408887346900448}
-  - component: {fileID: 7443408887346900434}
   - component: {fileID: 7443408887346900449}
   m_Layer: 0
   m_Name: NetworkManager
@@ -7406,10 +7390,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 7443408887346900445}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b35c78a63aa4faf42b46dc4df103dabd, type: 3}
+  m_Script: {fileID: 11500000, guid: 347daec981879384da27e410c1f3bb64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameplayManagerPrefab: {fileID: 5244667296191878682, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
+  _sceneDelegatePrefab: {fileID: 786467654113088903, guid: 59c0f57aad8c73042ae9d206018c26c0, type: 3}
 --- !u!1001 &7502375356247304897
 PrefabInstance:
   m_ObjectHideFlags: 0
