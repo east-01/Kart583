@@ -23,7 +23,7 @@ public class KartSelectController : MonoBehaviour
     private PlayerPanelController parentPanel;
     private PlayerControls controlsReference;
 
-    private KartName currentName;
+    private KartType currentName;
     private KartSettings highestStats;
     private float lastScrollTime; // Tracks the last time we recieved a navigate input
 
@@ -37,8 +37,8 @@ public class KartSelectController : MonoBehaviour
 
         highestStats = gameplayManagerPrefab.GetComponent<KartAtlas>().HighestStats;
 
-        if(parentPanel.PlayerObject.data.kartName != KartName.NONE)
-            currentName = parentPanel.PlayerObject.data.kartName;
+        if(parentPanel.PlayerObject.data.kartType != KartType.NONE)
+            currentName = parentPanel.PlayerObject.data.kartType;
         else
             currentName = 0;
 
@@ -75,13 +75,13 @@ public class KartSelectController : MonoBehaviour
         rightPosition.sprite = ka.RetrieveData(KartNameArithmetic(currentName, 1)).image;
     }
 
-    private KartName KartNameArithmetic(KartName current, int offset) {
-        int kartCount = Enum.GetValues(typeof(KartName)).Length;
+    private KartType KartNameArithmetic(KartType current, int offset) {
+        int kartCount = Enum.GetValues(typeof(KartType)).Length;
         current += offset;
         if((int)current < 1) {
-            current = (KartName)(kartCount-1);
+            current = (KartType)(kartCount-1);
         } else if((int)current >= kartCount) {
-            current = (KartName)1;
+            current = (KartType)1;
         }
         return current;
     }

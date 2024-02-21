@@ -54,13 +54,8 @@ public class KartsIRManager : NetworkBehaviour
 			throw new InvalidOperationException("Tried to spawn a new kart on a client.");
 
 		GameObject newKart = Instantiate(kartPrefab, GameplayManager.KartContainer);
-		base.ServerManager.Spawn(newKart.GetComponent<NetworkObject>(), owner);
 
-		// Connects the owner to the scene that the GameplayManager is on
-		// TODO: This should be more robust
-		// base.SceneManager.AddOwnerToDefaultScene(newKart.GetComponent<NetworkObject>());
-
-        print("spawned " + newKart.name);
+        print("spawned " + newKart.name + " with data " + data.name + ", " + data.kartType);
 
 		KartManager newKartManager = KartBehavior.LocateManager(newKart);
 		newKartManager.SetPlayerData(data);
@@ -75,23 +70,35 @@ public class KartsIRManager : NetworkBehaviour
 		kartObjects.Add(newKart);
 		playerPositions.Add(newKartManager.GetPositionTracker());
 
+		base.ServerManager.Spawn(newKart, owner);
+
 		return newKartManager;
 	}
 
 	/// <summary>
-	/// Spawns a kart using SpawnKart, spawns a PlayerObjectInGame object and connects them.
+	/// Spawns a kart using SpawnKart, queues up the PlayerObject to wait for when the server spawns the kart.
+	/// Once the server spawns the kart, the client recieves the ConnectPlayerToKart call, and spawns a
+	///   PlayerObjectInGame object and connects all elements to the newly spawned kart.
 	/// </summary>
-	/// <param name="player"></param>
 	public void SpawnPlayer(PlayerObject player)
 	{
 		// Player was spawned via late join, give them a random kart name
-		if(player.data.kartName == KartName.NONE) 
-			player.data.kartName = SelectRandomKartName();
+		if(player.data.kartType == KartType.NONE) 
+			player.data.kartType = SelectRandomKartName();
 
-		print("player kart name " + player.data.kartName);
+		print("player kart name " + player.data.kartType);
 		SpawnPlayer_Server(player.data, base.LocalConnection);
 		playerObjectsWaitingForKarts.Add(player.data.name, player);
 		
+	}
+
+	/// <summary>
+	/// This method will be called when the server spawns a new kart, prompting all observers
+	///   to handle it.
+	/// </summary>
+	[ObserversRpc]
+	public void HandleSpawn() {
+
 	}
 
 	[ServerRpc(RequireOwnership = false)]
@@ -135,13 +142,13 @@ public class KartsIRManager : NetworkBehaviour
 		pkm.UseHumanDriver(player.input);
 	}
 
-	[ServerRpc(RequireOwnership = false)]
+	// [ServerRpc(RequireOwnership = false)]
 	public void SpawnBot() 
 	{		
 		print("Spawning bot (" + kartObjects.Count + " objects)");
         PlayerData bdata = new() {
             name = rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)] + " (Bot)",
-			kartName = SelectRandomKartName()
+			kartType = SelectRandomKartName()
         };
 		KartManager bkm = SpawnKart(null, bdata);
 		bkm.UseBotDriver();
@@ -159,10 +166,10 @@ public class KartsIRManager : NetworkBehaviour
         }
     }
 
-	private KartName SelectRandomKartName() 
+	private KartType SelectRandomKartName() 
 	{
-		Array enumVals = Enum.GetValues(typeof(KartName));
-		return (KartName)enumVals.GetValue(new System.Random().Next(1, enumVals.Length));
+		Array enumVals = Enum.GetValues(typeof(KartType));
+		return (KartType)enumVals.GetValue(new System.Random().Next(1, enumVals.Length));
 	}
 
 	public int KartCount { get { return kartObjects.Count; } }

@@ -17,6 +17,7 @@ public class KartManager : KartBehavior
 
 	public void SetPlayerData(PlayerData data) 
 	{
+		print("Kart set data name: " + data.name + ", type: " + data.kartType);
 		this.data = data;
 	}
 
@@ -60,6 +61,6 @@ public class KartManager : KartBehavior
 public struct PlayerData {
 	public string name;
 	public string hexColor;
-	public KartName kartName;
+	public KartType kartType;
 	public bool ready;
 }

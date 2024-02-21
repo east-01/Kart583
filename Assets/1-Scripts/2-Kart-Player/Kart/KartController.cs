@@ -86,10 +86,10 @@ public class KartController : KartBehavior
     private void Start()
     {
 
-		if(kartManager.GetPlayerData().kartName == KartName.NONE) 
+		if(kartManager.GetPlayerData().kartType == KartType.NONE) 
 			throw new InvalidOperationException("Player data doesn't have a kart name");
 
-		KartDataPackage kdp = GameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartName);
+		KartDataPackage kdp = GameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
 		settings = kdp.settings;
 	
 		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);

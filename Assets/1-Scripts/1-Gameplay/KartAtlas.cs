@@ -14,7 +14,7 @@ public class KartAtlas : MonoBehaviour
         get { 
             if(_highestStats == null) {
                 _highestStats = new();
-                foreach(KartName name in Enum.GetValues(typeof(KartName))) {
+                foreach(KartType name in Enum.GetValues(typeof(KartType))) {
                     KartSettings settings = RetrieveData(name).settings;
                     foreach(FieldInfo fi in typeof(KartSettings).GetFields()) {
                         if(fi.FieldType != typeof(float)) {
@@ -34,7 +34,7 @@ public class KartAtlas : MonoBehaviour
     }
     
     [Header("IMPORTANT NOTE: Match enum index to list index")] public List<KartDataPackage> Karts;
-    public KartDataPackage RetrieveData(KartName kartName) 
+    public KartDataPackage RetrieveData(KartType kartName) 
     {
         return Karts[(int)kartName];
     }
@@ -42,7 +42,7 @@ public class KartAtlas : MonoBehaviour
 }
 
 [Serializable]
-public enum KartName {
+public enum KartType {
     NONE, STANDARD, SPEED
 }
 

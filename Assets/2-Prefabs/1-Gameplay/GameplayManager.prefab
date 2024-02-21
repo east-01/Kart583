@@ -64,11 +64,11 @@ MonoBehaviour:
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     LocalScale: {x: 1, y: 1, z: 1}
   _isNetworked: 1
-  _isGlobal: 1
+  _isGlobal: 0
   _initializeOrder: 0
   _defaultDespawnType: 0
   NetworkObserver: {fileID: 0}
-  <PrefabId>k__BackingField: 6
+  <PrefabId>k__BackingField: 5
   <SpawnableCollectionId>k__BackingField: 0
   _scenePathHash: 0
   <SceneId>k__BackingField: 0
@@ -113,7 +113,7 @@ MonoBehaviour:
     laps: 3
     startDelay: 5
     startBoostPercent: 0.5
-    bots: 0
+    bots: 1
     botLimit: 8
   phase: 0
   raceTime: 0
@@ -201,6 +201,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Karts:
+  - name: NONE
+    model: {fileID: 0}
+    image: {fileID: 0}
+    settings:
+      maxSpeed: 0
+      maxBoost: 0
+      maxBoostSpeed: 0
+      acceleration: 0
+      turnSpeed: 0
   - name: The Stang
     model: {fileID: 112918798818135259, guid: e06d4f75d3d102f4c99a2bad7b15807d, type: 3}
     image: {fileID: 21300000, guid: cff783a6d979d5e4c800984f7deba31a, type: 3}

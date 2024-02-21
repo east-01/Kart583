@@ -5,7 +5,6 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -22,7 +21,7 @@ public class SceneDelegate : NetworkBehaviour
 
     public static SceneDelegate Instance;
     
-    private List<Scene> ScenesLoaded = new();
+    private List<Scene> ScenesLoaded = new(); // Unused for now, see RegisterScenes
 
     void Awake() 
     {
@@ -32,9 +31,31 @@ public class SceneDelegate : NetworkBehaviour
         Instance = this;
     }
 
-    void OnEnable() { InstanceFinder.SceneManager.OnLoadEnd += RegisterScenes; }
+    //This code is junk at the moment. Need to understand scene handling in more detail to make it work.
+    //I'll just use SceneManager#AddOwnerToDefaultScene for now and see how far that gets me.
+
+    void OnEnable() { InstanceFinder.SceneManager.OnLoadEnd += RegisterScenes; print("Registered OnLoadEnd event"); }
     void OnDisable() { InstanceFinder.SceneManager.OnLoadEnd -= RegisterScenes; }
 
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        ServerRpcJoinScene(base.LocalConnection);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcJoinScene(NetworkConnection conn) 
+    {
+        // For now we're loading the players into the default loaded scene
+        // More info here: https://fish-networking.gitbook.io/docs/manual/guides/scene-management/scene-visibility#initial-scene-load
+        Scene activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        base.SceneManager.AddConnectionToScene(conn, activeScene);
+    }
+
+    /// <summary>
+    /// Unused code at the moment, will be used when we get more into depth of menus/lobbies
+    /// </summary>
+    /// <param name="args"></param>
     private void RegisterScenes(SceneLoadEndEventArgs args)
     {
         if(!args.QueueData.AsServer) 
@@ -44,20 +65,6 @@ public class SceneDelegate : NetworkBehaviour
             ScenesLoaded.Add(scene);
             print("Registered scene " + scene.name);
         }
-    }
-
-    public override void OnStartClient()
-    {
-        base.OnStartClient();
-        // Starting client, looking for scene to join
-        ServerRpcJoinScene(base.LocalConnection);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcJoinScene(NetworkConnection conn) 
-    {
-        // Not sure what scene to put them in yet. Lets just put them in the first one that was loaded.
-        base.SceneManager.AddConnectionToScene(conn, ScenesLoaded[0]);
     }
 
 }
