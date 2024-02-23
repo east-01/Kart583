@@ -1,5 +1,7 @@
 using System;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,7 +13,7 @@ public class RaceManager : NetworkBehaviour
     public RaceSettings settings;
 
     /* ----- Runtime fields ----- */
-    [Header("Runtime Fields"), SerializeField] private RacePhase phase; 
+    [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange))] private RacePhase phase; 
     [SerializeField] private float raceTime;
 
     private void Start()
@@ -37,30 +39,34 @@ public class RaceManager : NetworkBehaviour
 
     private void Update() 
     {
+        // Don't do other race things if we're doing the intro animation or waiting for late join
+        if(phase != RacePhase.LATE_JOIN && phase != RacePhase.INTRO_ANIMATION)
+            raceTime += Time.deltaTime;
+
+        if(!base.IsServer)
+            return;
 
         // We'll attempt to escalate the race phase each Update()
         // Only allowed to escalate once per frame
         switch(phase) {
             case RacePhase.LATE_JOIN:
-                PlayerInputManager pim = PlayerObjectManager.Instance.GetPlayerInputManager();
-                if(pim.playerCount == 0) {
-                    pim.EnableJoining();
-                } else {
-                    pim.DisableJoining();
-                    GameplayManager.PlayerManager.SpawnBots();
-                    phase = RacePhase.INTRO_ANIMATION;
-                }
                 break;
             case RacePhase.INTRO_ANIMATION:
-                if(!GameplayManager.HasRaceCamera || !GameplayManager.RaceCamera.Animating) {
-                    phase = RacePhase.COUNTDOWN;
-                    PrepareRace();
+                // TODO: Add a timer that kicks the player if they don't ready up by said time
+                bool allPlayersReady = true;
+                foreach(GameObject obj in GameplayManager.PlayerManager.kartObjects) {
+                    if(!KartBehavior.LocateManager(obj).GetPlayerData().ready) {
+                        allPlayersReady = false;
+                        break;
+                    }
                 }
+                bool introAnimComplete = !GameplayManager.HasRaceCamera || !GameplayManager.RaceCamera.Animating;
+                if(introAnimComplete && allPlayersReady)
+                    phase = RacePhase.COUNTDOWN;
                 break;
             case RacePhase.COUNTDOWN:
-                if(raceTime >= 0) {
+                if(raceTime >= 0)
                     phase = RacePhase.RACING;
-                }
                 break;
             case RacePhase.RACING:
                 bool allHumanPlayersFinished = true;
@@ -71,9 +77,31 @@ public class RaceManager : NetworkBehaviour
                         break;
                     }
                 }
-                if(allHumanPlayersFinished) {
+                if(allHumanPlayersFinished)
                     phase = RacePhase.FINISHED;
-                }
+                break;
+            case RacePhase.FINISHED:
+                break;
+        }
+
+    }
+
+    private void RacePhaseChange(RacePhase prev, RacePhase current, bool asServer) {
+        PlayerInputManager pim = PlayerObjectManager.Instance.GetPlayerInputManager();
+
+        switch(current) {
+            case RacePhase.LATE_JOIN:
+                if(!asServer)
+                    pim.EnableJoining();
+                break;
+            case RacePhase.INTRO_ANIMATION:
+                if(asServer) 
+                    GameplayManager.PlayerManager.SpawnBots();
+                break;
+            case RacePhase.COUNTDOWN:
+                PrepareRace();
+                break;
+            case RacePhase.RACING:
                 break;
             case RacePhase.FINISHED:
                 if(!GameplayManager.ScreenManager.ResultsBuilder.ResultsShown) {
@@ -83,11 +111,24 @@ public class RaceManager : NetworkBehaviour
                 break;
         }
 
-        // Don't do other race things if we're doing the intro animation or waiting for late join
-        if(phase == RacePhase.LATE_JOIN || phase == RacePhase.INTRO_ANIMATION) return;
+        if(current != RacePhase.LATE_JOIN) 
+            pim.DisableJoining();
+    }
 
-        raceTime += Time.deltaTime;
+    public override void OnStartClient() 
+    {
+        base.OnStartClient();
+        RacePhaseChange(RacePhase.LATE_JOIN, phase, false);
+    }
 
+    /// <summary>
+    /// Used by clients after they join
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void PassLateJoin() 
+    {
+        if(phase == RacePhase.LATE_JOIN)
+            phase = RacePhase.INTRO_ANIMATION;
     }
 
     /** Prepare's the player objects and splitscreen manager for the race */
@@ -95,7 +136,7 @@ public class RaceManager : NetworkBehaviour
     {
         // Enable player cameras and splitscreen, ensure we're on Gameplay control map
         PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => {
-            // po.input.enabled = true;
+            po.input.enabled = true;
             po.input.SwitchCurrentActionMap("Gameplay");
             po.input.camera.enabled = true;
             if(po.PlayerIndex == 0) po.input.camera.GetComponent<AudioListener>().enabled = true;

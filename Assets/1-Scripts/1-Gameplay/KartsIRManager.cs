@@ -22,7 +22,7 @@ public class KartsIRManager : NetworkBehaviour
 		"Rainmaker", "Raja", "Rex", "Roundhouse", "Sabretooth", "Saltie", "Samara", "Scout", "Shepard", "Slider",
 		"Squall", "Sticks", "Stinger", "Storm", "Sultan", "Sundown", "Swabbie", "Tex", "Tusk", "Viper", "Wolfman", "Yuri"
 	};
-	private static readonly string KartNamePrefix = "Kart-";
+	public static readonly string KartNamePrefix = "Kart-";
 
 	[SerializeField] private GameObject kartPrefab;
 	[SerializeField] private GameObject playerObjectInGamePrefab;
@@ -54,10 +54,8 @@ public class KartsIRManager : NetworkBehaviour
 			throw new InvalidOperationException("Tried to spawn a new kart on a client.");
 
 		GameObject newKart = Instantiate(kartPrefab, GameplayManager.KartContainer);
-
-        print("spawned " + newKart.name + " with data " + data.name + ", " + data.kartType);
-
 		KartManager newKartManager = KartBehavior.LocateManager(newKart);
+		data.ready = false;
 		newKartManager.SetPlayerData(data);
 
 		Vector3 spawnPos = GameplayManager.SpawnPositions.transform.GetChild(kartObjects.Count).position;
@@ -86,7 +84,6 @@ public class KartsIRManager : NetworkBehaviour
 		if(player.data.kartType == KartType.NONE) 
 			player.data.kartType = SelectRandomKartName();
 
-		print("player kart name " + player.data.kartType);
 		SpawnPlayer_Server(player.data, base.LocalConnection);
 		playerObjectsWaitingForKarts.Add(player.data.name, player);
 		
@@ -103,7 +100,6 @@ public class KartsIRManager : NetworkBehaviour
 
 	[ServerRpc(RequireOwnership = false)]
 	public void SpawnPlayer_Server(PlayerData data, NetworkConnection source) {
-		print("Spawning player (" + kartObjects.Count + " objects)");
 		SpawnKart(source, data);
 		ConnectPlayerToKart(source, data);
 	}
@@ -140,12 +136,17 @@ public class KartsIRManager : NetworkBehaviour
 
 		// Connect player kart manager to player object
 		pkm.UseHumanDriver(player.input);
+
+		// Pass late join phase (does nothing if we're not in late join)
+		GameplayManager.RaceManager.PassLateJoin();
+
 	}
 
-	// [ServerRpc(RequireOwnership = false)]
 	public void SpawnBot() 
 	{		
-		print("Spawning bot (" + kartObjects.Count + " objects)");
+		if(!base.IsServer)
+			throw new InvalidOperationException("Tried to spawn a bot as a client.");
+
         PlayerData bdata = new() {
             name = rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)] + " (Bot)",
 			kartType = SelectRandomKartName()
@@ -154,9 +155,11 @@ public class KartsIRManager : NetworkBehaviour
 		bkm.UseBotDriver();
 	}
 
-	[ServerRpc(RequireOwnership = false)]
     public void SpawnBots() 
     {
+		if(!base.IsServer)
+			throw new InvalidOperationException("Tried to spawn bots as a client.");
+
 		RaceSettings settings = GameplayManager.RaceManager.settings;
         if(settings.bots) {
             int botsToSpawn = Math.Min(settings.botLimit, PlayerLimit-KartCount);

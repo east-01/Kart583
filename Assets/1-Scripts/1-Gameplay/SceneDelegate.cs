@@ -31,10 +31,7 @@ public class SceneDelegate : NetworkBehaviour
         Instance = this;
     }
 
-    //This code is junk at the moment. Need to understand scene handling in more detail to make it work.
-    //I'll just use SceneManager#AddOwnerToDefaultScene for now and see how far that gets me.
-
-    void OnEnable() { InstanceFinder.SceneManager.OnLoadEnd += RegisterScenes; print("Registered OnLoadEnd event"); }
+    void OnEnable() { InstanceFinder.SceneManager.OnLoadEnd += RegisterScenes; }
     void OnDisable() { InstanceFinder.SceneManager.OnLoadEnd -= RegisterScenes; }
 
     public override void OnStartClient()

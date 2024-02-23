@@ -31,8 +31,6 @@ public class PlayerObjectManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
         }
 
-        print("Woke up player object manager");
-
         playerInputManager = GetComponent<PlayerInputManager>();
         playerObjects = new();
     }
@@ -51,15 +49,6 @@ public class PlayerObjectManager : MonoBehaviour
 
     public void PlayerJoined(PlayerInput input) 
     {
-
-        // print("attempting to spawn player on server");
-        // if(InstanceFinder.IsClient) {
-        //     print("We are a client, spawning as " + InstanceFinder.ClientManager.Connection.ClientId);
-        //     print("  new obj: " + input.gameObject);
-            // InstanceFinder.ServerManager.Spawn(input.gameObject/*, InstanceFinder.ClientManager.Connection*/);
-            // GameplayManager.Instance.SpawnPlayer(input.gameObject);
-        // }
-
         input.gameObject.transform.SetParent(transform);
 
         PlayerObject obj = new();
@@ -80,7 +69,6 @@ public class PlayerObjectManager : MonoBehaviour
             GameplayManager.PlayerManager.SpawnPlayer(obj);
         } else
             Debug.LogError("Failed to handle a player input");
-
     }
 
     

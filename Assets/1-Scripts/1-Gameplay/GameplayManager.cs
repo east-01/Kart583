@@ -43,25 +43,6 @@ public class GameplayManager : NetworkBehaviour
     private ScreenManager screenManager;
     private IntroCamData introCamData;
 
-    // public override void OnStartNetwork()
-    // {
-    //     print("Network started, is server: " + base.IsServer + " is client: " + base.IsClient);
-    //     base.OnStartNetwork();
-    //     base.ServerManager.Spawn(gameObject);
-    // }
-
-    [ServerRpc]
-    public void SpawnGameplayManagerOnServer() 
-    {
-
-    }
-
-    public override void OnStartClient() 
-    {
-        base.OnStartClient();
-        print("recieved on start client for gameplaymanager");
-    }
-
     void Start() 
     {
 
@@ -137,26 +118,6 @@ public class GameplayManager : NetworkBehaviour
             problems.ForEach(problem => Debug.LogError(" - " + problem));
         }
 
-        print("Started GameplayManager");
-
-    }
-
-    [ServerRpc(RequireOwnership = false)] // Don't require ownership since the PlayerObjectManager belongs to server
-    public void SpawnPlayer(GameObject playerObject, NetworkConnection conn = null) 
-    {
-        print("Server is spawning player for " + conn.ClientId);
-        base.ServerManager.Spawn(playerObject, conn);
-    }
-
-    private float timeCounter;
-    void Update() 
-    {
-        if(timeCounter > 2f) {
-            // print("Gameplaymanager is active: " + gameObject.activeSelf);
-            timeCounter = 0;
-        } else {
-            timeCounter += Time.deltaTime;
-        }
     }
 
     public static RaceManager RaceManager { get { return Instance.GetRaceManager(); } }

@@ -1,11 +1,12 @@
 using System;
+using FishNet.Object;
 using UnityEngine;
 
 /** This class will be a superclass to all going on the Kart. 
     It will check everything on the kart object and collect it.
     It's useful to have this because we can collect all of the separate
       components on the kart together here, then reference them from one thing. */
-public class KartBehavior : MonoBehaviour
+public class KartBehavior : NetworkBehaviour
 {
 
     // Control

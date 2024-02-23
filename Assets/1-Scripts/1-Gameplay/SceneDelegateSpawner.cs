@@ -29,7 +29,6 @@ public class SceneDelegateSpawner : MonoBehaviour
         GameObject go = Instantiate(_sceneDelegatePrefab);
         go.name = "SceneDelegate";
         InstanceFinder.ServerManager.Spawn(go);
-        print("SPAWNED SCENEDELEGATE");
     }
 
     private void SceneManager_OnQueueStart()
