@@ -744,7 +744,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 22457152, guid: 67117722a812a2e46ab8cb8eafbf5f5e, type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 22457152, guid: 67117722a812a2e46ab8cb8eafbf5f5e, type: 3}
       propertyPath: m_AnchorMax.x
@@ -1226,7 +1226,7 @@ Transform:
   - {fileID: 1573930904}
   - {fileID: 1288816674}
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &243930295
 PrefabInstance:
@@ -1607,7 +1607,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1678664317}
-  m_RootOrder: 4
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &311163220 stripped
 Transform:
@@ -2157,9 +2157,13 @@ PrefabInstance:
       propertyPath: settings.bots
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5244667296191878687, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
+      propertyPath: settings.laps
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6795377866323719207, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
       propertyPath: playStartAnimation
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7290347010873503086, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
       propertyPath: _scenePathHash
@@ -2345,7 +2349,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4015501027482385175, guid: 0a2e965257a36584d84a24aaea71fbf7, type: 3}
       propertyPath: m_RootOrder
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4015501027482385175, guid: 0a2e965257a36584d84a24aaea71fbf7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4583,6 +4587,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1362058639}
+  - component: {fileID: 1362058640}
+  - component: {fileID: 1362058641}
   m_Layer: 0
   m_Name: KartContainer
   m_TagString: Untagged
@@ -4597,14 +4603,62 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1362058638}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1678664317}
-  m_RootOrder: 3
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1362058640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362058638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <IsNested>k__BackingField: 0
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  _networkBehaviours:
+  - {fileID: 1362058641}
+  <ParentNetworkObject>k__BackingField: {fileID: 0}
+  <ChildNetworkObjects>k__BackingField: []
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: -0, y: -0, z: -0, w: 1}
+    LocalScale: {x: 1, y: 1, z: 1}
+  _isNetworked: 1
+  _isGlobal: 0
+  _initializeOrder: 0
+  _defaultDespawnType: 0
+  NetworkObserver: {fileID: 0}
+  <PrefabId>k__BackingField: 0
+  <SpawnableCollectionId>k__BackingField: 0
+  _scenePathHash: 2026140244
+  <SceneId>k__BackingField: 8702206089252226324
+  <AssetPathHash>k__BackingField: 0
+--- !u!114 &1362058641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362058638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a6a39c46bf52104ba8efe3100bce3f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 0
+  _addedNetworkObject: {fileID: 1362058640}
+  _networkObjectCache: {fileID: 1362058640}
 --- !u!4 &1362130469 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8296744902773586357, guid: 771654114b22c1342a20fb677a2eb9d3, type: 3}
@@ -4806,7 +4860,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &1394850127
 MeshFilter:
@@ -5684,10 +5738,9 @@ Transform:
   - {fileID: 1610920202}
   - {fileID: 1067772488}
   - {fileID: 274761880}
-  - {fileID: 1362058639}
   - {fileID: 308784557}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1704513307
 PrefabInstance:
@@ -7433,7 +7486,7 @@ Transform:
   m_Children:
   - {fileID: 4393252311193752034}
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7443408887346900448
 MonoBehaviour:

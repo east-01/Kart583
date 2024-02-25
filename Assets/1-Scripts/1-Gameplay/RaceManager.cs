@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using Unity.VisualScripting;
@@ -15,6 +16,8 @@ public class RaceManager : NetworkBehaviour
     /* ----- Runtime fields ----- */
     [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange))] private RacePhase phase; 
     [SerializeField] private float raceTime;
+
+    [SerializeField, SyncObject] private readonly SyncList<PlayerData> placements = new();
 
     private void Start()
     {
@@ -39,7 +42,6 @@ public class RaceManager : NetworkBehaviour
 
     private void Update() 
     {
-        // Don't do other race things if we're doing the intro animation or waiting for late join
         if(phase != RacePhase.LATE_JOIN && phase != RacePhase.INTRO_ANIMATION)
             raceTime += Time.deltaTime;
 
@@ -77,8 +79,10 @@ public class RaceManager : NetworkBehaviour
                         break;
                     }
                 }
-                if(allHumanPlayersFinished)
+                if(allHumanPlayersFinished) {
+                    PopulatePlacements(); // Populate placements here so that we can ensure the results are ready once clients need to show results.
                     phase = RacePhase.FINISHED;
+                }
                 break;
             case RacePhase.FINISHED:
                 break;
@@ -88,6 +92,7 @@ public class RaceManager : NetworkBehaviour
 
     private void RacePhaseChange(RacePhase prev, RacePhase current, bool asServer) {
         PlayerInputManager pim = PlayerObjectManager.Instance.GetPlayerInputManager();
+        print("race phase changed to " + current);
 
         switch(current) {
             case RacePhase.LATE_JOIN:
@@ -95,8 +100,10 @@ public class RaceManager : NetworkBehaviour
                     pim.EnableJoining();
                 break;
             case RacePhase.INTRO_ANIMATION:
-                if(asServer) 
+                if(asServer) {
                     GameplayManager.PlayerManager.SpawnBots();
+                    placements.Clear();
+                }
                 break;
             case RacePhase.COUNTDOWN:
                 PrepareRace();
@@ -104,9 +111,11 @@ public class RaceManager : NetworkBehaviour
             case RacePhase.RACING:
                 break;
             case RacePhase.FINISHED:
-                if(!GameplayManager.ScreenManager.ResultsBuilder.ResultsShown) {
-                    GameplayManager.ScreenManager.ResultsBuilder.ShowResults();
-                    GameplayManager.ScreenManager.ConnectPlayerInput(PlayerObjectManager.Instance.GetPlayerObjects()[0]);
+                if(!asServer) {
+                    ScreenManager sm = GameplayManager.ScreenManager;
+                    sm.ResultsBuilder.gameObject.SetActive(true);
+                    sm.ResultsBuilder.waitingForPlacements = true;
+                    sm.ConnectPlayerInput(PlayerObjectManager.Instance.GetPlayerObjects()[0]);                    
                 }
                 break;
         }
@@ -150,8 +159,78 @@ public class RaceManager : NetworkBehaviour
         raceTime = -Math.Abs(settings.startDelay);
     }
 
+    [Server]
+    public void PopulatePlacements() 
+    {
+        int kartCount = GameplayManager.PlayerManager.kartObjects.Count;
+
+        List<KartManager> unsorted = new();
+        List<KartManager> dnf = new(); 
+        
+        // Separate people that finished/didn't finish
+        GameplayManager.PlayerManager.kartObjects.ForEach(ko => {
+            KartManager km = KartBehavior.LocateManager(ko);
+            if(km.GetPositionTracker().raceCompletion < 1)
+                dnf.Add(km);
+            else
+                unsorted.Add(km);
+        });
+
+        List<KartManager> sorted = new();
+
+        // Sort finished racers by time
+        while(unsorted.Count > 0) {
+            float smallestRaceTime = float.MaxValue;
+            KartManager smallestKM = null;
+
+            foreach(KartManager manager in unsorted) {
+                PositionTracker pt = manager.GetPositionTracker();
+                // Check if this is the lowest finish time
+                if(pt.raceFinishTime < smallestRaceTime) {
+                    smallestRaceTime = pt.raceFinishTime;
+                    smallestKM = manager;
+                }
+            }
+
+            if(smallestKM == null)
+                throw new InvalidOperationException("Failed to select next fastest kart.");
+
+            unsorted.Remove(smallestKM);
+            sorted.Add(smallestKM);
+        }
+
+        // Sort unfinished racers by race completion
+        while(dnf.Count > 0) {
+            float highestRaceCompletion = float.MinValue;
+            KartManager hrcKM = null;
+
+            foreach(KartManager manager in dnf) {
+                PositionTracker pt = manager.GetPositionTracker();
+                // Check if this is the lowest finish time
+                if(pt.raceCompletion > highestRaceCompletion) {
+                    highestRaceCompletion = pt.raceCompletion;
+                    hrcKM = manager;
+                }
+            }
+
+            if(hrcKM == null)
+                throw new InvalidOperationException("Failed to select next highest race completion.");
+
+            dnf.Remove(hrcKM);
+            sorted.Add(hrcKM);
+        }
+
+        placements.Clear();
+        sorted.ForEach(km => placements.Add(km.GetPlayerData()));
+
+        print("server populated " + placements.Count);
+
+    }
+
     public float RaceTime { get { return raceTime; }}
     public bool CanMove { get { return raceTime >= 0; } }
+
+    public SyncList<PlayerData> GetPlacements() { return placements; }
 
 }
 

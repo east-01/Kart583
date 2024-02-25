@@ -47,11 +47,13 @@ public class KartManager : KartBehavior
 		botItemManager.enabled = true;
 		humanDriver.enabled = false;
 
-		if(base.IsServer) {
+		if(base.IsClient) { // Used when the player finishes race and switches to bot controller
+			ServerRpcSetIsHuman(false);
+			ServerRpcSetReady(true);
+		} else if(base.IsServer) {
 			isHuman = false;
 			data.ready = true;
-		} else
-			throw new InvalidOperationException("Tried to ready human driver without being a client.");
+		}
 	}
 
 	public static bool IsKartGameObject(GameObject obj) 

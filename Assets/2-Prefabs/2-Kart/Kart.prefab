@@ -545,7 +545,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   _componentConfiguration: 0
-  _synchronizeParent: 0
+  _synchronizeParent: 1
   _packing:
     Position: 1
     Rotation: 1

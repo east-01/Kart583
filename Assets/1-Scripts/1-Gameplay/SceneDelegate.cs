@@ -52,7 +52,6 @@ public class SceneDelegate : NetworkBehaviour
     /// <summary>
     /// Unused code at the moment, will be used when we get more into depth of menus/lobbies
     /// </summary>
-    /// <param name="args"></param>
     private void RegisterScenes(SceneLoadEndEventArgs args)
     {
         if(!args.QueueData.AsServer) 

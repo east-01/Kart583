@@ -53,9 +53,13 @@ public class KartsIRManager : NetworkBehaviour
 		if(!base.IsServer)
 			throw new InvalidOperationException("Tried to spawn a new kart on a client.");
 
-		GameObject newKart = Instantiate(kartPrefab, GameplayManager.KartContainer);
+		GameObject newKart = Instantiate(kartPrefab);
 		KartManager newKartManager = KartBehavior.LocateManager(newKart);
+
 		data.ready = false;
+		if(!IsNameUnique(data.name))
+			data.name = MakeNameUnique(data.name);
+		
 		newKartManager.SetPlayerData(data);
 
 		Vector3 spawnPos = GameplayManager.SpawnPositions.transform.GetChild(kartObjects.Count).position;
@@ -69,6 +73,7 @@ public class KartsIRManager : NetworkBehaviour
 		playerPositions.Add(newKartManager.GetPositionTracker());
 
 		base.ServerManager.Spawn(newKart, owner);
+		newKart.GetComponent<NetworkObject>().SetParent(GameplayManager.KartContainer.GetComponent<EmptyNetworkBehaviour>());
 
 		return newKartManager;
 	}
@@ -82,7 +87,7 @@ public class KartsIRManager : NetworkBehaviour
 	{
 		// Player was spawned via late join, give them a random kart name
 		if(player.data.kartType == KartType.NONE) 
-			player.data.kartType = SelectRandomKartName();
+			player.data.kartType = SelectRandomKartType();
 
 		SpawnPlayer_Server(player.data, base.LocalConnection);
 		playerObjectsWaitingForKarts.Add(player.data.name, player);
@@ -115,7 +120,6 @@ public class KartsIRManager : NetworkBehaviour
 			print("FAILED TO FIND SPAWNED KART");
 			return;
 		}
-			// throw new InvalidOperationException("Failed to find spawned player kart.");
 
 		KartManager pkm = KartBehavior.LocateManager(spawnedPlayerKart);
 
@@ -148,8 +152,8 @@ public class KartsIRManager : NetworkBehaviour
 			throw new InvalidOperationException("Tried to spawn a bot as a client.");
 
         PlayerData bdata = new() {
-            name = rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)] + " (Bot)",
-			kartType = SelectRandomKartName()
+            name = SelectRandomBotName(),
+			kartType = SelectRandomKartType()
         };
 		KartManager bkm = SpawnKart(null, bdata);
 		bkm.UseBotDriver();
@@ -169,10 +173,54 @@ public class KartsIRManager : NetworkBehaviour
         }
     }
 
-	private KartType SelectRandomKartName() 
+	/// <summary>
+	/// Takes a PlayerData object and locates the associated KartManager with it
+	/// </summary>
+	public KartManager LocateKartManager(PlayerData data) 
+	{
+		foreach(KartManager km in GameObject.FindObjectsOfType<KartManager>()) {
+			if(km.GetPlayerData().name == data.name)
+				return km;
+		}
+		Debug.LogWarning("Failed to LocateKartManager");
+		return null;
+	}
+
+	private KartType SelectRandomKartType() 
 	{
 		Array enumVals = Enum.GetValues(typeof(KartType));
 		return (KartType)enumVals.GetValue(new System.Random().Next(1, enumVals.Length));
+	}
+
+	private string SelectRandomBotName() 
+	{
+		for(int attempt = 0; attempt < rlBotNames.Length; attempt++) {
+			string selection = rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)] + " (Bot)";
+			if(IsNameUnique(selection))
+				return selection;
+		}
+		return "Bot";
+	}
+
+	/// <summary>
+	/// Check if a name is unique among karts
+	/// </summary>
+	public bool IsNameUnique(string name) {
+		foreach(GameObject go in kartObjects) {
+			if(KartBehavior.LocateManager(go).GetPlayerData().name == name)
+				return false;		
+		}
+		return true;
+	}
+
+	/// <summary>
+	/// Makes a name unique by appending integers to the end of the input
+	/// </summary>
+	public string MakeNameUnique(string name) {
+		int i = 0;
+		while(!IsNameUnique(name + i))
+			i++;
+		return name + i;
 	}
 
 	public int KartCount { get { return kartObjects.Count; } }
