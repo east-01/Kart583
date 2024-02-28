@@ -32,7 +32,10 @@ public class SceneDelegate : NetworkBehaviour
     }
 
     void OnEnable() { InstanceFinder.SceneManager.OnLoadEnd += RegisterScenes; }
-    void OnDisable() { InstanceFinder.SceneManager.OnLoadEnd -= RegisterScenes; }
+    void OnDisable() { 
+        if(InstanceFinder.SceneManager != null)
+            InstanceFinder.SceneManager.OnLoadEnd -= RegisterScenes; 
+    }
 
     public override void OnStartClient()
     {
