@@ -3693,6 +3693,14 @@ PrefabInstance:
       propertyPath: defaultSettings.startDelay
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 7290347010873503086, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
+      propertyPath: _scenePathHash
+      value: 3716245182
+      objectReference: {fileID: 0}
+    - target: {fileID: 7290347010873503086, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
+      propertyPath: <SceneId>k__BackingField
+      value: 15961151524407065067
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
 --- !u!1001 &114525658
@@ -74591,6 +74599,14 @@ PrefabInstance:
     - target: {fileID: 3753355222670578130, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3909700393056677414, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}
+      propertyPath: _scenePathHash
+      value: 3716245182
+      objectReference: {fileID: 0}
+    - target: {fileID: 3909700393056677414, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}
+      propertyPath: <SceneId>k__BackingField
+      value: 15961151522643385682
       objectReference: {fileID: 0}
     - target: {fileID: 6976801468129761730, guid: efc38672c1b7b604eb1f6c555c91a05d, type: 3}
       propertyPath: m_CustomSkybox

@@ -23,12 +23,14 @@ public class PlayerObjectManager : MonoBehaviour
 
     private void Awake()
     {
+        print("player object manager woke up");
         // We'll use singleton pattern for this
         if(Instance != null) 
             throw new InvalidOperationException("Singleton pattern broken!");
         else {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            print("Set new instance");
         }
 
         playerInputManager = GetComponent<PlayerInputManager>();

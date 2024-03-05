@@ -29,11 +29,19 @@ public class MenuLobbyController : MonoBehaviour
             Debug.LogError("Failed to find NetworkManager.");
             return;
         }
-            
+                    
         _viewController = GetComponent<MenuLobbyViewController>();
 
         _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
+
+    }
+
+    private void Update() 
+    {
+        if(Input.GetKeyDown(KeyCode.F10)) {
+            StartAsClient();
+        }
     }
 
     private void OnDestroy()

@@ -16,15 +16,18 @@ public class RaceManager : NetworkBehaviour
     /* ----- Runtime fields ----- */
     [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange))] private RacePhase phase; 
     [SerializeField] private float raceTime;
+    private bool waitingForPlayerInput = false;
 
     [SerializeField, SyncObject] private readonly SyncList<PlayerData> placements = new();
 
-    private void Start()
+    private void Awake()
     {
         raceTime = -100;
 
         // Initialize phases
-        if(PlayerObjectManager.Instance == null || PlayerObjectManager.Instance.GetPlayerInputManager().playerCount == 0) {
+        if(PlayerObjectManager.Instance == null) {
+            waitingForPlayerInput = true;
+        } else if(PlayerObjectManager.Instance.GetPlayerInputManager().playerCount == 0) {
             phase = RacePhase.LATE_JOIN;
         } else if(GameplayManager.HasRaceCamera) {
             phase = RacePhase.INTRO_ANIMATION;
@@ -42,7 +45,13 @@ public class RaceManager : NetworkBehaviour
 
     private void Update() 
     {
-        if(phase != RacePhase.LATE_JOIN && phase != RacePhase.INTRO_ANIMATION)
+        if(waitingForPlayerInput && PlayerObjectManager.Instance != null) {
+            waitingForPlayerInput = false;
+            // Re-call race phase change since we probably missed something important by not having player input
+            RacePhaseChange(RacePhase.LATE_JOIN, phase, false);
+        }
+
+        if(!waitingForPlayerInput && phase != RacePhase.LATE_JOIN && phase != RacePhase.INTRO_ANIMATION)
             raceTime += Time.deltaTime;
 
         if(!base.IsServer)
@@ -91,8 +100,14 @@ public class RaceManager : NetworkBehaviour
     }
 
     private void RacePhaseChange(RacePhase prev, RacePhase current, bool asServer) {
-        PlayerInputManager pim = PlayerObjectManager.Instance.GetPlayerInputManager();
         print("race phase changed to " + current);
+
+        // If this is the case, waitingForPlayerObjectManager will be true and phase will be changed again
+        if(waitingForPlayerInput) {
+            return;
+        }
+
+        PlayerInputManager pim = PlayerObjectManager.Instance.GetPlayerInputManager();
 
         switch(current) {
             case RacePhase.LATE_JOIN:
