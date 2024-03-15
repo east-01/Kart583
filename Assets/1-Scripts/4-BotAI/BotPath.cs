@@ -11,8 +11,11 @@ using UnityEngine.Rendering;
   * This class will pick waypoints from inside each checkpoint box bounds, then
   *   the optimal path can be read from any position on the track. 
   * Read more about the optimal path in ReadPath(). */
-public class BotPath : KartBehavior
+public class BotPath : KartBehavior, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
 
     public List<Vector3> waypointPositions;
     /** Cache the curve and it's associated waypoint */
@@ -26,14 +29,24 @@ public class BotPath : KartBehavior
 
     public float pathLength;
 
-    void Start() 
+    new protected void Awake() 
     {
+        base.Awake();
+        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
+
         ReloadPath();          
     }
 
     void Update()
     {
-        if(drawBotPath) DrawPath();
+        if(drawBotPath) 
+            DrawPath();
     }
 
     public void ReloadPath() 
@@ -55,7 +68,7 @@ public class BotPath : KartBehavior
     public void PickPath() 
     {
         int i = 0;
-        foreach(Transform pos in GameplayManager.Waypoints.transform) {
+        foreach(Transform pos in kartLevelManager.Waypoints.transform) {
             Collider coll = pos.gameObject.GetComponent<Collider>();
             bool foundPoint = false;
             // Track the fail count for each attempt, helps illuminate problems with a waypoint.
@@ -116,7 +129,7 @@ public class BotPath : KartBehavior
             }
 
             if(!foundPoint) {
-                if(GameplayManager.Instance.showBotPathWarnings) {
+                if(gameplayManager.showBotPathWarnings) {
                     Debug.LogError("Failed to find a usable position at checkpoint \"" + pos.gameObject.name + "\"");
                     Debug.LogError("  Missed ground checks: " + fcGround + "; Missed distance checks: " + fcDistance + ", Missed obstruction checks: " + fcObstruction);
                     if(obstructions.Count > 0) {
@@ -131,7 +144,7 @@ public class BotPath : KartBehavior
             i++;
         }
 
-        if(waypointPositions.Count != GameplayManager.Waypoints.Count) {
+        if(waypointPositions.Count != kartLevelManager.Waypoints.Count) {
             Debug.LogError("Error: Botpath on \"" + gameObject.name + "\" failed to pick the same amount of waypoints as the defined waypoints.");
         }
 
@@ -139,7 +152,7 @@ public class BotPath : KartBehavior
 
     public void PickWaypointPath() 
     {
-        foreach(Transform pos in GameplayManager.Waypoints.transform) {
+        foreach(Transform pos in kartLevelManager.Waypoints.transform) {
             waypointPositions.Add(pos.position);
         }
 

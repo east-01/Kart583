@@ -37,13 +37,17 @@ public class GameLobby
     }
     private float timeInState;
 
-    private Dictionary<NetworkConnection, PlayerData> players = new();
-    private KartLevel? level;
+    private Dictionary<NetworkConnection, PlayerData> players = new(); // Players in lobby
 
+    /* Scene related */
     private SceneLookupData lobbySceneData;
     private SceneLookupData mapSceneData;
 
     private Dictionary<SceneLookupData, Scene> loadedScenes = new();
+
+    /* Game related */
+    private KartLevel? level;
+    private GameplayManager gameplayManager;
 
     /// <summary>
     /// A list of connections waiting to join lobby, used for when the first player 
@@ -112,14 +116,6 @@ public class GameLobby
 
     public void AddPlayer(NetworkConnection conn, PlayerData data) 
     {
-        // if(lobbyScene != null) {
-        //     SceneDelegate.Instance.MoveToLobby(conn);
-        //     Debug.Log("added player directly to scene");
-        // } else {
-        //     lobbyJoinQueue.Add(conn);
-        //     Debug.Log("added player to join quee");
-        // }
-
         players.Add(conn, data);
         manager.UpdateLobby(id, this);
  
@@ -147,6 +143,20 @@ public class GameLobby
         } else {
             mapSceneData = data;
             SendDebugMessage($"Map scene handle is now " + mapSceneData.Handle);
+
+            // Register GameplayManager
+            gameplayManager = null;
+            foreach(GameObject obj in scene.GetRootGameObjects()) {
+                GameplayManager testManager = obj.GetComponent<GameplayManager>();
+                if(testManager == null)
+                    continue;
+                gameplayManager = testManager;
+                break;
+            }
+            if(gameplayManager != null)
+                gameplayManager.SetGameLobby(this);
+            else
+                Debug.LogError("GameLobby registered a non-lobby scene, but failed to register an associated GameplayManager.");
         }
 
         loadedScenes.Add(data, scene);
@@ -175,9 +185,17 @@ public class GameLobby
     }
 
     private bool sendLobbyDebugMessages = true;
-    public void SendDebugMessage(string message) {
+    public void SendDebugMessage(string message) 
+    {
         if(sendLobbyDebugMessages)
             Debug.Log($"({id}) {message}");
+    }
+
+    public PlayerData? GetPlayerData(NetworkConnection client) 
+    {
+        if(!players.ContainsKey(client))
+            return null;
+        return players[client];
     }
 
     public LobbyData Data { get {
@@ -198,6 +216,7 @@ public class GameLobby
     public KartLevel? Level { get { return level; } }
     public Scene? LobbyScene { get { return GetLoadedScene(lobbySceneData, false); } }
     public Scene? MapScene { get { return GetLoadedScene(mapSceneData, false); } }
+    public GameplayManager GameplayManager { get { return gameplayManager; } }
     public int OpenSlots { get { return KartsIRManager.PlayerLimit - players.Count; } }
 }
 

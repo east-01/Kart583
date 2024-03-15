@@ -7,8 +7,11 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
-public class PositionDisplay : MonoBehaviour
+public class PositionDisplay : MonoBehaviour, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
 
     public PlayerHUDCanvas parent;
     /* ----- Settings variables ---- */
@@ -18,12 +21,25 @@ public class PositionDisplay : MonoBehaviour
     [Header("Race Position")]public TMP_Text positionText;
     public Color[] positionColors;
 
+    void Awake() 
+    {
+        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
+    }
+
     private void Update() 
     {
-        if(GameplayManager.Instance == null) return;
-        if(parent.subject == null) return;
+        if(gameplayManager == null)
+            return;
+        if(parent.subject == null) 
+            return;
         
-        RaceManager rm = GameplayManager.RaceManager;
+        RaceManager rm = gameplayManager.RaceManager;
         PositionTracker positionTracker = parent.subject.GetPositionTracker();
 
         // Lap text

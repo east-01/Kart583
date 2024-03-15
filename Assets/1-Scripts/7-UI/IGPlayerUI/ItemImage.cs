@@ -5,8 +5,11 @@ using UnityEngine.UI;
   *   item slot animation.
   * We also have the option to stop the animation at the center, so the player
   *   can see what item they currently have. */
-public class ItemImage : MonoBehaviour
+public class ItemImage : MonoBehaviour, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
 
     public AnimationCurve fadeCurve;
     public AnimationCurve sizeCurve;
@@ -20,6 +23,17 @@ public class ItemImage : MonoBehaviour
     private bool stopAtCenter;
 
     public Item item; // The item that is represented by this image, set by StartAnimation()
+
+    void Awake() 
+    {
+        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
+    }
 
     void Update()
     {
@@ -64,7 +78,7 @@ public class ItemImage : MonoBehaviour
 
         this.animationTime = 0;    
 
-        GetComponent<Image>().sprite = GameplayManager.ItemAtlas.RetrieveData(item).itemIcon;
+        GetComponent<Image>().sprite = gameplayManager.ItemAtlas.RetrieveData(item).itemIcon;
 
         gameObject.SetActive(true);
 

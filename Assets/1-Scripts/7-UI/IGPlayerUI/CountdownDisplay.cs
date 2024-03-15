@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class CountdownDisplay : MonoBehaviour
+public class CountdownDisplay : MonoBehaviour, GameplayManagerBehavior
 {
-
     /* ----- Settings variables ---- */
     [Header("General animation")] public float regularSize;
     public Color regularColor;
@@ -21,21 +20,33 @@ public class CountdownDisplay : MonoBehaviour
     public float delay = 0.2f;
 
     /* ----- Runtime variables ----- */
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
+
     private RectTransform rt;
     [Header("Runtime fields")] public int displayedSecond;
     public int raceFloor;
     public float secondProgress;
 
-    void Start() 
+    void Awake() 
     {
         rt = GetComponent<RectTransform>();
+
+        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
     }
 
     void Update()
     {
+        if(gameplayManager == null)
+            return;
 
-        if(GameplayManager.Instance == null) return;
-        RaceManager rm = GameplayManager.RaceManager;
+        RaceManager rm = gameplayManager.RaceManager;
 
         if(rm.RaceTime < 1) {
             // -1.2f --> |_-1.2_| == -2 --> |-2 - -1.2| --> 0.8 correct, -1.2 does represent 80% progress through 0.8

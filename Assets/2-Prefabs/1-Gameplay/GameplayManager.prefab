@@ -13,9 +13,7 @@ GameObject:
   - component: {fileID: 6795377866323719207}
   - component: {fileID: 5244667296191878687}
   - component: {fileID: 5244667296191878685}
-  - component: {fileID: 1692848356265694792}
-  - component: {fileID: 5387708413198328946}
-  - component: {fileID: 8378404512011593445}
+  - component: {fileID: 8016103563887908404}
   m_Layer: 0
   m_Name: GameplayManager
   m_TagString: Untagged
@@ -57,6 +55,7 @@ MonoBehaviour:
   - {fileID: 6795377866323719207}
   - {fileID: 5244667296191878687}
   - {fileID: 5244667296191878685}
+  - {fileID: 8016103563887908404}
   <ParentNetworkObject>k__BackingField: {fileID: 0}
   <ChildNetworkObjects>k__BackingField: []
   SerializedTransformProperties:
@@ -89,6 +88,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}
   playerObjectManagerPrefab: {fileID: 1451273396316291034, guid: 1d5be95719efe044689066dd96520717, type: 3}
+  atlasesPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
   showWarnings: 0
   showBotPathWarnings: 0
   playStartAnimation: 1
@@ -132,11 +132,10 @@ MonoBehaviour:
   _componentIndexCache: 2
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}
-  kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
   playerObjectInGamePrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
   kartObjects: []
   playerPositions: []
---- !u!114 &1692848356265694792
+--- !u!114 &8016103563887908404
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -145,86 +144,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 5244667296191878682}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8ed40ef50acced44d9e68d85a3aafd77, type: 3}
+  m_Script: {fileID: 11500000, guid: 4d23b6192233c3d4b88a298618abbeef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  items:
-  - item: 0
-    weight: 20
-    itemIcon: {fileID: 21300000, guid: cf11399fd649b9b45ab5778b21fad2d8, type: 3}
-    worldItem: {fileID: 8446460546308375123, guid: c2f8e977ae44f6647b8e3e35c9081237, type: 3}
-  - item: 1
-    weight: 10
-    itemIcon: {fileID: 21300000, guid: 370e255dcb51ec74b9a7174299de137d, type: 3}
-    worldItem: {fileID: 4275335312303541124, guid: 30e28d96ce9313a40b247a83ec51dbd0, type: 3}
-  - item: 2
-    weight: 15
-    itemIcon: {fileID: 21300000, guid: 5dc160347e5856d489c2b4c6ab5f81ee, type: 3}
-    worldItem: {fileID: 8446460546308375123, guid: 124eab082821c0b4ab22d8193bfe545a, type: 3}
-  - item: 3
-    weight: 3
-    itemIcon: {fileID: 21300000, guid: 08a1ffc05b174ea4390575b5ede5d078, type: 3}
-    worldItem: {fileID: 8446460546308375123, guid: af03030099b0f4a4ba8f990ac7e51a45, type: 3}
---- !u!114 &5387708413198328946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5244667296191878682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 35f5a4b695c453245a559c469d32b742, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Levels:
-  - Level: 0
-    sceneName: TestTrack
-    levelString: Test Track
-    levelImage: {fileID: 21300000, guid: c4da1aff96cbf2e4fac1bf6a7f7e8070, type: 3}
-    lapCount: 5
-  - Level: 1
-    sceneName: ATuinShipyard
-    levelString: A'Tuin Shipyard
-    levelImage: {fileID: 21300000, guid: 3e8f2addc3ea4c146b4223cd0991ba7e, type: 3}
-    lapCount: 3
---- !u!114 &8378404512011593445
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5244667296191878682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3b9945bbdeceece46ae24f3965f6513b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Karts:
-  - name: NONE
-    model: {fileID: 0}
-    image: {fileID: 0}
-    settings:
-      maxSpeed: 0
-      maxBoost: 0
-      maxBoostSpeed: 0
-      acceleration: 0
-      turnSpeed: 0
-  - name: The Stang
-    model: {fileID: 112918798818135259, guid: e06d4f75d3d102f4c99a2bad7b15807d, type: 3}
-    image: {fileID: 21300000, guid: cff783a6d979d5e4c800984f7deba31a, type: 3}
-    settings:
-      maxSpeed: 35
-      maxBoost: 3
-      maxBoostSpeed: 42.5
-      acceleration: 7.5
-      turnSpeed: 1.25
-  - name: The Jambori
-    model: {fileID: 112918798818135259, guid: 8589472832489834a8244a615fe4d112, type: 3}
-    image: {fileID: 21300000, guid: d80e94f73aa862348b8ec40c6487ee6a, type: 3}
-    settings:
-      maxSpeed: 40
-      maxBoost: 2
-      maxBoostSpeed: 50
-      acceleration: 10
-      turnSpeed: 1.1
+  _componentIndexCache: 3
+  _addedNetworkObject: {fileID: 7290347010873503086}
+  _networkObjectCache: {fileID: 7290347010873503086}
+  kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}

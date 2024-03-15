@@ -28,20 +28,25 @@ public class LobbyManager : NetworkBehaviour
     public delegate void LobbyUpdateHandler(LobbyData newData);
     public event LobbyUpdateHandler LobbyUpdated;
 
+    private bool waitingForInput;
+
     private void Update () 
     {
         foreach(GameLobby lobby in lobbies.Values) { lobby.Update(); }
+
+        if(waitingForInput && PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.GetPlayerObjects().Count > 0) {
+            waitingForInput = false;
+            ServerRpcJoinLobby(base.LocalConnection, PlayerObjectManager.Instance.GetPlayerObjects()[0].data);
+        }
     }
 
     public override void OnStartClient() 
     {
-        PlayerData testData = new()
-        {
-            name = "testName",
-            kartType = KartType.STANDARD
-        };
-
-        ServerRpcJoinLobby(base.LocalConnection, testData);
+        if(PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.GetPlayerObjects().Count > 0) {
+            ServerRpcJoinLobby(base.LocalConnection, PlayerObjectManager.Instance.GetPlayerObjects()[0].data);
+        } else {
+            waitingForInput = true;
+        }
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -172,8 +177,8 @@ public class LobbyManager : NetworkBehaviour
     [Server]
     private string GenerateLobbyID() 
     {
-		for(int attempt = 0; attempt < KartsIRManager.rlBotNames.Length; attempt++) {
-			string selection = KartsIRManager.rlBotNames[UnityEngine.Random.Range(0, KartsIRManager.rlBotNames.Length)];
+		for(int attempt = 0; attempt < KartSpawner.rlBotNames.Length; attempt++) {
+			string selection = KartSpawner.rlBotNames[UnityEngine.Random.Range(0, KartSpawner.rlBotNames.Length)];
 			if(GetLobby(selection) == null)
 				return selection;
 		}

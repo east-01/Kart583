@@ -14,22 +14,35 @@ public class RaceManager : NetworkBehaviour
     public RaceSettings settings;
 
     /* ----- Runtime fields ----- */
-    [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange))] private RacePhase phase; 
-    [SerializeField] private float raceTime;
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
+
+    [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange))] 
+    private RacePhase phase; 
+    [SerializeField] 
+    private float raceTime;
     private bool waitingForPlayerInput = false;
 
     [SerializeField, SyncObject] private readonly SyncList<PlayerData> placements = new();
 
     private void Awake()
     {
+        gameplayManager = GetComponent<GameplayManager>();
+        kartLevelManager = gameplayManager.KartLevelManager;
+
         raceTime = -100;
+
+        Debug.LogWarning("Game currently detects initial phase as late join because it's looking for the PlayerInputManager's player count, when it should be looking at the kart player count");
+
+        if(!base.IsServer)
+            return;
 
         // Initialize phases
         if(PlayerObjectManager.Instance == null) {
             waitingForPlayerInput = true;
         } else if(PlayerObjectManager.Instance.GetPlayerInputManager().playerCount == 0) {
             phase = RacePhase.LATE_JOIN;
-        } else if(GameplayManager.HasRaceCamera) {
+        } else if(kartLevelManager.HasRaceCamera) {
             phase = RacePhase.INTRO_ANIMATION;
         } else {
             phase = RacePhase.COUNTDOWN;
@@ -39,7 +52,7 @@ public class RaceManager : NetworkBehaviour
         // Spawn bots if we're not waiting on a late join
         // If we are waiting for a late join, the bots will be spawn after said player joins
         if(phase != RacePhase.LATE_JOIN) 
-            GameplayManager.PlayerManager.SpawnBots();
+            gameplayManager.KartSpawner.SpawnBots();
 
     }
 
@@ -64,15 +77,8 @@ public class RaceManager : NetworkBehaviour
                 break;
             case RacePhase.INTRO_ANIMATION:
                 // TODO: Add a timer that kicks the player if they don't ready up by said time
-                bool allPlayersReady = true;
-                foreach(GameObject obj in GameplayManager.PlayerManager.kartObjects) {
-                    if(!KartBehavior.LocateManager(obj).GetPlayerData().ready) {
-                        allPlayersReady = false;
-                        break;
-                    }
-                }
-                bool introAnimComplete = !GameplayManager.HasRaceCamera || !GameplayManager.RaceCamera.Animating;
-                if(introAnimComplete && allPlayersReady)
+                bool introAnimComplete = !kartLevelManager.HasRaceCamera || !kartLevelManager.RaceCamera.Animating;
+                if(introAnimComplete && gameplayManager.PlayerManager.AllPlayersReady)
                     phase = RacePhase.COUNTDOWN;
                 break;
             case RacePhase.COUNTDOWN:
@@ -81,7 +87,7 @@ public class RaceManager : NetworkBehaviour
                 break;
             case RacePhase.RACING:
                 bool allHumanPlayersFinished = true;
-                foreach(GameObject kartObj in GameplayManager.PlayerManager.kartObjects) {
+                foreach(GameObject kartObj in gameplayManager.PlayerManager.kartObjects) {
                     KartManager km = KartBehavior.LocateManager(kartObj);
                     if(km.IsHuman && km.GetPositionTracker().raceCompletion < 1) {
                         allHumanPlayersFinished = false;
@@ -116,7 +122,7 @@ public class RaceManager : NetworkBehaviour
                 break;
             case RacePhase.INTRO_ANIMATION:
                 if(asServer) {
-                    GameplayManager.PlayerManager.SpawnBots();
+                    gameplayManager.KartSpawner.SpawnBots();
                     placements.Clear();
                 }
                 break;
@@ -127,7 +133,7 @@ public class RaceManager : NetworkBehaviour
                 break;
             case RacePhase.FINISHED:
                 if(!asServer) {
-                    ScreenManager sm = GameplayManager.ScreenManager;
+                    ScreenManager sm = kartLevelManager.ScreenManager;
                     sm.ResultsBuilder.gameObject.SetActive(true);
                     sm.ResultsBuilder.waitingForPlacements = true;
                     sm.ConnectPlayerInput(PlayerObjectManager.Instance.GetPlayerObjects()[0]);                    
@@ -162,13 +168,17 @@ public class RaceManager : NetworkBehaviour
         PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => {
             po.input.enabled = true;
             po.input.SwitchCurrentActionMap("Gameplay");
-            po.input.camera.enabled = true;
-            if(po.PlayerIndex == 0) po.input.camera.GetComponent<AudioListener>().enabled = true;
+            if(po.input.camera != null) {
+                po.input.camera.enabled = true;
+                if(po.PlayerIndex == 0) 
+                    po.input.camera.GetComponent<AudioListener>().enabled = true;
+            }
         });
-        GameplayManager.PlayerInputManager.splitScreen = true;
+
+        PlayerObjectManager.Instance.GetPlayerInputManager().splitScreen = true;
 
         // Disable main camera audio listener so we get player 0's camera audio
-        GameplayManager.RaceCamera.GetComponent<AudioListener>().enabled = false;
+        kartLevelManager.RaceCamera.GetComponent<AudioListener>().enabled = false;
 
         // Load settings values
         raceTime = -Math.Abs(settings.startDelay);
@@ -177,13 +187,13 @@ public class RaceManager : NetworkBehaviour
     [Server]
     public void PopulatePlacements() 
     {
-        int kartCount = GameplayManager.PlayerManager.kartObjects.Count;
+        int kartCount = gameplayManager.PlayerManager.kartObjects.Count;
 
         List<KartManager> unsorted = new();
         List<KartManager> dnf = new(); 
         
         // Separate people that finished/didn't finish
-        GameplayManager.PlayerManager.kartObjects.ForEach(ko => {
+        gameplayManager.PlayerManager.kartObjects.ForEach(ko => {
             KartManager km = KartBehavior.LocateManager(ko);
             if(km.GetPositionTracker().raceCompletion < 1)
                 dnf.Add(km);

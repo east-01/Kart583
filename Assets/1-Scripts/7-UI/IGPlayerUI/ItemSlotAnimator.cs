@@ -6,8 +6,11 @@ using System;
 /** This script goes on the ItemDisplay object in the player's HUD, responsible
   *   for showing item icons to the player. It uses the itemImagePrefab to do the
   *   actual showing of images. */
-public class ItemSlotAnimator : MonoBehaviour
+public class ItemSlotAnimator : MonoBehaviour, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
 
     /* Editor fields*/
     public GameObject itemImagePrefab;
@@ -28,6 +31,12 @@ public class ItemSlotAnimator : MonoBehaviour
     private List<GameObject> animatingItemImages;
     [SerializeField] private float animationTime;
     [SerializeField] private float timeTillSpawn;
+
+    void Awake() 
+    {
+        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+    }
+
     void Start() 
     {
         if(animatingItemImages != null && animatingItemImages.Count > 0) 
@@ -35,8 +44,15 @@ public class ItemSlotAnimator : MonoBehaviour
         animatingItemImages = new List<GameObject>();
     }
 
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
+    }
+
     void Update() {
-        if(!animating) return;
+        if(!animating) 
+            return;
 
         animationTime += Time.deltaTime;
 
@@ -57,7 +73,7 @@ public class ItemSlotAnimator : MonoBehaviour
             if(lastImage) 
                 SpawnNewImage(true, this.result);
             else
-                SpawnNewImage(false, GameplayManager.ItemAtlas.RollRandom());
+                SpawnNewImage(false, gameplayManager.ItemAtlas.RollRandom());
         }
 
     }

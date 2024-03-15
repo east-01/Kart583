@@ -26,9 +26,8 @@ public class KartBehavior : NetworkBehaviour
     protected BotPath botPath;
     protected HumanDriver humanDriver;
 
-    void Awake() 
+    protected void Awake() 
     {
-
         // Find manager
         kartManager = LocateManager(gameObject);
 
@@ -47,8 +46,7 @@ public class KartBehavior : NetworkBehaviour
         botItemManager = kartManager.GetComponentInChildren<BotItemManager>();
         botPath = kartManager.GetComponentInChildren<BotPath>();
         humanDriver = kartManager.GetComponentInChildren<HumanDriver>();
-
-    }
+    } 
 
     public static KartManager LocateManager(GameObject kartObject) {
         KartManager manager = kartObject.GetComponent<KartManager>();

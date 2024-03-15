@@ -3,8 +3,11 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class KartItemManager : KartBehavior
+public class KartItemManager : KartBehavior, GameplayManagerBehavior
 {
+
+	private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
 
     public ItemSlotAnimator itemSlotManager;
 	public Image heldItemImage;
@@ -12,19 +15,37 @@ public class KartItemManager : KartBehavior
 	private Item? slotItem;
 	private Item? heldItem;
 
+	new protected void Awake() 
+	{
+		base.Awake();
+		SceneDelegate.Instance.SubscribeForGameplayManager(this);
+	}
+
 	void Start() 
 	{
 		heldItemImage.gameObject.SetActive(false);
 	}
 
+	public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
+    }
+
     /** Callback for when a player hits an item box. 
 	    Return true if item successfully recieved, false if not. */
 	public bool HitItemBox(GameObject itemBox) 
     { 
-		if(slotItem != null) return false;
+		if(gameplayManager == null) {
+			Debug.LogWarning("Hit item box without a gameplayManager being loaded!");
+			return false;
+		}
+
+		if(slotItem != null) 
+			return false;
 
 		// Eventually this code will change to better give items based off of position
-        Item result = GameplayManager.ItemAtlas.RollRandom();
+        Item result = gameplayManager.ItemAtlas.RollRandom();
 
 		this.slotItem = result;
 		
@@ -33,7 +54,7 @@ public class KartItemManager : KartBehavior
 	}
 
 	public void PerformItemInput(bool pressed) 
-	{
+	{			
 		if(pressed && (itemSlotManager == null || !itemSlotManager.IsAnimating()) && slotItem != null && heldItem == null) {
 
 			heldItem = slotItem.Value;
@@ -41,11 +62,11 @@ public class KartItemManager : KartBehavior
 
 			if(itemSlotManager != null) itemSlotManager.DisableChildren();
 			heldItemImage.gameObject.SetActive(true);
-			heldItemImage.sprite = GameplayManager.ItemAtlas.RetrieveData(heldItem.Value).itemIcon;
+			heldItemImage.sprite = gameplayManager.ItemAtlas.RetrieveData(heldItem.Value).itemIcon;
 
 		} else if(!pressed && heldItem.HasValue) {
 
-			GameObject worldItemPrefab = GameplayManager.ItemAtlas.RetrieveData(heldItem.Value).worldItem;
+			GameObject worldItemPrefab = gameplayManager.ItemAtlas.RetrieveData(heldItem.Value).worldItem;
 			String err = null;
 			if(worldItemPrefab == null || worldItemPrefab.GetComponent<WorldItem>() == null)	
 				err = worldItemPrefab == null ? 
@@ -59,7 +80,7 @@ public class KartItemManager : KartBehavior
 			// If an error occured we don't want to instantiate a new item.
 			if(err != null) { Debug.Log(err); return; } 
 
-			Instantiate(worldItemPrefab, GameplayManager.ItemContainer).GetComponent<WorldItem>().ActivateItem(gameObject, kartCtrl.TurnInput);
+			Instantiate(worldItemPrefab, kartLevelManager.ItemContainer).GetComponent<WorldItem>().ActivateItem(gameObject, kartCtrl.TurnInput);
 
 		}
 	}

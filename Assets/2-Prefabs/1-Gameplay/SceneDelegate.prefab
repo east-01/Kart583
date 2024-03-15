@@ -49,7 +49,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 786467654113088896}
   _networkObjectCache: {fileID: 786467654113088896}
-  _gameplayManagerPrefab: {fileID: 5244667296191878682, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
+  _atlasPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
 --- !u!114 &3998657301122485672
 MonoBehaviour:
   m_ObjectHideFlags: 0

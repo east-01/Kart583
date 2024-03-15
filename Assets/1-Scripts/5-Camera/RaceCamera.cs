@@ -5,12 +5,20 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class RaceCamera : MonoBehaviour
+public class RaceCamera : MonoBehaviour, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
 
     public AnimationCurve titleFade;
     public TMP_Text mapTitleText;
     public float startAnimationTimeLeft;
+
+    void Awake() 
+    {
+        SceneDelegate.Instance.SubscribeForGameplayManager(this);        
+    }
 
     void Start() 
     {
@@ -18,9 +26,16 @@ public class RaceCamera : MonoBehaviour
         // if(GameplayManager.Instance.playStartAnimation) StartAnimation();
     }
 
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
+    }
+
     void Update()
     {
-        if(GameplayManager.Instance == null) return;
+        if(gameplayManager == null) 
+            return;
 
         if(startAnimationTimeLeft > 0) {
             startAnimationTimeLeft -= Time.deltaTime;
@@ -38,20 +53,20 @@ public class RaceCamera : MonoBehaviour
             GetComponent<AudioListener>().enabled = true;
         }
 
-        RaceManager rm = GameplayManager.RaceManager;
+        RaceManager rm = gameplayManager.RaceManager;
         if(rm.RaceTime > 0) return;
 
-        float animProgress = 1-(startAnimationTimeLeft/GameplayManager.Instance.startAnimationDuration);
+        float animProgress = 1-(startAnimationTimeLeft/gameplayManager.startAnimationDuration);
 
         mapTitleText.alpha = titleFade.Evaluate(animProgress);
 
-        if(GameplayManager.IntroCamData != null) {
-            transform.position = Vector3.Lerp(GameplayManager.IntroCamData.CamStartPos.position, GameplayManager.IntroCamData.CamEndPos.position, animProgress);
+        if(kartLevelManager.IntroCamData != null) {
+            transform.position = Vector3.Lerp(kartLevelManager.IntroCamData.CamStartPos.position, kartLevelManager.IntroCamData.CamEndPos.position, animProgress);
         }
     }
 
     public void StartAnimation() {
-        startAnimationTimeLeft = GameplayManager.Instance.startAnimationDuration;
+        startAnimationTimeLeft = gameplayManager.startAnimationDuration;
         if(startAnimationTimeLeft > 0) {
             mapTitleText.enabled = true;
         }

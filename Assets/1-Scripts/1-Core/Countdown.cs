@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Countdown : MonoBehaviour
+public class Countdown : MonoBehaviour, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+
     [SerializeField]
     private AudioClip[] _audioClips;
     private AudioClip _currentAudioClip;
@@ -17,9 +20,17 @@ public class Countdown : MonoBehaviour
         _audioSource = GetComponent<AudioSource>();
     }
 
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+    }
+
     void Update()
     {
-        RaceManager rm = GameplayManager.RaceManager;
+        if(gameplayManager == null)
+            return;
+            
+        RaceManager rm = gameplayManager.RaceManager;
         if(rm.RaceTime > 0) { 
             Destroy(gameObject);
             return;

@@ -2,20 +2,18 @@ using System;
 using System.Collections.Generic;
 using FishNet;
 using FishNet.Connection;
+using FishNet.Editing;
 using FishNet.Managing.Scened;
 using FishNet.Object;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 /// <summary>
 /// The scene delegate is a global networked object that will handle clients being placed
-///   into scenes. The current setup works like this:
-/// Server-side scene delegate:
-///   - Spawns scenes
-///   - Recieves client requests to be placed into scenes
-/// Client-side scene delegate:
-///   - On start, makes a request to join a scene
+///   into scenes. Some of the more confusing code I've written. See flowchart:
+/// https://lucid.app/lucidchart/df418eac-4680-413e-9bbd-19c1bc7376ef/edit?viewport_loc=-2414%2C-625%2C2387%2C1147%2C0_0&invitationId=inv_a757cd21-5e23-440e-8b4d-cd3943fe5ef7
 /// </summary>
 [RequireComponent(typeof(LobbyManager))]
 public class SceneDelegate : NetworkBehaviour
@@ -28,27 +26,11 @@ public class SceneDelegate : NetworkBehaviour
 
     private LobbyManager _lobbyManager;
     [SerializeField]
-    private GameObject _gameplayManagerPrefab;
-
-    /// <summary>
-    /// A queue of lobby ids requesting a lobby scene.
-    /// </summary>
-    private List<GameLobby> requestingLobbyScenes = new(); // TODO: Chopping block
-    /// <summary>
-    /// A queue of lobby ids requesting a map scene.
-    /// </summary>
-    private List<GameLobby> requestingMapScenes = new(); // TODO: Chopping block
+    private GameObject _atlasPrefab;
 
     private Dictionary<SceneLookupData, GameLobby> expectingScene = new();
-
-    /// <summary>
-    /// Client only variable storing the lobby scene
-    /// </summary>
-    private Scene clientSceneLobby;
-    /// <summary>
-    /// Client only variable storing server scene
-    /// </summary>
-    private Scene clientSceneMap;
+    private Dictionary<SceneLookupData, Scene> loadedScenes = new();
+    private Dictionary<SceneLookupData, GameplayManager> gameplayManagers = new();
 
     /// <summary>
     /// Client side only, the data that we're trying to get the client to load
@@ -99,7 +81,7 @@ public class SceneDelegate : NetworkBehaviour
         sld.ReplaceScenes = ReplaceOption.All;
 
         base.SceneManager.LoadConnectionScenes(sld);
-        print($"SceneDelegate#LoadSceneForGameLobby: Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}");
+        SceneDelegateDebug($"SceneDelegate#LoadSceneForGameLobby: Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}");
     }
 
     [Server]
@@ -119,10 +101,10 @@ public class SceneDelegate : NetworkBehaviour
         SceneLookupData lookupData;
         if(existingHandle != 0) {
             lookupData = gameLobby.LobbySceneData;
-            print("SceneDelegate#MoveToLobby: Handle exists, scene name is: " + lookupData.Name);
+            SceneDelegateDebug("SceneDelegate#MoveToLobby: Handle exists, scene name is: " + lookupData.Name);
         } else {
             lookupData = new SceneLookupData(SceneNames.MENU_LOBBY);
-            print("SceneDelegate#MoveToLobby: Creating new lookup data since we dont have a handle stored");
+            SceneDelegateDebug("SceneDelegate#MoveToLobby: Creating new lookup data since we dont have a handle stored");
         }
 
         if(gameLobby.LobbyScene == null)
@@ -148,10 +130,10 @@ public class SceneDelegate : NetworkBehaviour
         SceneLookupData lookupData;
         if(existingHandle != 0) {
             lookupData = gameLobby.MapSceneData;
-            print("SceneDelegate#MoveToMap: Handle exists, scene name is: " + lookupData.Name);
+            SceneDelegateDebug("SceneDelegate#MoveToMap: Handle exists, scene name is: " + lookupData.Name);
         } else {
             lookupData = new SceneLookupData(LevelAtlas.RetrieveData(gameLobby.Level.Value).sceneName);
-            print("SceneDelegate#MoveToMap: Creating new lookup data since we dont have a handle stored");
+            SceneDelegateDebug("SceneDelegate#MoveToMap: Creating new lookup data since we dont have a handle stored");
         }
 
         if(gameLobby.MapScene == null)
@@ -166,9 +148,9 @@ public class SceneDelegate : NetworkBehaviour
         if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != lookupData.Name) {
             loadTarget = lookupData;
             UnityEngine.SceneManagement.SceneManager.LoadScene(lookupData.Name, LoadSceneMode.Single);
-            print($"SceneDelegate#TargetRpcEnsureSceneLoaded: Client calling load scene \"{lookupData.Name}\"");
+            SceneDelegateDebug($"SceneDelegate#TargetRpcEnsureSceneLoaded: Client calling load scene \"{lookupData.Name}\"");
         } else {
-            print($"SceneDelegate#TargetRpcEnsureSceneLoaded: Scene \"{lookupData.Name}\" is already loaded, skipping to SceneDelegate#ServerRpcClientLoadedScene");
+            SceneDelegateDebug($"SceneDelegate#TargetRpcEnsureSceneLoaded: Scene \"{lookupData.Name}\" is already loaded, skipping to SceneDelegate#ServerRpcClientLoadedScene");
             ServerRpcClientLoadedScene(base.LocalConnection, lookupData);
         }
     }
@@ -182,8 +164,12 @@ public class SceneDelegate : NetworkBehaviour
             Debug.LogWarning("Scene load didn't match load target.");
             return;
         }
+
+        // Scene loaded, add to loadedScenes Dictionary. Also done in RegisterScenes for server
+        loadedScenes.Add(new(scene.handle, scene.name), scene);
+
         ServerRpcClientLoadedScene(base.LocalConnection, loadTarget);
-        print($"SceneDelegate#SceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"");
+        SceneDelegateDebug($"SceneDelegate#SceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"");
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -195,25 +181,31 @@ public class SceneDelegate : NetworkBehaviour
             return;
         }
 
-        print($"SceneDelegate#ServerRpcClientLoadedScene: Looking up w/ name: {lookup.Name} handle: {lookup.Handle}");
-
         Scene? targetScene = gameLobby.GetLoadedScene(lookup, true);
         if(targetScene == null) {
-            Debug.LogError("Client loaded scene but GameLobby doesn't have corresponding scene loaded.");
+            Debug.LogError($"Client loaded scene but GameLobby doesn't have corresponding scene loaded. Lookup info: {lookup.Name} handle: {lookup.Handle}");
             return;
         }
 
+        SceneDelegateDebug("SceneDelegate#ServerRpcClientLoadedScene: Validated client loaded, scene. Adding their connection");
         base.SceneManager.AddConnectionToScene(client, targetScene.Value);
 
-        print("SceneDelegate#ServerRpcClientLoadedScene: Validated client loaded, scene. Adding their connection");
+        if(targetScene.Value.name != SceneNames.MENU_LOBBY) {
+            if(gameLobby.GameplayManager != null)
+                print("TODO: HANDLE PLAYER SPAWN ONCE CLIENT LOADS SCENE");
+                // gameLobby.GameplayManager.PlayerManager.SpawnPlayer(client, gameLobby.GetPlayerData(client).Value);
+            else
+                Debug.LogWarning("Failed to notify GameplayManager of player joining map scene because GameplayManager is null.");
+        }
+
     }
 
     private void RegisterScenes(SceneLoadEndEventArgs args)
     {
 
-        LevelAtlas la = _gameplayManagerPrefab.GetComponent<LevelAtlas>();
+        LevelAtlas la = _atlasPrefab.GetComponent<LevelAtlas>();
         foreach(Scene scene in args.LoadedScenes) {
-            print($"{(base.IsServer ? "Server" : "Client")} loaded scene " + scene.name + ", handle: " + scene.handle);
+            SceneDelegateDebug($"{(base.IsServer ? "Server" : "Client")} loaded scene " + scene.name + ", handle: " + scene.handle);
 
             // Find which lobby is expecing this scene
             SceneLookupData sceneLookupData = new(scene.handle, scene.name);
@@ -234,11 +226,22 @@ public class SceneDelegate : NetworkBehaviour
 
             expectingLobby.RegisterLoadedScene(sceneLookupData, scene);
 
-            ScenesLoaded.Add(scene);
+            // Scene loaded, add it to loadedScenes dictionary, also done in SceneManager_SceneLoaded
+            loadedScenes.Add(sceneLookupData, scene);
+        }
+
+        // Disable event systems
+        if(base.IsServer) {
+            int disabledEventSystems = 0;
+            foreach(EventSystem system in FindObjectsOfType<EventSystem>()) {
+                system.enabled = false;
+                disabledEventSystems++;
+            }
+            print($"Disabled {disabledEventSystems} event system(s).");
         }
 
         if(args.SkippedSceneNames.Length > 0)
-            print($"RegisterScenes skipped {args.SkippedSceneNames.Length} scene(s).");
+            SceneDelegateDebug($"RegisterScenes skipped {args.SkippedSceneNames.Length} scene(s).");
     }
 
     public void CheckInitialGlobalScene() 
@@ -259,55 +262,79 @@ public class SceneDelegate : NetworkBehaviour
         }
     }
 
-    /*[Server]
-    public void RequestLobbyScene(string lobbyID) 
+    /// <summary>
+    /// Look for a GameplayManager in a scene
+    /// </summary>
+    private GameplayManager LocateGameplayManager(Scene scene) 
     {
-        GameLobby requestingLobby = _lobbyManager.GetLobby(lobbyID);
-        if(requestingLobby == null) {
-            Debug.LogError($"Lobby id {lobbyID} isn't known to the LobbyManager but still requested a LobbyScene.");
-            return;
+        foreach(GameObject obj in scene.GetRootGameObjects()) {
+            obj.TryGetComponent(out GameplayManager testGameplayManager);
+            if (testGameplayManager != null)
+                return testGameplayManager;
         }
-
-        SceneLoadData loadData = new SceneLoadData("MenuLobby");
-        loadData.Options.AutomaticallyUnload = false;
-        base.SceneManager.LoadConnectionScenes(loadData);
-
-        requestingLobbyScenes.Add(requestingLobby);
+        return null;
     }
 
-    [Server]
-    public void RequestMapScene(string lobbyID, KartLevel level) 
+    /// <summary>
+    /// Checks for a GameplayManager in the same scene as the provided GameplayManagerBehavior script.
+    /// If one is found, it's returned and the GameplayManagerLoaded interface method gets called.
+    /// 
+    /// Use subscribeCaller = true to ensure that the GameplayManagerLoadedScript will be called 
+    /// </summary>
+    public bool GetGameplayManager(GameplayManagerBehavior gameplayManagerBehavior) 
     {
-        GameLobby requestingLobby = _lobbyManager.GetLobby(lobbyID);
-        if(requestingLobby == null) {
-            Debug.LogError($"Lobby id {lobbyID} isn't known to the LobbyManager but still requested a MapScene.");
-            return;
+        if(gameplayManagerBehavior is not MonoBehaviour) {
+            Debug.LogError("A GameplayManagerBehavior interface is on a script that isn't a Monobehavior!");
+            return false;
+        }
+        Scene objectsScene = (gameplayManagerBehavior as MonoBehaviour).gameObject.scene;
+        SceneLookupData lookupData = new(objectsScene.handle, objectsScene.name);
+        if(!loadedScenes.ContainsKey(lookupData)) 
+            return false;
+
+        GameplayManager toReturn = null;
+        if(gameplayManagers.ContainsKey(lookupData)) {
+            toReturn = gameplayManagers[lookupData];
+        } else {
+            toReturn = LocateGameplayManager(loadedScenes[lookupData]);
+            if(toReturn != null) 
+                gameplayManagers.Add(lookupData, toReturn);
         }
 
-        LevelAtlas la = _gameplayManagerPrefab.GetComponent<LevelAtlas>();
-
-        SceneLoadData loadData = new SceneLoadData(la.RetrieveData(level).sceneName);
-        loadData.Options.AutomaticallyUnload = false;
-        base.SceneManager.LoadConnectionScenes(loadData);
-
-        requestingMapScenes.Add(requestingLobby);
+        if(toReturn == null)
+            return false;
+        
+        gameplayManagerBehavior.GameplayManagerLoaded(toReturn);
+        return true;
     }
 
-    [Server]
-    public void UnloadMapScene(string lobbyID, Scene existingScene) 
+    public void SubscribeForGameplayManager(GameplayManagerBehavior gameplayManagerBehavior) 
     {
-        GameLobby requestingLobby = _lobbyManager.GetLobby(lobbyID);
-        if(requestingLobby == null) {
-            Debug.LogError($"Lobby id {lobbyID} isn't known to the LobbyManager but still requested to unload map scene.");
+        // If we can get the GameplayManager right away do it so we don't have to waste time waiting for the next Update() call.
+        if(GetGameplayManager(gameplayManagerBehavior))
             return;
+        waitingForGameplayManagers.Add(gameplayManagerBehavior);
+    }
+
+    private List<GameplayManagerBehavior> waitingForGameplayManagers = new();
+    private void Update() 
+    {
+        if(waitingForGameplayManagers.Count == 0)
+            return;
+        List<GameplayManagerBehavior> toRemove = new();
+        foreach(GameplayManagerBehavior gmb in waitingForGameplayManagers) {
+            if(GetGameplayManager(gmb))
+                toRemove.Add(gmb);
         }
+        toRemove.ForEach(gmb => waitingForGameplayManagers.Remove(gmb));
+    }
 
-        SceneUnloadData sud = new SceneUnloadData(existingScene.name);
-        base.SceneManager.UnloadConnectionScenes(sud);
+    private static bool sendSceneDelegateDebug = false;
+    public static void SceneDelegateDebug(string message) {
+        if(sendSceneDelegateDebug)
+            print(message);
+    }
 
-        requestingLobby.ClearMapScene();
-    }*/
-
-    public LevelAtlas LevelAtlas { get { return _gameplayManagerPrefab.GetComponent<LevelAtlas>(); } }
+    public LevelAtlas LevelAtlas { get { return _atlasPrefab.GetComponent<LevelAtlas>(); } }
 
 }

@@ -1,0 +1,128 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5686835481644822823
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3095257855366682110}
+  - component: {fileID: 1427336598315271612}
+  - component: {fileID: 577092068717363600}
+  - component: {fileID: 4888532564422759782}
+  m_Layer: 0
+  m_Name: Atlases
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3095257855366682110
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5686835481644822823}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1427336598315271612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5686835481644822823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ed40ef50acced44d9e68d85a3aafd77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  items:
+  - item: 0
+    weight: 20
+    itemIcon: {fileID: 21300000, guid: cf11399fd649b9b45ab5778b21fad2d8, type: 3}
+    worldItem: {fileID: 8446460546308375123, guid: c2f8e977ae44f6647b8e3e35c9081237, type: 3}
+  - item: 1
+    weight: 10
+    itemIcon: {fileID: 21300000, guid: 370e255dcb51ec74b9a7174299de137d, type: 3}
+    worldItem: {fileID: 4275335312303541124, guid: 30e28d96ce9313a40b247a83ec51dbd0, type: 3}
+  - item: 2
+    weight: 15
+    itemIcon: {fileID: 21300000, guid: 5dc160347e5856d489c2b4c6ab5f81ee, type: 3}
+    worldItem: {fileID: 8446460546308375123, guid: 124eab082821c0b4ab22d8193bfe545a, type: 3}
+  - item: 3
+    weight: 3
+    itemIcon: {fileID: 21300000, guid: 08a1ffc05b174ea4390575b5ede5d078, type: 3}
+    worldItem: {fileID: 8446460546308375123, guid: af03030099b0f4a4ba8f990ac7e51a45, type: 3}
+--- !u!114 &577092068717363600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5686835481644822823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35f5a4b695c453245a559c469d32b742, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Levels:
+  - Level: 0
+    sceneName: TestTrack
+    levelString: Test Track
+    levelImage: {fileID: 21300000, guid: c4da1aff96cbf2e4fac1bf6a7f7e8070, type: 3}
+    lapCount: 5
+  - Level: 1
+    sceneName: ATuinShipyard
+    levelString: A'Tuin Shipyard
+    levelImage: {fileID: 21300000, guid: 3e8f2addc3ea4c146b4223cd0991ba7e, type: 3}
+    lapCount: 3
+--- !u!114 &4888532564422759782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5686835481644822823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b9945bbdeceece46ae24f3965f6513b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Karts:
+  - name: NONE
+    model: {fileID: 0}
+    image: {fileID: 0}
+    settings:
+      maxSpeed: 0
+      maxBoost: 0
+      maxBoostSpeed: 0
+      acceleration: 0
+      turnSpeed: 0
+  - name: The Stang
+    model: {fileID: 112918798818135259, guid: e06d4f75d3d102f4c99a2bad7b15807d, type: 3}
+    image: {fileID: 21300000, guid: cff783a6d979d5e4c800984f7deba31a, type: 3}
+    settings:
+      maxSpeed: 35
+      maxBoost: 3
+      maxBoostSpeed: 42.5
+      acceleration: 7.5
+      turnSpeed: 1.25
+  - name: The Jambori
+    model: {fileID: 112918798818135259, guid: 8589472832489834a8244a615fe4d112, type: 3}
+    image: {fileID: 21300000, guid: d80e94f73aa862348b8ec40c6487ee6a, type: 3}
+    settings:
+      maxSpeed: 40
+      maxBoost: 2
+      maxBoostSpeed: 50
+      acceleration: 10
+      turnSpeed: 1.1

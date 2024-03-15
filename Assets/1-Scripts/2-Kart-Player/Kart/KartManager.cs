@@ -10,18 +10,15 @@ public class KartManager : KartBehavior
 
 	[SerializeField] private POIGDelegate poigDelegate;
 
-	[SerializeField, SyncVar(OnChange = nameof(PlayerDataChanged))] 
+	[SerializeField] 
 	private PlayerData data;
 	[SyncVar] private bool isHuman;
 
+	[ObserversRpc(RunLocally = true, BufferLast = true)]
 	public void SetPlayerData(PlayerData data) 
 	{
 		this.data = data;
-	}
-
-	public void PlayerDataChanged(PlayerData prev, PlayerData current, bool asServer) 
-	{
-		gameObject.name = KartsIRManager.KartNamePrefix + current.name;
+		gameObject.name = KartSpawner.KartNamePrefix + data.name;
 	}
 
 	/** Connects the PlayerInput to the HumanDriver script in the kart's brain. */

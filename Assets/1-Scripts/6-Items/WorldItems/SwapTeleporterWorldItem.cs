@@ -16,7 +16,7 @@ public class SwapTeleporterWorldItem : WorldItem
         // Determine weight based off of distance from player
         Dictionary<KartManager, float> dict = new();
         float totalWeight = 0;
-        foreach(GameObject obj in GameplayManager.PlayerManager.kartObjects) {
+        foreach(GameObject obj in gameplayManager.PlayerManager.kartObjects) {
             KartManager km = KartBehavior.LocateManager(obj);
             PositionTracker pt = km.GetPositionTracker();
             // pt.racepos == 1 makes it so that we can teleport to anyone if we're in first

@@ -5,8 +5,10 @@ using System;
 /**
  * Kart ControllerV? by Ethan Mullen
  */
-public class KartController : KartBehavior
+public class KartController : KartBehavior, GameplayManagerBehavior
 {
+
+	private GameplayManager gameplayManager;
 
 	/* ----- Settings variables ----- */
 	private Transform kartModel;
@@ -20,6 +22,8 @@ public class KartController : KartBehavior
 	public float rideHeight = 0.75f;
 	public float velocityDecay = 10f;
 	public float minimumVelocityThreshold = 0.1f; // If the angular/regular velocity of the rigidbody is less than this, set to zero
+
+	private bool waitingForKartType; // Waiting for the kart type to come in from server
 
 	[Header("Turning")]
 	public float steeringWheelTurnSpeed = 5f;
@@ -76,20 +80,25 @@ public class KartController : KartBehavior
 
 	public float damageCooldown; // When >0, no input goes to the kart
 
-	/*
-	KartController issues:
-	- Variable audit, we can probably clean some things up
-	- Floating kart on spawn
-	- Braking takes forever
-	*/
+	new protected void Awake() 
+	{
+		base.Awake();
+		SceneDelegate.Instance.SubscribeForGameplayManager(this);
+	}
 
-    private void Start()
-    {
+	public void GameplayManagerLoaded(GameplayManager gameplayManager) 
+	{
+		this.gameplayManager = gameplayManager;
 
 		if(kartManager.GetPlayerData().kartType == KartType.NONE) 
-			throw new InvalidOperationException("Player data doesn't have a kart name");
+			waitingForKartType = true;
+		else
+			InitializeKartType();
+	}
 
-		KartDataPackage kdp = GameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
+	public void InitializeKartType() 
+	{
+		KartDataPackage kdp = gameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
 		settings = kdp.settings;
 	
 		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);
@@ -100,10 +109,20 @@ public class KartController : KartBehavior
 			initKartModelY = kartModel.localPosition.y;
 		else
 			Debug.LogWarning("KartController on \"" + gameObject.name + "\" doesn't have a kartModel assigned."); 
-    }
+	}
 
     private void Update()
     {
+		if(gameplayManager == null)
+			return;
+
+		if(waitingForKartType) {
+			if(kartManager.GetPlayerData().kartType != KartType.NONE) {
+				InitializeKartType();
+				waitingForKartType = false;
+			} else 
+				return;
+		}
 
 		/* Grounded */
 		bool lastFrameGrounded = this.grounded;
@@ -160,8 +179,8 @@ public class KartController : KartBehavior
 			boostAmount = Mathf.Max(boostAmount - boostDecayCurve.Evaluate(boostDecayTime)*passiveBoostDrain*Time.deltaTime, 0);									
 		}
 
-		if(GameplayManager.RaceManager.RaceTime <= 0) {
-			boostAmount = GameplayManager.RaceManager.settings.startBoostPercent*settings.maxBoost;
+		if(gameplayManager.RaceManager.RaceTime <= 0) {
+			boostAmount = gameplayManager.RaceManager.settings.startBoostPercent*settings.maxBoost;
 		}
 
 		/* Damage effects */
@@ -412,7 +431,11 @@ public class KartController : KartBehavior
 
 	public float CurrentMaxSpeed { get { return momentum == 1 ? (ActivelyBoosting ? settings.maxBoostSpeed : settings.maxSpeed) : settings.maxSpeed/4f; } }
 	public float SpeedRatio { get { return TrackSpeed/CurrentMaxSpeed; } }
-	public bool CanMove { get { return GameplayManager.RaceManager.CanMove && damageCooldown <= 0; } }
+	public bool CanMove { get { 
+		if(gameplayManager == null)
+			return false;
+		return gameplayManager.RaceManager.CanMove && damageCooldown <= 0; 
+	} }
 
 	public bool SteeringWheelMatchesTurn { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(turn.x); } }
 	public bool SteeringWheelMatchesDrift { get { return Mathf.Sign(steeringWheelDirection) == Mathf.Sign(driftDirection); } }

@@ -4,8 +4,10 @@ using UnityEngine;
 using System;
 
 /** Keeps track of a Kart's position on a track */
-public class PositionTracker : KartBehavior, IComparable<PositionTracker>
+public class PositionTracker : KartBehavior, IComparable<PositionTracker>, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
 
     private Waypoints waypoints;
 
@@ -17,6 +19,12 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
     public int racePos;
     public bool hasStartedRace;
     public float raceFinishTime;
+
+	new protected void Awake() 
+	{
+		base.Awake();
+		SceneDelegate.Instance.SubscribeForGameplayManager(this);
+	}
 
     void Start() 
     {
@@ -34,6 +42,11 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
         hasStartedRace = false;
         lapNumber = 0;
         raceFinishTime = -1;
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
     }
 
     void OnTriggerEnter(Collider other) 
@@ -55,7 +68,10 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
     }
 
     void Update() {
-        if(GameplayManager.RaceManager.RaceTime < 0) {
+        if(gameplayManager == null)
+            return;
+
+        if(gameplayManager.RaceManager.RaceTime < 0) {
             waypointIndex = waypoints.Count-1;
             lapNumber = 0;
         }
@@ -72,7 +88,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
 
     void RaceFinished() 
     {
-        raceFinishTime = GameplayManager.RaceManager.RaceTime;
+        raceFinishTime = gameplayManager.RaceManager.RaceTime;
 
         if(kartManager.HasPOIGDelegate) {
             kartManager.POIGDelegate.HUD.enabled = false;
@@ -132,7 +148,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>
 
     public float GetRaceCompletion() 
     {
-        RaceManager rm = GameplayManager.RaceManager;
+        RaceManager rm = gameplayManager.RaceManager;
         return Mathf.Lerp((float)lapNumber/rm.settings.laps, Mathf.Clamp01((float)(lapNumber+1)/rm.settings.laps), lapCompletion);
     }
 

@@ -4,22 +4,36 @@ using FishNet;
 using UnityEngine;
 
 /** This class will build the results rows out of the ResultRow prefabs. */
-public class ResultsBuilder : MonoBehaviour
+public class ResultsBuilder : MonoBehaviour, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
 
     public GameObject placementRowPrefab;
     public RectTransform resultsContainer;
 
     private List<GameObject> menuElements;
-    public bool waitingForPlacements = false; // 
+    public bool waitingForPlacements = false;
 
     void Awake() 
-    {
+    {        
+        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+    
         gameObject.SetActive(false);
     }
 
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
+    }
+
     void Update() {
-        if(waitingForPlacements && GameplayManager.RaceManager.GetPlacements().Count > 0) {
+        if(gameplayManager == null)
+            return;
+
+        if(waitingForPlacements && gameplayManager.RaceManager.GetPlacements().Count > 0) {
             waitingForPlacements = false;
             ShowResults();
         }
@@ -36,8 +50,8 @@ public class ResultsBuilder : MonoBehaviour
         menuElements = new List<GameObject>();
 
         int i = 0;
-        foreach(PlayerData data in GameplayManager.RaceManager.GetPlacements()) {
-            KartManager manager = GameplayManager.PlayerManager.LocateKartManager(data);
+        foreach(PlayerData data in gameplayManager.RaceManager.GetPlacements()) {
+            KartManager manager = gameplayManager.PlayerManager.SearchForKartManager(data);
             if(manager == null) 
                 throw new InvalidOperationException("Manager cannot be null.");
                 

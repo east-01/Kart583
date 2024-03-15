@@ -20,13 +20,19 @@ public class MenuPlayerController : MonoBehaviour
     void Start() 
     {
         PlayerObjectManager.Instance.GetPlayerInputManager().EnableJoining();
+        PlayerObjectManager.Instance.PlayerObjectJoinedEvent += HandleJoin;
 
         // Spawn player menus for ppl already in the player input manager
         if(PlayerObjectManager.Instance.GetPlayerObjects().Count > 0)
             Debug.LogWarning("TODO: Handle existing player objects at start");
     }
 
-    public void HandleJoin(PlayerObject obj) 
+    void OnDestroy() 
+    {
+        PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= HandleJoin;
+    }
+
+    private void HandleJoin(PlayerObject obj) 
     {
         // Spawn player panel
         GameObject playerPanel = Instantiate(playerPanelPrefab, playerPanelContainer.transform);
@@ -45,7 +51,7 @@ public class MenuPlayerController : MonoBehaviour
         obj.input.uiInputModule = playerPanel.GetComponentInChildren<InputSystemUIInputModule>();
     }
 
-    public void HandleLeave(PlayerObject obj) 
+    private void HandleLeave(PlayerObject obj) 
     {
 
     }   

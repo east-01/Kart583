@@ -7,8 +7,11 @@ using System;
   *   be instantiated by the KartManager when the player uses an item, and then
   *   activated by the ActivateItem() call. Currently, the only parameter is
   *   direction input, but we can add more information if needed. */
-public abstract class WorldItem : MonoBehaviour
+public abstract class WorldItem : MonoBehaviour, GameplayManagerBehavior
 {
+    protected GameplayManager gameplayManager;
+	  protected KartLevelManager kartLevelManager;
+
     /** Player/Bot gameobject that threw the item */
     public GameObject Owner { get; protected set; }
     /** How long left until the item despawns. */
@@ -27,6 +30,17 @@ public abstract class WorldItem : MonoBehaviour
     /** The item was hit, do damage accordingly. 
       * Called in OnTriggerEnter() in this class. */
     public abstract void ItemHit(GameObject hitPlayer);
+
+	void Awake() 
+	{
+		SceneDelegate.Instance.SubscribeForGameplayManager(this);
+	}
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
+    }
 
     void Update() 
     {

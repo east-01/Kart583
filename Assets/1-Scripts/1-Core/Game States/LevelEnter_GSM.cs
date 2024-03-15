@@ -2,8 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LevelEnter_GSM : IState
+public class LevelEnter_GSM : IState, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
+
     /*
      * This state will contain a quick camera traversal showing the level while the karts spawn.
      */
@@ -22,10 +26,23 @@ public class LevelEnter_GSM : IState
         _cam = gsm.Cam;
         _players = gsm.PlayerKarts;
         _bots = gsm.BotsPrefabs;
+
+        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
     }
 
     public void OnStateEnter()
     {
+        if(kartLevelManager == null) {
+            Debug.LogError("Tried to enter level state without kartLevelManager being loaded.");
+            return;
+        }
+        
         foreach (var player in _players)
         {
             _karts.Add(player);
@@ -39,7 +56,7 @@ public class LevelEnter_GSM : IState
             _karts.Add(bot);
         }
 
-        _cam.transform.position = GameplayManager.IntroCamData.CamStartPos.position;
+        _cam.transform.position = kartLevelManager.IntroCamData.CamStartPos.position;
         
     }
 

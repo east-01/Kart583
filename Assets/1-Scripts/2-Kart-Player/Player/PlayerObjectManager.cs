@@ -18,19 +18,25 @@ public class PlayerObjectManager : MonoBehaviour
 
     public static PlayerObjectManager Instance { get; private set; }
 
+    public delegate void PlayerObjectJoinHandler(PlayerObject newPlayer);
+    public event PlayerObjectJoinHandler PlayerObjectJoinedEvent;
+
+    [SerializeField]
+    private GameObject inputPromptCanvas;
+
     private PlayerInputManager playerInputManager;
     private List<PlayerObject> playerObjects;
 
     private void Awake()
     {
-        print("player object manager woke up");
         // We'll use singleton pattern for this
-        if(Instance != null) 
-            throw new InvalidOperationException("Singleton pattern broken!");
-        else {
+        if(Instance != null) {
+            Destroy(gameObject);
+            Debug.Log($"Destroyed newly spawned PlayerObjectManager since singleton Instance already exists.");
+            return;
+        } else {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            print("Set new instance");
         }
 
         playerInputManager = GetComponent<PlayerInputManager>();
@@ -60,28 +66,32 @@ public class PlayerObjectManager : MonoBehaviour
         };
 
         playerObjects.Add(obj);
-
-        if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == SceneNames.MENU_PLAYER) {
-            GameObject canv = GameObject.Find("MenuCanvas");
-            if(canv == null) 
-                throw new InvalidOperationException("Failed to find MenuCanvas.");
-
-            canv.GetComponent<MenuPlayerController>().HandleJoin(obj);
-        } else if(GameplayManager.Instance != null) {
-            GameplayManager.PlayerManager.SpawnPlayer(obj);
-        } else
-            Debug.LogError("Failed to handle a player input");
+        PlayerObjectJoinedEvent?.Invoke(obj);
     }
-
-    
 
     public void PlayerLeft(PlayerInput input) 
     {
 
     }
 
+    public void PromptForInput() 
+    { 
+        inputPromptCanvas.SetActive(true); 
+        playerInputManager.EnableJoining();
+    }
+
+    public void ClearInputPrompt() 
+    { 
+        inputPromptCanvas.SetActive(false); 
+        playerInputManager.DisableJoining();
+    }
+
+    public bool InputPromptActive { get { return inputPromptCanvas.activeSelf; } }
+
     public PlayerInputManager GetPlayerInputManager() { return playerInputManager; }
     public List<PlayerObject> GetPlayerObjects() { return playerObjects; }
+
+    public int PlayerObjectCount { get { return playerObjects.Count; } }
 
 }
 

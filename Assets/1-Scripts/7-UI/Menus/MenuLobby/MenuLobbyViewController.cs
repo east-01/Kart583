@@ -30,7 +30,7 @@ public class MenuLobbyViewController : MonoBehaviour
     private void Start() 
     {
         _controller = GetComponent<MenuLobbyController>();       
-        print("MenuLobbyViewController#Start: Script started, scene handle is: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().handle); 
+        SceneDelegate.SceneDelegateDebug("MenuLobbyViewController#Start: Script started, scene handle is: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().handle); 
     }
 
     private void OnDisable() 
@@ -45,7 +45,7 @@ public class MenuLobbyViewController : MonoBehaviour
         if(_lobbyManager == null && SceneDelegate.Instance != null && SceneDelegate.LobbyManager != null) {
             _lobbyManager = SceneDelegate.LobbyManager;
             SceneDelegate.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated;    
-            print("MenuLobbyViewController#Update: Attached lobby manager"); 
+            SceneDelegate.SceneDelegateDebug("MenuLobbyViewController#Update: Attached lobby manager"); 
             
             // if(InstanceFinder.IsClient) {
             //     print("MenuLobbyViewController#Update: Requesting update"); 
@@ -56,20 +56,20 @@ public class MenuLobbyViewController : MonoBehaviour
 
     public void UpdateView() 
     {
-        print($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {_currentData.HasValue})"); 
-        // Connection buttons
-        bool showConnectionButtons = _controller.ServerConnectionState == LocalConnectionState.Stopped && 
-                                     _controller.ClientConnectionState == LocalConnectionState.Stopped &&
-                                     !InstanceFinder.IsClient && !InstanceFinder.IsServer // Condition checking if we've loaded into this scene w/o tracking connection states
-                                     /*&& TODO: Editor field determining build type*/;
-        connectionButtons.SetActive(showConnectionButtons);
+        NetworkStateManager nsm = _controller.ConnectedNetworkManager.GetComponent<NetworkStateManager>();
+        if(nsm == null) {
+            Debug.LogError("Failed to UpdateView because the NetworkStateManager is null.");
+            return;
+        }
+
+        SceneDelegate.SceneDelegateDebug($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {_currentData.HasValue})"); 
 
         // Status text
         string lobbyStatusText = "";
-        if(_controller.ServerConnectionState != LocalConnectionState.Stopped)
-            lobbyStatusText = "[Server - " + _controller.ServerConnectionState + "]";
-        else if(_controller.ClientConnectionState != LocalConnectionState.Stopped)
-            lobbyStatusText = "[Client - " + _controller.ClientConnectionState + "]";
+        if(nsm.ServerConnectionState != LocalConnectionState.Stopped)
+            lobbyStatusText = "[Server - " + nsm.ServerConnectionState + "]";
+        else if(nsm.ClientConnectionState != LocalConnectionState.Stopped)
+            lobbyStatusText = "[Client - " + nsm.ClientConnectionState + "]";
         this.lobbyStatusText.text = lobbyStatusText;
 
         // Menu reset
@@ -78,7 +78,7 @@ public class MenuLobbyViewController : MonoBehaviour
         if(!_currentData.HasValue)
             return;
 
-        print($"MenuLobbyViewController#UpdateView: Player name count {_currentData.Value.playerNames.Count}"); 
+        SceneDelegate.SceneDelegateDebug($"MenuLobbyViewController#UpdateView: Player name count {_currentData.Value.playerNames.Count}"); 
 
         LobbyData lobbyData = _currentData.Value;
 
@@ -92,7 +92,7 @@ public class MenuLobbyViewController : MonoBehaviour
     public void LobbyManager_LobbyUpdated(LobbyData newData) 
     {
         _currentData = newData;
-        print("MenuLobbyViewController#LobbyManager_LobbyUpdated: Recieved update event"); 
+        SceneDelegate.SceneDelegateDebug("MenuLobbyViewController#LobbyManager_LobbyUpdated: Recieved update event"); 
         UpdateView();
     }
 
