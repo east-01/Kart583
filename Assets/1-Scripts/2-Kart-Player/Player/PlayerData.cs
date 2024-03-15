@@ -9,7 +9,11 @@ using UnityEngine;
 [Serializable]
 public struct PlayerData {
     /// <summary>
-    /// The display name of the player, must be unique on the server
+    /// A unique identifier for this player
+    /// </summary>
+    public string guid;
+    /// <summary>
+    /// The display name of the player
     /// </summary>
 	public string name;
 	public KartType kartType;
@@ -26,4 +30,6 @@ public struct PlayerData {
     /// The hex color that the player picked in the player select menu.
     /// </summary>
 	public string hexColor;
+
+    public readonly string Summary { get { return $"[PlayerData guid: \"{guid}\" name: \"{name}\" type: {kartType} ready: {ready}]"; } }
 }

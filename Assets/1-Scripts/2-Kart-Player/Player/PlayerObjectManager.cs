@@ -62,6 +62,7 @@ public class PlayerObjectManager : MonoBehaviour
         PlayerObject obj = new();
         obj.input = input;
         obj.data = new() {
+            guid = Guid.NewGuid().ToString(),
             name = "Player " + (obj.PlayerIndex + 1)
         };
 

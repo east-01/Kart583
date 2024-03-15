@@ -22,13 +22,18 @@ public class SceneDelegate : NetworkBehaviour
     public static SceneDelegate Instance;
     public static LobbyManager LobbyManager { get { return Instance._lobbyManager; } }
 
-    private List<Scene> ScenesLoaded = new(); // Unused for now, see RegisterScenes
+    public delegate void ClientAddedToSceneHandler(NetworkConnection client, SceneLookupData sceneLookupData);
+    /// <summary>
+    /// Called when a client is added to the scene.
+    /// For now, only is called on the client that was added.
+    /// </summary>
+    public event ClientAddedToSceneHandler ClientAddedToSceneEvent;
 
     private LobbyManager _lobbyManager;
     [SerializeField]
     private GameObject _atlasPrefab;
 
-    private Dictionary<SceneLookupData, GameLobby> expectingScene = new();
+    private Dictionary<SceneLookupData, GameLobby> expectingScene = new(); // Server only, connects GameLobbies to scenes
     private Dictionary<SceneLookupData, Scene> loadedScenes = new();
     private Dictionary<SceneLookupData, GameplayManager> gameplayManagers = new();
 
@@ -188,16 +193,15 @@ public class SceneDelegate : NetworkBehaviour
         }
 
         SceneDelegateDebug("SceneDelegate#ServerRpcClientLoadedScene: Validated client loaded, scene. Adding their connection");
+
         base.SceneManager.AddConnectionToScene(client, targetScene.Value);
+        TargetRpcClientAddedToScene(client, lookup);
+    }
 
-        if(targetScene.Value.name != SceneNames.MENU_LOBBY) {
-            if(gameLobby.GameplayManager != null)
-                print("TODO: HANDLE PLAYER SPAWN ONCE CLIENT LOADS SCENE");
-                // gameLobby.GameplayManager.PlayerManager.SpawnPlayer(client, gameLobby.GetPlayerData(client).Value);
-            else
-                Debug.LogWarning("Failed to notify GameplayManager of player joining map scene because GameplayManager is null.");
-        }
-
+    [TargetRpc]
+    private void TargetRpcClientAddedToScene(NetworkConnection client, SceneLookupData lookup) 
+    {
+        ClientAddedToSceneEvent?.Invoke(client, lookup);
     }
 
     private void RegisterScenes(SceneLoadEndEventArgs args)

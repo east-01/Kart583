@@ -32,18 +32,17 @@ public class RaceManager : NetworkBehaviour
 
         raceTime = -100;
 
-        Debug.LogWarning("Game currently detects initial phase as late join because it's looking for the PlayerInputManager's player count, when it should be looking at the kart player count");
-
         if(!base.IsServer)
             return;
 
         // Initialize phases
         if(PlayerObjectManager.Instance == null) {
-            waitingForPlayerInput = true;
-        } else if(PlayerObjectManager.Instance.GetPlayerInputManager().playerCount == 0) {
+            waitingForPlayerInput = true; // TODO: This is really dumb: we should only be waiting for player input on clients
+            Debug.LogWarning("This is really dumb: we should only be waiting for player input on clients");
+        } else if(gameplayManager.GameLobby.PlayerCount == 0) {
             phase = RacePhase.LATE_JOIN;
         } else if(kartLevelManager.HasRaceCamera) {
-            phase = RacePhase.INTRO_ANIMATION;
+            phase = RacePhase.WAITING_FOR_PLAYERS;
         } else {
             phase = RacePhase.COUNTDOWN;
             PrepareRace();
@@ -64,7 +63,7 @@ public class RaceManager : NetworkBehaviour
             RacePhaseChange(RacePhase.LATE_JOIN, phase, false);
         }
 
-        if(!waitingForPlayerInput && phase != RacePhase.LATE_JOIN && phase != RacePhase.INTRO_ANIMATION)
+        if(!waitingForPlayerInput && phase != RacePhase.LATE_JOIN && phase != RacePhase.WAITING_FOR_PLAYERS)
             raceTime += Time.deltaTime;
 
         if(!base.IsServer)
@@ -75,10 +74,11 @@ public class RaceManager : NetworkBehaviour
         switch(phase) {
             case RacePhase.LATE_JOIN:
                 break;
-            case RacePhase.INTRO_ANIMATION:
+            case RacePhase.WAITING_FOR_PLAYERS:
                 // TODO: Add a timer that kicks the player if they don't ready up by said time
-                bool introAnimComplete = !kartLevelManager.HasRaceCamera || !kartLevelManager.RaceCamera.Animating;
-                if(introAnimComplete && gameplayManager.PlayerManager.AllPlayersReady)
+                // bool introAnimComplete = !kartLevelManager.HasRaceCamera || !kartLevelManager.RaceCamera.Animating;
+                // TODO: Add intro anim back in
+                if(gameplayManager.PlayerManager.AllPlayersReady)
                     phase = RacePhase.COUNTDOWN;
                 break;
             case RacePhase.COUNTDOWN:
@@ -120,7 +120,7 @@ public class RaceManager : NetworkBehaviour
                 if(!asServer)
                     pim.EnableJoining();
                 break;
-            case RacePhase.INTRO_ANIMATION:
+            case RacePhase.WAITING_FOR_PLAYERS:
                 if(asServer) {
                     gameplayManager.KartSpawner.SpawnBots();
                     placements.Clear();
@@ -158,7 +158,7 @@ public class RaceManager : NetworkBehaviour
     public void PassLateJoin() 
     {
         if(phase == RacePhase.LATE_JOIN)
-            phase = RacePhase.INTRO_ANIMATION;
+            phase = RacePhase.WAITING_FOR_PLAYERS;
     }
 
     /** Prepare's the player objects and splitscreen manager for the race */
@@ -283,5 +283,5 @@ public enum RaceType
 
 public enum RacePhase
 {
-    LATE_JOIN, INTRO_ANIMATION, COUNTDOWN, RACING, FINISHED
+    LATE_JOIN, WAITING_FOR_PLAYERS, COUNTDOWN, RACING, FINISHED
 }

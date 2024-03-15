@@ -10,14 +10,18 @@ public class KartManager : KartBehavior
 
 	[SerializeField] private POIGDelegate poigDelegate;
 
-	[SerializeField] 
+	[SerializeField, SyncVar(OnChange = nameof(PlayerDataChanged))] 
 	private PlayerData data;
-	[SyncVar] private bool isHuman;
+	[SyncVar] 
+	private bool isHuman;
 
-	[ObserversRpc(RunLocally = true, BufferLast = true)]
 	public void SetPlayerData(PlayerData data) 
 	{
 		this.data = data;
+	}
+
+	private void PlayerDataChanged(PlayerData prev, PlayerData current, bool asServer) 
+	{
 		gameObject.name = KartSpawner.KartNamePrefix + data.name;
 	}
 

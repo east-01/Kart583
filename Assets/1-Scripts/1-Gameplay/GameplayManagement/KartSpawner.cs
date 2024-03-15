@@ -55,6 +55,11 @@ public class KartSpawner : NetworkBehaviour
             return null;
         }
 
+		if(data.guid == "") {
+			Debug.LogError("Tried to spawn a kart with empty guid, this is not allowed");
+			return null;
+		}
+
 		if(data.kartType == KartType.NONE) {
 			data.kartType = SelectRandomKartType();
 			Debug.LogWarning($"Tried to spawn a kart without a kartType included. Random type {data.kartType} selected.");
@@ -77,8 +82,6 @@ public class KartSpawner : NetworkBehaviour
 
         // PlayerData management
 		data.ready = false;
-		if(!IsNameUnique(data.name))
-			data.name = MakeNameUnique(data.name);
 
 		newKartManager.SetPlayerData(data);
 
@@ -102,6 +105,7 @@ public class KartSpawner : NetworkBehaviour
 	public void SpawnBot() 
 	{		
         PlayerData bdata = new() {
+			guid = Guid.NewGuid().ToString(),
             name = SelectRandomBotName(),
 			kartType = SelectRandomKartType()
         };
@@ -130,16 +134,6 @@ public class KartSpawner : NetworkBehaviour
 				return false;		
 		}
 		return true;
-	}
-
-	/// <summary>
-	/// Makes a name unique by appending integers to the end of the input
-	/// </summary>
-	public string MakeNameUnique(string name) {
-		int i = 0;
-		while(!IsNameUnique(name + i))
-			i++;
-		return name + i;
 	}
 
     public KartType SelectRandomKartType() 

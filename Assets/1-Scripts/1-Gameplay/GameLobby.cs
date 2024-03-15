@@ -217,6 +217,7 @@ public class GameLobby
     public Scene? LobbyScene { get { return GetLoadedScene(lobbySceneData, false); } }
     public Scene? MapScene { get { return GetLoadedScene(mapSceneData, false); } }
     public GameplayManager GameplayManager { get { return gameplayManager; } }
+    public int PlayerCount { get { return players.Count; } }
     public int OpenSlots { get { return KartsIRManager.PlayerLimit - players.Count; } }
 }
 
