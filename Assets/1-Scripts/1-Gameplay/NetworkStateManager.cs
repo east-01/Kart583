@@ -67,13 +67,23 @@ public class NetworkStateManager : MonoBehaviour
     private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)
     {
         _clientConnectionState = args.ConnectionState;
-        clientStatusText.text = "Client: " + _clientConnectionState;
+        if(_clientConnectionState != LocalConnectionState.Stopped) {
+            clientStatusText.gameObject.SetActive(true);
+            clientStatusText.text = "Client: " + _clientConnectionState;
+        } else {
+            clientStatusText.gameObject.SetActive(false);
+        }
     }
 
     private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs args)
     {
         _serverConnectionState = args.ConnectionState;
-        serverStatusText.text = "Server: " + _serverConnectionState;
+        if(_serverConnectionState != LocalConnectionState.Stopped) {
+            serverStatusText.gameObject.SetActive(true);
+            serverStatusText.text = "Server: " + _serverConnectionState;
+        } else {
+            serverStatusText.gameObject.SetActive(false);
+        }
     }
 
 }

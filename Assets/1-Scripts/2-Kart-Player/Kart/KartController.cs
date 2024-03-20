@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using FishNet.Connection;
 // Kart Controller is NOT ALLOWED to use UnityEngine.InputSystem. See HumanDriver!
 
 /**
@@ -11,7 +12,7 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 	private GameplayManager gameplayManager;
 
 	/* ----- Settings variables ----- */
-	private Transform kartModel;
+	public Transform kartModel;
 
 	public KartSettings settings;
 
@@ -55,7 +56,7 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 	[SerializeField] private float throttle;
 	[SerializeField] private bool boosting;
 
-	private float initKartModelY;
+	public float initKartModelY;
 
 	[Header("Runtime fields")] public Vector3 up = new(0, 1, 0);
 	[SerializeField] private Vector3 velocity;
@@ -89,40 +90,12 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 	public void GameplayManagerLoaded(GameplayManager gameplayManager) 
 	{
 		this.gameplayManager = gameplayManager;
-
-		if(kartManager.GetPlayerData().kartType == KartType.NONE) 
-			waitingForKartType = true;
-		else
-			InitializeKartType();
-	}
-
-	public void InitializeKartType() 
-	{
-		KartDataPackage kdp = gameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
-		settings = kdp.settings;
-	
-		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);
-		newKartModel.GetComponent<KartModel>().SetKartController(this);
-		kartModel = newKartModel.transform;
-
-		if(kartModel != null) 
-			initKartModelY = kartModel.localPosition.y;
-		else
-			Debug.LogWarning("KartController on \"" + gameObject.name + "\" doesn't have a kartModel assigned."); 
 	}
 
     private void Update()
     {
 		if(gameplayManager == null)
 			return;
-
-		if(waitingForKartType) {
-			if(kartManager.GetPlayerData().kartType != KartType.NONE) {
-				InitializeKartType();
-				waitingForKartType = false;
-			} else 
-				return;
-		}
 
 		/* Grounded */
 		bool lastFrameGrounded = this.grounded;

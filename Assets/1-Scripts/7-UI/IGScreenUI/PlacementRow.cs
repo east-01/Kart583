@@ -13,11 +13,11 @@ public class PlacementRow : MonoBehaviour
 
     /** Update the visual to reflect the kart that it's going to represent.
         This will change the placement text, name text and time text. */
-    public void UpdateVisuals(KartManager kart, int placement) 
+    public void UpdateVisuals(KartManager kart, RacePlacementData placementData) 
     {
-        placeText.text = placement + ".";
+        placeText.text = (placementData.position+1) + ".";
         nameText.text = kart.GetPlayerData().name;
-        timeText.text = FormatTime(kart.GetPositionTracker().raceFinishTime);
+        timeText.text = FormatTime(placementData.raceFinishTime);
     }
 
     public string FormatTime(float time) { 

@@ -13,7 +13,7 @@ public class HumanDriver : KartBehavior
 
     void Update() 
     {
-        if(posTracker.raceCompletion >= 1) {
+        if(posTracker.RaceCompletion >= 1) {
             kartManager.UseBotDriver();
         }
     }

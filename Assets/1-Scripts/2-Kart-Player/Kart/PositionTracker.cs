@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using FishNet.Object;
+using UnityEngine.EventSystems;
+using FishNet.Connection;
+using FishNet.Object.Synchronizing;
 
 /** Keeps track of a Kart's position on a track */
 public class PositionTracker : KartBehavior, IComparable<PositionTracker>, GameplayManagerBehavior
@@ -11,14 +15,24 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
     private Waypoints waypoints;
 
-    [SerializeField] public int waypointIndex;
+    public int waypointIndex;
     public float segmentCompletion;
     public float lapCompletion;
-    public float raceCompletion;
+    [SyncVar]
+    private float raceCompletion;
+    public float RaceCompletion {
+        get { return raceCompletion; }
+        set {
+            if(base.IsServer) 
+                raceCompletion = value;
+            else if(base.IsOwner)
+                ServerRpcSetRaceCompletion(value);
+        }
+    }
     public int lapNumber;
     public int racePos;
     public bool hasStartedRace;
-    public float raceFinishTime;
+    private bool hasFinishedRace; // A boolean tracking if we've notified the server of finishing
 
 	new protected void Awake() 
 	{
@@ -37,11 +51,11 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
         }
         waypoints = waypointsObj.GetComponent<Waypoints>();
         
-        segmentCompletion = lapCompletion = raceCompletion = 0;
+        segmentCompletion = lapCompletion = RaceCompletion = 0;
 
         hasStartedRace = false;
+        hasFinishedRace = false;
         lapNumber = 0;
-        raceFinishTime = -1;
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)
@@ -61,8 +75,8 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
         if(!hasStartedRace) {
             hasStartedRace = true;
+            hasFinishedRace = false;
             lapNumber = 0;
-            raceFinishTime = -1;
         } else if(advancedLapCompleted) 
             lapNumber += 1;
     }
@@ -78,22 +92,38 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
         segmentCompletion = GetSegmentCompletion();
         lapCompletion = GetLapCompletion();
-        raceCompletion = GetRaceCompletion();
-    
-        if(raceCompletion >= 1 && raceFinishTime == -1) {
+        if(base.IsServer)
+            RaceCompletion = GetRaceCompletion();
+        else if(base.IsOwner)
+            ServerRpcSetRaceCompletion(GetRaceCompletion());
+
+        if(RaceCompletion >= 1 && !hasFinishedRace) {
+            hasFinishedRace = true;
             RaceFinished();
         }
     
     }
 
-    void RaceFinished() 
+    private void RaceFinished() 
     {
-        raceFinishTime = gameplayManager.RaceManager.RaceTime;
+        if(base.IsServer)
+            gameplayManager.RaceManager.CompletedRace(kartManager.GetPlayerData(), raceCompletion);
+        else if(base.IsClient && base.IsOwner)
+            gameplayManager.RaceManager.ServerRpcCompletedRace(kartManager.GetPlayerData(), raceCompletion);
 
         if(kartManager.HasPOIGDelegate) {
             kartManager.POIGDelegate.HUD.enabled = false;
         }
     }
+
+    [ServerRpc]
+    private void ServerRpcSetRaceCompletion(float raceCompletion) { this.RaceCompletion = raceCompletion; }
+
+    /// <summary>
+    /// Call for the server's RaceManager to tell client what our race position is
+    /// </summary>
+    [TargetRpc]
+    public void TargetRpcSetRacePosition(NetworkConnection client, int racePosition) { this.racePos = racePosition; }
 
     public Waypoints GetWaypoints() { return waypoints; }
     public Transform GetCurrentWaypoint() { return waypoints.GetWaypointFromIndex(waypointIndex); }
@@ -154,6 +184,6 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
     public int CompareTo(PositionTracker other)
     {
-        return -raceCompletion.CompareTo(other.raceCompletion);
+        return -RaceCompletion.CompareTo(other.RaceCompletion);
     }
 }

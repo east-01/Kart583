@@ -1,38 +1,90 @@
 using System;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 /** Responsible for managing kart operations. */
-public class KartManager : KartBehavior 
+public class KartManager : KartBehavior, GameplayManagerBehavior 
 {
 
-	[SerializeField] private POIGDelegate poigDelegate;
+	private GameplayManager gameplayManager;
+
+	[SerializeField] 
+	private POIGDelegate poigDelegate;
 
 	[SerializeField, SyncVar(OnChange = nameof(PlayerDataChanged))] 
 	private PlayerData data;
 	[SyncVar] 
 	private bool isHuman;
+	private bool waitingForKartType;
 
-	public void SetPlayerData(PlayerData data) 
+	new protected void Awake() 
 	{
-		this.data = data;
+		base.Awake();
+		SceneDelegate.Instance.SubscribeForGameplayManager(this);
 	}
 
-	private void PlayerDataChanged(PlayerData prev, PlayerData current, bool asServer) 
+	public void GameplayManagerLoaded(GameplayManager gameplayManager) 
 	{
-		gameObject.name = KartSpawner.KartNamePrefix + data.name;
+		this.gameplayManager = gameplayManager;
+
+		if(kartManager.GetPlayerData().kartType == KartType.NONE) 
+			waitingForKartType = true;
+		else
+			InitializeKartType();
+	}
+
+    public override void OnOwnershipClient(NetworkConnection prevOwner)
+    {
+		// Sync enabled status with our ownership status
+		kartCtrl.enabled = base.IsOwner;
+		kartStateManager.enabled = base.IsOwner;
+		// kartItemManager: Stays enabled so we can sync item wielding between players
+		// posTracker: Stays enabled, updates server on race position (TODO: Make this a server-side calculation it will be exploited)
+		// kartEffectManager: Stays enabled
+
+		// Bot/Human driver scripts are determined in UseHumanDriver and UseBotDriver
+    }
+
+    private void Update() 
+	{
+		if(waitingForKartType) {
+			if(kartManager.GetPlayerData().kartType != KartType.NONE) {
+				InitializeKartType();
+				waitingForKartType = false;
+			} else 
+				return;
+		}
+	}
+
+	public void InitializeKartType() 
+	{
+		KartDataPackage kdp = gameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
+		kartCtrl.settings = kdp.settings;
+	
+		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);
+		newKartModel.GetComponent<KartModel>().SetKartController(kartCtrl);
+		kartCtrl.kartModel = newKartModel.transform;
+
+		if(kartCtrl.kartModel != null) 
+			kartCtrl.initKartModelY = kartCtrl.kartModel.localPosition.y;
+		else
+			Debug.LogWarning("KartController on \"" + kartCtrl.gameObject.name + "\" doesn't have a kartModel assigned."); 
 	}
 
 	/** Connects the PlayerInput to the HumanDriver script in the kart's brain. */
 	public void UseHumanDriver(PlayerInput input) 
 	{
-		botPath.enabled = false;
-		botDriver.enabled = false;
-		botItemManager.enabled = false;
-		humanDriver.enabled = true;
-		humanDriver.ConnectPlayerInput(input);
+
+		if(base.IsOwner) {
+			botPath.enabled = false;
+			botDriver.enabled = false;
+			botItemManager.enabled = false;
+			humanDriver.enabled = true;
+			humanDriver.ConnectPlayerInput(input);
+		}
 
 		if(base.IsClient) {
 			ServerRpcSetIsHuman(true);
@@ -57,9 +109,14 @@ public class KartManager : KartBehavior
 		}
 	}
 
-	public static bool IsKartGameObject(GameObject obj) 
+	public void SetPlayerData(PlayerData data) 
 	{
-		return obj.GetComponent<KartManager>() != null;
+		this.data = data;
+	}
+
+	private void PlayerDataChanged(PlayerData prev, PlayerData current, bool asServer) 
+	{
+		gameObject.name = KartSpawner.KartNamePrefix + data.name;
 	}
 
 	[ServerRpc]
@@ -72,6 +129,13 @@ public class KartManager : KartBehavior
 	public bool IsBot { get { return !isHuman; } }
 
 	public bool HasPOIGDelegate { get { return poigDelegate != null; } }
-	public POIGDelegate POIGDelegate { get { return poigDelegate; } }
+	public POIGDelegate POIGDelegate { 
+		get { return poigDelegate; } 
+		set { poigDelegate = value; } 
+	}
 
+	public static bool IsKartGameObject(GameObject obj) 
+	{
+		return obj.GetComponent<KartManager>() != null;
+	}
 }

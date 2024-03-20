@@ -9,7 +9,7 @@ public class SwapTeleporterWorldItem : WorldItem
     {
 
         PositionTracker ownerPT = KartBehavior.LocateManager(owner).GetPositionTracker();
-        float currentRaceCompletion = ownerPT.raceCompletion;
+        float currentRaceCompletion = ownerPT.RaceCompletion;
 
         /* Pick target */
         // Store the kartmanager and it's weight

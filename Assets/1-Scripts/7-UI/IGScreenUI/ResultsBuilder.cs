@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using FishNet;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using UnityEngine;
 
 /** This class will build the results rows out of the ResultRow prefabs. */
@@ -29,37 +31,49 @@ public class ResultsBuilder : MonoBehaviour, GameplayManagerBehavior
         this.kartLevelManager = gameplayManager.KartLevelManager;
     }
 
+    int ticked;
     void Update() {
         if(gameplayManager == null)
             return;
 
-        if(waitingForPlacements && gameplayManager.RaceManager.GetPlacements().Count > 0) {
+        if(waitingForPlacements && gameplayManager.RaceManager.GetPlacements().Count == gameplayManager.PlayerManager.KartCount) {
             waitingForPlacements = false;
             ShowResults();
         }
     }
 
-    /** Updates the results screen then shows it.
-      * The kart array parameter is expected to be sorted. 
-      * 
-      * Honestly, idk why this method is so complicated. Shit just would not work easily. */
     public void ShowResults() 
     {
         // Delete old menu elements
         menuElements?.ForEach(e => Destroy(e));
         menuElements = new List<GameObject>();
 
-        int i = 0;
-        foreach(PlayerData data in gameplayManager.RaceManager.GetPlacements()) {
-            KartManager manager = gameplayManager.PlayerManager.SearchForKartManager(data);
-            if(manager == null) 
-                throw new InvalidOperationException("Manager cannot be null.");
-                
-            GameObject newObj = Instantiate(placementRowPrefab, resultsContainer);
-            newObj.GetComponent<PlacementRow>().UpdateVisuals(manager, i+1);
+        SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
+        for(int position = 0; position < gameplayManager.PlayerManager.KartCount; position++) {
+            string playerUUID = null;
+            // Find playerUUID from position
+            foreach(string testUUID in placements.Keys) {
+                if(placements[testUUID].position == position) {
+                    playerUUID = testUUID;
+                    break;
+                }
+            }
 
+            if(playerUUID == null) {
+                Debug.LogError($"ResultsBuilder failed to find UUID from position " + position);
+                continue;
+            }
+
+            KartManager manager = gameplayManager.PlayerManager.SearchForKartManager(playerUUID);
+            if(manager == null) {
+                Debug.LogError($"Couldn't locate KartManager from uuid \"{playerUUID}\"");
+                continue;
+            }
+
+            RacePlacementData racePlacementData = placements[playerUUID];                
+            GameObject newObj = Instantiate(placementRowPrefab, resultsContainer);
+            newObj.GetComponent<PlacementRow>().UpdateVisuals(manager, racePlacementData);
             menuElements.Add(newObj);
-            i++;
         }
     }
 

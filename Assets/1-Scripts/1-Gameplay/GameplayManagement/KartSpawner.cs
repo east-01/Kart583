@@ -55,7 +55,7 @@ public class KartSpawner : NetworkBehaviour
             return null;
         }
 
-		if(data.guid == "") {
+		if(data.uuid == "") {
 			Debug.LogError("Tried to spawn a kart with empty guid, this is not allowed");
 			return null;
 		}
@@ -85,10 +85,6 @@ public class KartSpawner : NetworkBehaviour
 
 		newKartManager.SetPlayerData(data);
 
-        // Register new kart with playerManager
-		playerManager.kartObjects.Add(newKart);
-		playerManager.playerPositions.Add(newKartManager.GetPositionTracker());
-
 		// Run event
 		ObserversRpcCallSpawnEvent(owner, data);
 
@@ -105,7 +101,7 @@ public class KartSpawner : NetworkBehaviour
 	public void SpawnBot() 
 	{		
         PlayerData bdata = new() {
-			guid = Guid.NewGuid().ToString(),
+			uuid = Guid.NewGuid().ToString(),
             name = SelectRandomBotName(),
 			kartType = SelectRandomKartType()
         };

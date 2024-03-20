@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
 using UnityEngine;
-using UnityEngine.InputSystem.Interactions;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -15,7 +12,7 @@ using UnityEngine.SceneManagement;
 public class GameLobby 
 {
 
-    public static readonly float PLAYER_WAIT_TIME = 5;
+    public static readonly float PLAYER_WAIT_TIME = 2;
 
     private LobbyManager manager;
     private string id;
@@ -32,7 +29,7 @@ public class GameLobby
                 // if(mapScene != null)
                     // SceneDelegate.Instance.UnloadMapScene(id, mapScene.Value);
             }
-            manager.UpdateLobby(id, this);
+            manager.UpdateLobby(id, LobbyUpdateReason.STATE_CHANGE);
         }
     }
     private float timeInState;
@@ -104,10 +101,8 @@ public class GameLobby
 
         // Handle lobby join queue
         if(LobbyScene != null && lobbyJoinQueue.Count > 0) {
-            Debug.Log($"Moving {lobbyJoinQueue.Count} players from queue (is server: {InstanceFinder.IsServer})");
             lobbyJoinQueue.ForEach(conn => {
                 SceneDelegate.Instance.MoveToLobby(conn);
-                Debug.Log("Added player from queue");
             });
             lobbyJoinQueue.Clear();
         }
@@ -117,9 +112,9 @@ public class GameLobby
     public void AddPlayer(NetworkConnection conn, PlayerData data) 
     {
         players.Add(conn, data);
-        manager.UpdateLobby(id, this);
+        manager.UpdateLobby(id, LobbyUpdateReason.PLAYER_JOIN);
  
-        SendDebugMessage("Adding player");
+        SendDebugMessage("Adding player " + data.Summary);
         SceneDelegate.Instance.MoveToLobby(conn);
     }
 
@@ -199,11 +194,11 @@ public class GameLobby
     }
 
     public LobbyData Data { get {
-        List<string> pNames = new();
-        foreach(PlayerData data in players.Values) { pNames.Add(data.name); }
+        List<PlayerData> players = new();
+        foreach(PlayerData data in this.players.Values) { players.Add(data); }
 
         return new() {
-            playerNames = pNames,
+            players = players,
             state = this.state,
             timeInState = this.timeInState
         };
@@ -213,20 +208,26 @@ public class GameLobby
     public SceneLookupData LobbySceneData { get { return lobbySceneData; } }
     public SceneLookupData MapSceneData { get { return mapSceneData; } }
     public LobbyState State { get { return state; } }
-    public KartLevel? Level { get { return level; } }
     public Scene? LobbyScene { get { return GetLoadedScene(lobbySceneData, false); } }
     public Scene? MapScene { get { return GetLoadedScene(mapSceneData, false); } }
+
     public GameplayManager GameplayManager { get { return gameplayManager; } }
+    public KartLevel? Level { get { return level; } }
+
+    public Dictionary<NetworkConnection, PlayerData> Players { get { return players; } }
     public int PlayerCount { get { return players.Count; } }
+
     public int OpenSlots { get { return KartsIRManager.PlayerLimit - players.Count; } }
+
 }
 
 [Serializable]
 public struct LobbyData 
 {
-    public List<string> playerNames;
+    public List<PlayerData> players;
     public LobbyState state;
     public float timeInState;
+    public float playerWaitTimeout;
 }
 
 [Serializable]
@@ -235,4 +236,11 @@ public enum LobbyState
     WAITING_FOR_PLAYERS, 
     MAP_SELECTION, 
     RACING // The lobby is in game
+}
+
+public enum LobbyUpdateReason 
+{
+    NONE,
+    STATE_CHANGE,
+    PLAYER_JOIN
 }

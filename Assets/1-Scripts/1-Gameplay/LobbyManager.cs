@@ -22,10 +22,7 @@ public class LobbyManager : NetworkBehaviour
     /// </summary>
     private Dictionary<string, GameLobby> lobbies = new();
 
-    [SyncObject]
-    private readonly SyncDictionary<string, LobbyData> lobbyData = new();
-
-    public delegate void LobbyUpdateHandler(LobbyData newData);
+    public delegate void LobbyUpdateHandler(LobbyData newData, LobbyUpdateReason reason);
     public event LobbyUpdateHandler LobbyUpdated;
 
     private bool waitingForInput;
@@ -76,43 +73,34 @@ public class LobbyManager : NetworkBehaviour
 
         connectionLobbyPair.Add(newClient, lobbyToJoin.ID); // This step must precede SceneDelegate#MoveToLobby which is in GameLobby#AddPlayer
         lobbyToJoin.AddPlayer(newClient, data);
+    }
 
-        TargetRpcJoinedLobby(newClient, lobbyToJoin.Data);
+    /// <summary>
+    /// Fires the TargetRpcLobbyUpdatedEvent for all clients connected to a specific lobby
+    /// </summary>
+    [Server]
+    public void UpdateLobby(string lobbyID, LobbyUpdateReason reason) 
+    {
+        if(!lobbies.ContainsKey(lobbyID)) {
+            Debug.LogError($"Couldn't update lobby \"{lobbyID}\" because it's not registered in the LobbyManager.");
+            return;
+        }
+        GameLobby lobby = lobbies[lobbyID];
+        LobbyData lobbyData = lobby.Data;
+
+        // Invoke event on server
+        LobbyUpdated?.Invoke(lobbyData, reason);
+
+        // Invoke event for clients to said lobby
+        foreach(NetworkConnection client in lobby.Players.Keys) {
+            TargetRpcLobbyUpdatedEvent(client, lobbyData, reason);
+        }
     }
 
     [TargetRpc]
-    public void TargetRpcJoinedLobby(NetworkConnection conn, LobbyData joinedLobbyData) {
-        LobbyUpdated?.Invoke(joinedLobbyData);
+    public void TargetRpcLobbyUpdatedEvent(NetworkConnection conn, LobbyData lobbyData, LobbyUpdateReason reason) {
+        LobbyUpdated?.Invoke(lobbyData, reason);
     }
-
-    /*[ServerRpc]
-    public void ServerRpcGetLobbyData(NetworkConnection client, out LobbyData? data) 
-    {
-        GameLobby lobby = GetLobby(client);
-        if(lobby == null) {
-            data = null;
-            return;
-        }
-        data = lobby.Data;
-    }
-
-    [Client]
-    public void RU() 
-    {
-        SRPCRU(base.LocalConnection);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void SRPCRU(NetworkConnection client) 
-    {
-        GameLobby lobby = GetLobby(client);
-        if(lobby == null) {
-            Debug.LogError("fuck");
-            return;
-        }
-
-        UpdateLobby(lobby.ID, lobby);
-    }*/
 
     /// <summary>
     /// Gets the lobby id for the LocalConnection. Is a shortcut for:
@@ -152,26 +140,6 @@ public class LobbyManager : NetworkBehaviour
         if(!lobbies.ContainsKey(id))
             return null;
         return lobbies[id];
-    }
-
-    [Client]
-    public LobbyData? GetLobbyData() { return GetLobbyData(GetLobbyID(base.LocalConnection)); }
-    public LobbyData? GetLobbyData(string id) 
-    {
-        if(!lobbyData.ContainsKey(id))
-            return null;
-        return lobbyData[id];
-    }
-
-    /// <summary>
-    /// As specified in updating fields section of https://fish-networking.gitbook.io/docs/manual/guides/synchronizing/syncdictionary,
-    ///   we must update the lobbies like this in order to ensure the latest data is in the SyncDictionary.
-    /// </summary>
-    public void UpdateLobby(string id, GameLobby updatedInstance) 
-    {
-        LobbyData newData = updatedInstance.Data;
-        lobbyData[id] = newData;
-        LobbyUpdated?.Invoke(newData);
     }
 
     [Server]

@@ -67,6 +67,8 @@ namespace AClockworkBerry
         public bool StackTraceWarnings = false;
         public bool StackTraceErrors = true;
 
+        public KeyCode ToggleKeyCode = KeyCode.F3;
+
         static Queue<LogMessage> queue = new Queue<LogMessage>();
 
         GUIStyle styleContainer, styleText;
@@ -193,6 +195,13 @@ namespace AClockworkBerry
             // Remove overflowing rows
             while (queue.Count > TotalRows)
                 queue.Dequeue();
+
+            // Toggle shown
+            if(Input.GetKeyDown(ToggleKeyCode)) 
+            {
+                ShowLog = !ShowLog;
+                styleChanged = true;
+            }
         }
 
         void OnGUI()

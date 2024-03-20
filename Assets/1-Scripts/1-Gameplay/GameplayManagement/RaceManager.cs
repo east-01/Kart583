@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using Unity.VisualScripting;
@@ -23,7 +24,11 @@ public class RaceManager : NetworkBehaviour
     private float raceTime;
     private bool waitingForPlayerInput = false;
 
-    [SerializeField, SyncObject] private readonly SyncList<PlayerData> placements = new();
+    /// <summary>
+    /// Stores raceFinishTime first in RaceCompleted(), then gets position and point data in PopulatePlacements()
+    /// </summary>
+    [SyncObject] 
+    private readonly SyncDictionary<string, RacePlacementData> placements = new();
 
     private void Awake()
     {
@@ -89,13 +94,15 @@ public class RaceManager : NetworkBehaviour
                 bool allHumanPlayersFinished = true;
                 foreach(GameObject kartObj in gameplayManager.PlayerManager.kartObjects) {
                     KartManager km = KartBehavior.LocateManager(kartObj);
-                    if(km.IsHuman && km.GetPositionTracker().raceCompletion < 1) {
+                    if(!km.IsHuman)
+                        continue;
+                    if(km.GetPositionTracker().RaceCompletion < 1 || !placements.ContainsKey(km.GetPlayerData().uuid)) {
                         allHumanPlayersFinished = false;
                         break;
                     }
                 }
                 if(allHumanPlayersFinished) {
-                    PopulatePlacements(); // Populate placements here so that we can ensure the results are ready once clients need to show results.
+                    FinalizePlacements(); // Populate placements here so that we can ensure the results are ready once clients need to show results.
                     phase = RacePhase.FINISHED;
                 }
                 break;
@@ -180,82 +187,68 @@ public class RaceManager : NetworkBehaviour
         // Disable main camera audio listener so we get player 0's camera audio
         kartLevelManager.RaceCamera.GetComponent<AudioListener>().enabled = false;
 
+        // Data management
+        if(base.IsServer)
+            placements.Clear();
+
         // Load settings values
         raceTime = -Math.Abs(settings.startDelay);
     }
 
-    [Server]
-    public void PopulatePlacements() 
+    /// <summary>
+    /// Server RPC calling RaceManager#CompletedRace
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcCompletedRace(PlayerData data, float raceCompletion) 
     {
-        int kartCount = gameplayManager.PlayerManager.kartObjects.Count;
+        CompletedRace(data, raceCompletion);
+    }
 
-        List<KartManager> unsorted = new();
-        List<KartManager> dnf = new(); 
-        
-        // Separate people that finished/didn't finish
-        gameplayManager.PlayerManager.kartObjects.ForEach(ko => {
-            KartManager km = KartBehavior.LocateManager(ko);
-            if(km.GetPositionTracker().raceCompletion < 1)
-                dnf.Add(km);
-            else
-                unsorted.Add(km);
-        });
+    /// <summary>
+    /// Notify the server that this player has completed the race
+    /// </summary>
+    [Server]
+    public void CompletedRace(PlayerData data, float raceCompletion) 
+    {
+        if(placements.ContainsKey(data.uuid))
+            return;
 
-        List<KartManager> sorted = new();
+        float raceFinishTime = raceTime;
+        if(raceCompletion < 1)
+            raceFinishTime = -1;
 
-        // Sort finished racers by time
-        while(unsorted.Count > 0) {
-            float smallestRaceTime = float.MaxValue;
-            KartManager smallestKM = null;
+        RacePlacementData rpd = new() {
+            raceFinishTime = raceFinishTime,
+            raceCompletion = raceCompletion
+        };
 
-            foreach(KartManager manager in unsorted) {
-                PositionTracker pt = manager.GetPositionTracker();
-                // Check if this is the lowest finish time
-                if(pt.raceFinishTime < smallestRaceTime) {
-                    smallestRaceTime = pt.raceFinishTime;
-                    smallestKM = manager;
-                }
-            }
+        placements.Add(data.uuid, rpd);
+    }
 
-            if(smallestKM == null)
-                throw new InvalidOperationException("Failed to select next fastest kart.");
-
-            unsorted.Remove(smallestKM);
-            sorted.Add(smallestKM);
+    [Server]
+    public void FinalizePlacements() 
+    {
+        // Ensure everyone is in the placements array
+        foreach(GameObject kartObject in gameplayManager.PlayerManager.kartObjects) {
+            KartManager kartManager = KartBehavior.LocateManager(kartObject);
+            CompletedRace(kartManager.GetPlayerData(), kartManager.GetPositionTracker().RaceCompletion);
         }
 
-        // Sort unfinished racers by race completion
-        while(dnf.Count > 0) {
-            float highestRaceCompletion = float.MinValue;
-            KartManager hrcKM = null;
-
-            foreach(KartManager manager in dnf) {
-                PositionTracker pt = manager.GetPositionTracker();
-                // Check if this is the lowest finish time
-                if(pt.raceCompletion > highestRaceCompletion) {
-                    highestRaceCompletion = pt.raceCompletion;
-                    hrcKM = manager;
-                }
-            }
-
-            if(hrcKM == null)
-                throw new InvalidOperationException("Failed to select next highest race completion.");
-
-            dnf.Remove(hrcKM);
-            sorted.Add(hrcKM);
+        Dictionary<string, RacePlacementData> sortedPlacements = placements.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+        int position = 0;
+        foreach(string uuid in sortedPlacements.Keys) {
+            RacePlacementData storedRPD = placements[uuid];
+            storedRPD.position = position;
+            storedRPD.pointsAwarded = (12 - position) * 2; // TODO: ELO based points system
+            placements[uuid] = storedRPD; // Required for SyncDictionary 
+            position++;
         }
-
-        placements.Clear();
-        sorted.ForEach(km => placements.Add(km.GetPlayerData()));
-
-        print("server populated " + placements.Count);
-
     }
 
     public float RaceTime { get { return raceTime; }}
     public bool CanMove { get { return raceTime >= 0; } }
 
-    public SyncList<PlayerData> GetPlacements() { return placements; }
+    public SyncDictionary<string, RacePlacementData> GetPlacements() { return placements; }
 
 }
 
@@ -267,12 +260,35 @@ public struct RaceSettings
     public float startBoostPercent;
     public bool bots;
     public int botLimit;
-    public RaceSettings(int laps, float startDelay, float startBoostPercent, bool bots, int botLimit) {
-        this.laps = laps;
-        this.startDelay = startDelay;
-        this.startBoostPercent = startBoostPercent;
-        this.bots = bots;
-        this.botLimit = botLimit;
+}
+
+/// <summary>
+/// Data populated by the server to notify clients what they're placement results are
+/// </summary>
+[Serializable]
+public struct RacePlacementData : IComparable<RacePlacementData>
+{
+    /* Data provided by CompleteRace() */
+    public float raceFinishTime;
+    public float raceCompletion; // Used in CompareTo to sort the RacePlacementData in RaceManager
+
+    /* Data provided by PopulatePlacements() */
+    public int position;
+    public int pointsAwarded;
+
+    public readonly int CompareTo(RacePlacementData other)
+    {        
+        if(raceCompletion >= 1 && other.raceCompletion < 1)
+            return -1;
+        else if(raceCompletion < 1 && other.raceCompletion >= 1)
+            return 1;
+        else if(raceCompletion >= 1 && other.raceCompletion >= 1) {
+            // Both have completed race, return raceFinishTime comparison (lower is better)
+            return raceFinishTime.CompareTo(other.raceFinishTime);
+        } else {
+            // Neither have completed race, return raceCompletion compraison (higher is better)
+            return other.raceCompletion.CompareTo(raceCompletion);
+        }
     }
 }
 

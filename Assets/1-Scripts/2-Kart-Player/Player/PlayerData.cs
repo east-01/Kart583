@@ -11,7 +11,7 @@ public struct PlayerData {
     /// <summary>
     /// A unique identifier for this player
     /// </summary>
-    public string guid;
+    public string uuid;
     /// <summary>
     /// The display name of the player
     /// </summary>
@@ -31,5 +31,5 @@ public struct PlayerData {
     /// </summary>
 	public string hexColor;
 
-    public readonly string Summary { get { return $"[PlayerData guid: \"{guid}\" name: \"{name}\" type: {kartType} ready: {ready}]"; } }
+    public readonly string Summary { get { return $"[PlayerData{{{uuid[..3]}}} name: \"{name}\" type: {kartType} ready: {ready}]"; } }
 }

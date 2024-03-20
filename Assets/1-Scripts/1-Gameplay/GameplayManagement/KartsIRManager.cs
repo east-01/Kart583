@@ -23,6 +23,9 @@ public class KartsIRManager : NetworkBehaviour
     private KartLevelManager kartLevelManager;
 	private KartSpawner kartSpawner;
 
+	/// <summary>
+	/// A list of all Kart GameObjects, populated by ConnectToKart()
+	/// </summary>
 	public List<GameObject> kartObjects = new(); // This could include bots as well
 	public List<PositionTracker> playerPositions = new();
 	private Dictionary<string, PlayerObject> playerObjectsWaitingForKarts = new();
@@ -52,9 +55,18 @@ public class KartsIRManager : NetworkBehaviour
 
 	void Update()
     {
-		playerPositions = playerPositions.OrderByDescending(o=>o.raceCompletion).ToList();
+		if(!base.IsServer)
+			return;
+
+		playerPositions = playerPositions.OrderByDescending(o=>o.RaceCompletion).ToList();
 		int i = 0;
-		playerPositions.ForEach(pt => { pt.racePos = i; i++; });
+		playerPositions.ForEach(pt => { 
+			if(pt.Owner.IsValid)
+				pt.TargetRpcSetRacePosition(pt.Owner, i); 
+			else
+				pt.racePos = i;
+			i++; 
+		});
     }
 
     private void SceneDelegate_ClientAddedToScene(NetworkConnection client, SceneLookupData sceneLookupData)
@@ -75,31 +87,24 @@ public class KartsIRManager : NetworkBehaviour
 	public void SpawnPlayer(PlayerObject player)
 	{
 		kartSpawner.ServerRpcSpawnKart(base.LocalConnection, player.data);
-		playerObjectsWaitingForKarts.Add(player.data.guid, player);		
+		playerObjectsWaitingForKarts.Add(player.data.uuid, player);		
 	}
 
 	public void KartManager_KartSpawned(NetworkConnection conn, PlayerData data) 
-	{
-		if(conn != base.LocalConnection)
-			return;
-
-		if(!playerObjectsWaitingForKarts.ContainsKey(data.guid)) {
-			Debug.LogError($"Couldn't find a PlayerObject waiting for kart with data {data.Summary}");
-			return;
-		}
-
-		StartCoroutine(KartSearchCoroutine(data));
+	{		
+		bool shouldAttemptToConnectPlayerObject = conn == base.LocalConnection && playerObjectsWaitingForKarts.ContainsKey(data.uuid);
+		StartCoroutine(KartSearchCoroutine(data, shouldAttemptToConnectPlayerObject));
 	}
 
 	/// <summary>
 	/// Will repeatedly attempt to connect a POIG to a kart every 0.1s until success.
 	/// See ConnectToKart for more details
 	/// </summary>
-	private IEnumerator KartSearchCoroutine(PlayerData data) 
+	private IEnumerator KartSearchCoroutine(PlayerData data, bool attemptToConnectPlayerObject) 
 	{
 		bool connected = false;
 		for(int attempts = 0; !connected && attempts <= 50; attempts++) {
-			connected = ConnectToKart(data);
+			connected = ConnectToKart(data, attemptToConnectPlayerObject);
 			if(!connected)
 				yield return new WaitForSeconds(0.1f);
 		}
@@ -110,18 +115,28 @@ public class KartsIRManager : NetworkBehaviour
 
 	/// <summary>
 	/// Attempts to connect a PlayerObjectInGame object to a specified kart with kartdata.
-	/// Will return true 
 	/// </summary>
-	/// <param name="data"></param>
-	/// <returns></returns>
-	private bool ConnectToKart(PlayerData data) 
+	/// <returns>Success status</returns>
+	private bool ConnectToKart(PlayerData data, bool attemptToConnectPlayerObject) 
 	{
-		PlayerObject player = playerObjectsWaitingForKarts[data.guid];
-		
-		// Find the kart that was spawned
+		// Find the kart that was spawned add it to the KartObjects array
 		KartManager pkm = SearchForKartManager(data);
 		if(pkm == null) 
 			return false;
+
+		kartObjects.Add(pkm.gameObject);
+		playerPositions.Add(pkm.GetPositionTracker());
+
+		// If we're not attempting to connect a player object we can return true since success is only adding to kartObjects array
+		if(!attemptToConnectPlayerObject)
+			return true;
+		
+		PlayerObject player = playerObjectsWaitingForKarts[data.uuid];
+		
+		if(!playerObjectsWaitingForKarts.ContainsKey(data.uuid)) {
+			Debug.LogError($"Couldn't find a PlayerObject waiting for kart with data {data.Summary}");
+			return false;
+		}
 
 		// Spawn player object in game prefab
 		GameObject poig = Instantiate(playerObjectInGamePrefab, kartLevelManager.KartContainer);
@@ -140,6 +155,7 @@ public class KartsIRManager : NetworkBehaviour
 
 		// Connect player kart manager to player object
 		pkm.UseHumanDriver(player.input);
+		pkm.POIGDelegate = poigDelegate;
 
 		// Pass late join phase (does nothing if we're not in late join)
 		gameplayManager.RaceManager.PassLateJoin();
@@ -151,8 +167,15 @@ public class KartsIRManager : NetworkBehaviour
 	/// </summary>
 	public KartManager SearchForKartManager(PlayerData data) 
 	{
+		return SearchForKartManager(data.uuid);
+	}
+
+	/// <summary>
+	/// Takes a PlayerData object and locates the associated KartManager with it
+	/// </summary>
+	public KartManager SearchForKartManager(string playerUUID) {
 		foreach(KartManager km in FindObjectsOfType<KartManager>()) {
-			if(km.GetPlayerData().guid == data.guid)
+			if(km.GetPlayerData().uuid == playerUUID)
 				return km;
 		}
 		return null;
