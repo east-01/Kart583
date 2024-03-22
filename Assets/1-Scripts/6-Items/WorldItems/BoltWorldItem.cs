@@ -49,18 +49,16 @@ public class BoltWorldItem : WorldItem
         collCooldown = 0.5f;
     }
 
-    public override void ActivateItem(GameObject owner, Vector2 directionInput)
+    protected override void Internal_ActivateItem(ItemSpawnData spawnData)
     {
-
-        Owner = owner;
         lifeTime = 12f; // 12s of lifetime
 
-        KartController kc = owner.GetComponent<KartController>();
+        KartController kc = OwnerKartManager.GetKartController();
 
         //Needs to change
-        float forwardBackward = Mathf.Sign(directionInput.y);
+        float forwardBackward = Mathf.Sign(spawnData.stickDirection.y);
         if(forwardBackward == 0) forwardBackward = 1;
-        transform.position = owner.transform.position + forwardBackward*3f*kc.KartForward.normalized + kc.up*2;
+        transform.position = OwnerKartManager.gameObject.transform.position + forwardBackward*3f*kc.KartForward.normalized + kc.up*2;
         dir = kc.KartForward;
         GetComponent<Rigidbody>().velocity = kc.TrackVelocity;
 
@@ -71,19 +69,21 @@ public class BoltWorldItem : WorldItem
 
     }
 
-    public override void ItemDestroyed()
+    protected override void Internal_ItemDestroyed()
     {
         systems.ForEach(pe => pe.Stop());
-        Destroy(gameObject);
     }
 
-    public override void ItemHit(GameObject hitPlayer)
+    protected override void Internal_ItemHit(string hitPlayerUUID)
     {
-        if(!KartManager.IsKartGameObject(hitPlayer))
-            throw new InvalidOperationException("Called ItemHit with a hitPlayer parameter that isn't an acceptable player!");
+        KartManager hitKM = gameplayManager.PlayerManager.SearchForKartManager(hitPlayerUUID);
+        if(hitKM == null) {
+            Debug.LogError($"Internal_ItemHit could not locate KartManager from uuid \"{hitPlayerUUID}\"");
+            return;
+        }
         
-        hitPlayer.GetComponent<KartController>().damageCooldown = 3.5f;
-        ItemDestroyed();
+        hitKM.GetKartController().damageCooldown = 3.5f;
+        Internal_ItemDestroyed();
     }
     
 }

@@ -5,7 +5,10 @@ using UnityEngine;
 /** The gameplay manager is responsible for general game loop mgmt.
   * It will check if everything is in order on Start(), printing out an error if it fails.
   * Other classes will refer to this to access game data. */
-[RequireComponent(typeof(RaceManager), typeof(KartsIRManager), typeof(KartSpawner))]
+[RequireComponent(typeof(RaceManager))]
+[RequireComponent(typeof(KartsIRManager))]
+[RequireComponent(typeof(KartSpawner))]
+[RequireComponent(typeof(ItemManager))]
 public class GameplayManager : NetworkBehaviour
 {
 
@@ -30,6 +33,7 @@ public class GameplayManager : NetworkBehaviour
     private RaceManager _raceManager;
     private KartsIRManager _kartsIRManager;
     private KartSpawner _kartSpawner;
+    private ItemManager _itemManager;
 
     private KartLevelManager kartLevelManager;
     private GameLobby lobby;
@@ -44,6 +48,7 @@ public class GameplayManager : NetworkBehaviour
         _raceManager = GetComponent<RaceManager>();
         _kartsIRManager = GetComponent<KartsIRManager>();
         _kartSpawner = GetComponent<KartSpawner>();
+        _itemManager = GetComponent<ItemManager>();
 
         // Initialize KartLevelManager
         KartLevelManager klm = FindObjectOfType<KartLevelManager>();
@@ -73,6 +78,7 @@ public class GameplayManager : NetworkBehaviour
     public RaceManager RaceManager { get { return _raceManager; } }
     public KartsIRManager PlayerManager { get { return _kartsIRManager; } }
     public KartSpawner KartSpawner { get { return _kartSpawner; } }
+    public ItemManager ItemManager { get { return _itemManager; } }
 
     public KartLevelManager KartLevelManager { get { return kartLevelManager; } }
     public GameLobby GameLobby { get { return lobby; } }

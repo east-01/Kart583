@@ -156,6 +156,7 @@ public class KartsIRManager : NetworkBehaviour
 		// Connect player kart manager to player object
 		pkm.UseHumanDriver(player.input);
 		pkm.POIGDelegate = poigDelegate;
+		print("set poigdelegate as " + poigDelegate);
 
 		// Pass late join phase (does nothing if we're not in late join)
 		gameplayManager.RaceManager.PassLateJoin();

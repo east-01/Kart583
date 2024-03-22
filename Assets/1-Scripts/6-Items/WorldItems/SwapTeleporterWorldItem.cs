@@ -5,10 +5,9 @@ using UnityEngine;
 
 public class SwapTeleporterWorldItem : WorldItem
 {
-    public override void ActivateItem(GameObject owner, Vector2 directionInput)
+    protected override void Internal_ActivateItem(ItemSpawnData spawnData)
     {
-
-        PositionTracker ownerPT = KartBehavior.LocateManager(owner).GetPositionTracker();
+        PositionTracker ownerPT = OwnerKartManager.GetPositionTracker();
         float currentRaceCompletion = ownerPT.RaceCompletion;
 
         /* Pick target */
@@ -43,11 +42,11 @@ public class SwapTeleporterWorldItem : WorldItem
         PositionTracker targetPT = target.GetPositionTracker();
 
         // Store the transform values of object1
-        Vector3 tempPosition = owner.transform.position;
-        Quaternion tempRotation = owner.transform.rotation;
+        Vector3 tempPosition = OwnerKartManager.gameObject.transform.position;
+        Quaternion tempRotation = OwnerKartManager.gameObject.transform.rotation;
         int tempWaypoint = ownerPT.waypointIndex;
 
-        owner.transform.SetPositionAndRotation(target.transform.position, target.transform.rotation);
+        OwnerKartManager.gameObject.transform.SetPositionAndRotation(target.transform.position, target.transform.rotation);
         ownerPT.waypointIndex = targetPT.waypointIndex;
 
         target.transform.SetPositionAndRotation(tempPosition, tempRotation);
@@ -57,6 +56,6 @@ public class SwapTeleporterWorldItem : WorldItem
     }
 
     // We shouldn't have to handle these since the item immediately gets destroyed on spawn
-    public override void ItemDestroyed() { throw new System.NotImplementedException(); }
-    public override void ItemHit(GameObject hitPlayer) { throw new System.NotImplementedException(); }
+    protected override void Internal_ItemDestroyed() { throw new System.NotImplementedException(); }
+    protected override void Internal_ItemHit(string hitPlayerUUID) { throw new System.NotImplementedException(); }
 }

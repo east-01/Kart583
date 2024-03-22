@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class BoostCanisterWorldItem : WorldItem
 {
-    public override void ActivateItem(GameObject owner, Vector2 directionInput)
+    protected override void Internal_ActivateItem(ItemSpawnData spawnData)
     {
-
-        KartController kc = KartBehavior.LocateManager(owner).GetKartController();
+        KartController kc = OwnerKartManager.GetKartController();
         kc.boostDecayTime = 0;
         kc.boostAmount = kc.settings.maxBoost;
 
@@ -15,6 +14,6 @@ public class BoostCanisterWorldItem : WorldItem
     }
 
     // We shouldn't have to handle these since the item immediately gets destroyed on spawn
-    public override void ItemDestroyed() { throw new System.NotImplementedException(); }
-    public override void ItemHit(GameObject hitPlayer) { throw new System.NotImplementedException(); }
+    protected override void Internal_ItemDestroyed() { throw new System.NotImplementedException(); }
+    protected override void Internal_ItemHit(string hitPlayerUUID) { throw new System.NotImplementedException(); }
 }

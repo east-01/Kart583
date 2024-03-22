@@ -4,33 +4,33 @@ using System;
 public class OilWorldItem : WorldItem
 {
 
-    public override void ActivateItem(GameObject owner, Vector2 directionInput)
-    {
-
-        Owner = owner;
+    protected override void Internal_ActivateItem(ItemSpawnData spawnData)
+    {        
         lifeTime = 25f; // 30s of lifetime
 
-        KartController kc = owner.GetComponent<KartController>();
-
-        transform.position = owner.transform.position - kc.KartForward.normalized*3f - kc.up*0.3f;
+        KartController kc = OwnerKartManager.GetKartController();
+        transform.position = OwnerKartManager.gameObject.transform.position - kc.KartForward.normalized*3f - kc.up*0.3f;
 
         // TODO: Play activation animation and sound
 
     }
 
-    public override void ItemDestroyed()
+    protected override void Internal_ItemDestroyed()
     {
-        Destroy(gameObject);
+        
     }
 
-    public override void ItemHit(GameObject hitPlayer)
+    protected override void Internal_ItemHit(string hitPlayerUUID)
     {
-        if(!KartManager.IsKartGameObject(hitPlayer))
-            throw new InvalidOperationException("Called ItemHit with a hitPlayer parameter that isn't an acceptable player!");
+        KartManager hitKM = gameplayManager.PlayerManager.SearchForKartManager(hitPlayerUUID);
+        if(hitKM == null) {
+            Debug.LogError($"Internal_ItemHit could not locate KartManager from uuid \"{hitPlayerUUID}\"");
+            return;
+        }
         
-        hitPlayer.GetComponent<KartController>().damageCooldown = 2f;
+        hitKM.GetKartController().damageCooldown = 2f;
 
-        ItemDestroyed();
+        Internal_ItemDestroyed();
     }
     
 }

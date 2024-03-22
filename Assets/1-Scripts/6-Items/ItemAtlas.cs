@@ -44,13 +44,13 @@ public struct ItemDataPackage
     public Item item;
     public float weight;
     public Sprite itemIcon;
-    public GameObject worldItem;
+    public GameObject worldItemPrefab;
 
     public ItemDataPackage(Item item, float weight, Sprite itemIcon, GameObject worldItem)
     {
         this.item = item;
         this.weight = weight;
         this.itemIcon = itemIcon;
-        this.worldItem = worldItem;
+        this.worldItemPrefab = worldItem;
     }
 }

@@ -23,6 +23,8 @@ public class EssentialObjectSpawner : MonoBehaviour
 
     void CheckSceneDelegate() 
     {
+        if(InstanceFinder.ServerManager == null)
+            return;
         if(!InstanceFinder.ServerManager.Started)
             return;
         if(!InstanceFinder.IsServer)

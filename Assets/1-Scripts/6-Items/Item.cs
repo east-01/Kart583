@@ -1,5 +1,6 @@
 public enum Item
 {
+    NONE,
     OIL, // Banana equivalent
     BOLT, // Green shell equivalent
     BOOST_CANISTER, // Mushroom equivalent

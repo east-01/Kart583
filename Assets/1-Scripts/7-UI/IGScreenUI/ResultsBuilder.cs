@@ -31,7 +31,6 @@ public class ResultsBuilder : MonoBehaviour, GameplayManagerBehavior
         this.kartLevelManager = gameplayManager.KartLevelManager;
     }
 
-    int ticked;
     void Update() {
         if(gameplayManager == null)
             return;

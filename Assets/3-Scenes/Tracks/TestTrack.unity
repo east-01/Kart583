@@ -1953,14 +1953,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5244667296191878687, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
-      propertyPath: settings.bots
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5244667296191878687, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
-      propertyPath: settings.laps
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6795377866323719207, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
       propertyPath: playStartAnimation
       value: 1

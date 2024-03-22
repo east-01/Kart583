@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 public class GameLobby 
 {
 
-    public static readonly float PLAYER_WAIT_TIME = 2;
+    public static readonly float PLAYER_WAIT_TIME = 30;
 
     private LobbyManager manager;
     private string id;

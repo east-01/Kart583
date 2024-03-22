@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 5244667296191878687}
   - component: {fileID: 5244667296191878685}
   - component: {fileID: 8016103563887908404}
+  - component: {fileID: 704151461757926555}
   m_Layer: 0
   m_Name: GameplayManager
   m_TagString: Untagged
@@ -151,3 +152,18 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}
   kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+--- !u!114 &704151461757926555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5244667296191878682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bafacc7c977acf143acd635e5b08c7c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 7290347010873503086}
+  _networkObjectCache: {fileID: 0}
