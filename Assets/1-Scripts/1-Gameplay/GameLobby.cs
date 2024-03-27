@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 public class GameLobby 
 {
 
-    public static readonly float PLAYER_WAIT_TIME = 30;
+    public static readonly float PLAYER_WAIT_TIME = 2;
 
     private LobbyManager manager;
     private string id;
@@ -140,21 +140,79 @@ public class GameLobby
             SendDebugMessage($"Map scene handle is now " + mapSceneData.Handle);
 
             // Register GameplayManager
-            gameplayManager = null;
             foreach(GameObject obj in scene.GetRootGameObjects()) {
                 GameplayManager testManager = obj.GetComponent<GameplayManager>();
                 if(testManager == null)
                     continue;
-                gameplayManager = testManager;
+                RegisterGameplayManager(testManager);
                 break;
             }
-            if(gameplayManager != null)
-                gameplayManager.SetGameLobby(this);
-            else
+            if(gameplayManager == null)
                 Debug.LogError("GameLobby registered a non-lobby scene, but failed to register an associated GameplayManager.");
         }
 
         loadedScenes.Add(data, scene);
+    }
+
+    public void DeleteLoadedScene(Scene scene) 
+    {
+        if(!loadedScenes.ContainsValue(scene)) {
+            Debug.LogError("Tried to DeleteLoadedScene for a scene that isn't registered to this lobby!");
+            return;
+        }
+
+        SendDebugMessage($"Deleting scene named \"{scene.name}\" with handle {scene.handle}");
+        foreach(NetworkConnection client in players.Keys) {
+            SceneDelegate.Instance.MoveToLobby(client);            
+        }
+
+        SceneUnloadData sud = new SceneUnloadData(new SceneLookupData(scene.handle, scene.name));
+        SceneDelegate.Instance.SceneManager.UnloadConnectionScenes(sud);
+    }
+
+    /// <summary>
+    /// Deletes the current map scene and deregisteres the current gameplayManager.
+    /// </summary>
+    public void DeleteMapScene() 
+    {
+        if(MapScene == null) {
+            Debug.LogError("Can't delete map scene because MapScene is null.");
+            return;
+        }
+
+        if(!IsMapLevelEmpty()) {
+            Debug.LogError("Can't delete map scene because MapScene is occupied.");
+            return;
+        }
+
+        DeregisterGameplayManager();
+        DeleteLoadedScene(MapScene.Value);
+    }
+
+    private void RegisterGameplayManager(GameplayManager gm) 
+    {
+        gameplayManager = gm;
+        gameplayManager.SetGameLobby(this);
+
+        gameplayManager.RaceManager.RacePhaseChanged += RaceManager_RacePhaseChanged;
+    }
+
+    private void DeregisterGameplayManager() 
+    {
+        if(gameplayManager == null) {
+            Debug.LogError("Can't deregister GameplayManager because it is null.");
+            return;
+        }
+
+        gameplayManager.RaceManager.RacePhaseChanged -= RaceManager_RacePhaseChanged;
+    }
+
+    private void RaceManager_RacePhaseChanged(RacePhase prev, RacePhase current) 
+    {
+        SendDebugMessage($"RaceManager phase changed to {current}");
+        if(current == RacePhase.FINISHED) {
+            state = LobbyState.WAITING_FOR_PLAYERS;
+        }
     }
 
     /// <summary>
@@ -177,6 +235,21 @@ public class GameLobby
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Looks through players in lobby and check if they have the Map Level loaded.
+    /// </summary>
+    public bool IsMapLevelEmpty() 
+    {
+        if(MapScene == null)
+            return true;
+
+        foreach(NetworkConnection client in players.Keys) {
+            if(client.Scenes.Contains(MapScene.Value))
+                return false;
+        }        
+        return true;
     }
 
     private bool sendLobbyDebugMessages = true;

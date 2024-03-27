@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using UnityEngine;
 
 /** The gameplay manager is responsible for general game loop mgmt.
@@ -37,6 +38,8 @@ public class GameplayManager : NetworkBehaviour
 
     private KartLevelManager kartLevelManager;
     private GameLobby lobby;
+    [SyncVar]
+    private string lobbyID = null;
 
     void Awake() 
     {
@@ -87,10 +90,14 @@ public class GameplayManager : NetworkBehaviour
     public LevelAtlas LevelAtlas { get { return atlasesPrefab.GetComponent<LevelAtlas>(); } }
     public KartAtlas KartAtlas { get { return atlasesPrefab.GetComponent<KartAtlas>(); } }
 
+    [Server]
     public void SetGameLobby(GameLobby gameLobby) {
         if(this.lobby != null)
             Debug.LogWarning($"Overwriting lobby in scene \"{gameObject.scene.name}\"");
         this.lobby = gameLobby;
+        this.lobbyID = gameLobby.ID;
     }
+
+    public bool HasLobby { get { return lobbyID != null; } }
 
 }

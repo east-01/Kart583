@@ -97,6 +97,18 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcUpdateLobby(string lobbyID) 
+    {
+        UpdateLobby(lobbyID, LobbyUpdateReason.NONE);
+    }
+
+    [Client]
+    public void RequestLobbyUpdate() 
+    {
+        ServerRpcUpdateLobby(GetLobbyID());
+    }
+
     [TargetRpc]
     public void TargetRpcLobbyUpdatedEvent(NetworkConnection conn, LobbyData lobbyData, LobbyUpdateReason reason) {
         LobbyUpdated?.Invoke(lobbyData, reason);

@@ -115,7 +115,27 @@ public class SceneDelegate : NetworkBehaviour
         if(gameLobby.LobbyScene == null)
             LoadSceneForGameLobby(gameLobby.ID, lookupData);
 
+        if(gameLobby.MapScene != null && gameLobby.IsMapLevelEmpty()) {
+            SceneDelegateDebug("SceneDelegate#MoveToLobby: Found map scene empty, deleting it");
+            gameLobby.DeleteMapScene();
+        } else {
+            print($"SceneDelegate#MoveToLobby: Map scene couldn't delete. is null: {gameLobby.MapScene == null} is empty: {gameLobby.IsMapLevelEmpty()}");
+        }
+
         TargetRpcEnsureSceneLoaded(client, lookupData);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcMoveToLobby(NetworkConnection client) 
+    {
+        MoveToLobby(client);
+        //_lobbyManager.UpdateLobby(_lobbyManager.GetLobbyID(client), LobbyUpdateReason.PLAYER_JOIN);
+    }
+
+    [Client]
+    public void MoveClientToLobby() 
+    {
+        ServerRpcMoveToLobby(base.LocalConnection);
     }
 
     [Server]
@@ -147,6 +167,12 @@ public class SceneDelegate : NetworkBehaviour
         TargetRpcEnsureSceneLoaded(client, lookupData);
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcMoveToMap(NetworkConnection client) 
+    {
+        MoveToMap(client);
+    }
+
     [TargetRpc]
     private void TargetRpcEnsureSceneLoaded(NetworkConnection client, SceneLookupData lookupData) 
     {
@@ -173,6 +199,15 @@ public class SceneDelegate : NetworkBehaviour
         // Scene loaded, add to loadedScenes Dictionary. Also done in RegisterScenes for server
         loadedScenes.Add(new(scene.handle, scene.name), scene);
 
+        NetworkConnection client = base.LocalConnection;
+        SceneDelegateDebug("SceneDelegate#SceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.");
+        foreach(Scene otherScene in client.Scenes) {
+            if(otherScene != scene) {
+                SceneDelegateDebug($"SceneDelegate#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client");
+                base.SceneManager.RemoveConnectionsFromScene(new NetworkConnection[] { client }, otherScene);
+            }
+        }
+
         ServerRpcClientLoadedScene(base.LocalConnection, loadTarget);
         SceneDelegateDebug($"SceneDelegate#SceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"");
     }
@@ -191,8 +226,6 @@ public class SceneDelegate : NetworkBehaviour
             Debug.LogError($"Client loaded scene but GameLobby doesn't have corresponding scene loaded. Lookup info: {lookup.Name} handle: {lookup.Handle}");
             return;
         }
-
-        SceneDelegateDebug("SceneDelegate#ServerRpcClientLoadedScene: Validated client loaded, scene. Adding their connection");
 
         base.SceneManager.AddConnectionToScene(client, targetScene.Value);
         TargetRpcClientAddedToScene(client, lookup);
@@ -333,7 +366,7 @@ public class SceneDelegate : NetworkBehaviour
         toRemove.ForEach(gmb => waitingForGameplayManagers.Remove(gmb));
     }
 
-    private static bool sendSceneDelegateDebug = false;
+    private static bool sendSceneDelegateDebug = true;
     public static void SceneDelegateDebug(string message) {
         if(sendSceneDelegateDebug)
             print(message);

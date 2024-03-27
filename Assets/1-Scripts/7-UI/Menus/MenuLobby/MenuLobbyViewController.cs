@@ -96,8 +96,10 @@ public class MenuLobbyViewController : MonoBehaviour
         lobbyStatusText.text = "-";
         playerListGroup.DestroyChildren();
 
-        if(!_currentData.HasValue)
+        if(!_currentData.HasValue) {
+            SceneDelegate.LobbyManager.RequestLobbyUpdate();
             return;
+        }
 
         SceneDelegate.SceneDelegateDebug($"MenuLobbyViewController#UpdateView: Player name count {_currentData.Value.players.Count}"); 
 

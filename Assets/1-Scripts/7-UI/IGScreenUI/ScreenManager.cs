@@ -1,4 +1,5 @@
 using System;
+using FishNet;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,15 +8,27 @@ using UnityEngine.InputSystem;
       
     This class will negotiate the laying out of spliscreen views in
       the future, but for now will be responsible for showing results. */
-public class ScreenManager : MonoBehaviour
+public class ScreenManager : MonoBehaviour, GameplayManagerBehavior
 {
 
-	[SerializeField] GameObject continueTooltip;
+	[SerializeField] 
+	private GameObject continueTooltip;
 
+	private GameplayManager gameplayManager;
 	public ResultsBuilder ResultsBuilder;
 
 	private PlayerControls controlsReference;
 	private PlayerObject currentPlayer; // The player that has control over screen. Set by ConnectPlayerInput
+
+	private void Awake() 
+	{
+		SceneDelegate.Instance.SubscribeForGameplayManager(this);
+	}
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+    }
 
 	void OnDisable() 
 	{
@@ -40,9 +53,17 @@ public class ScreenManager : MonoBehaviour
 
 	void ActionTriggered(InputAction.CallbackContext context) 
 	{
+		if(gameplayManager == null) {
+			Debug.LogError("Tried to perfom InputAction on ScreenManager when gameplayManager is null!");
+			return;
+		}
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
-			GameObject tmo = GameObject.Find("TransitionManager");
-			tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_MAP);
+			if(gameplayManager.HasLobby) {
+				SceneDelegate.Instance.MoveClientToLobby();
+			} else {
+				GameObject tmo = GameObject.Find("TransitionManager");
+				tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_MAP);
+			}
         }
 	}
 

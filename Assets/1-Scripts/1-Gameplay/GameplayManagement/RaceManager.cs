@@ -20,6 +20,9 @@ public class RaceManager : NetworkBehaviour
 
     [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange))] 
     private RacePhase phase; 
+    public delegate void RacePhaseChangeHandler(RacePhase previousPhase, RacePhase currentPhase);
+    public event RacePhaseChangeHandler RacePhaseChanged;
+
     [SerializeField] 
     private float raceTime;
     private bool waitingForPlayerInput = false;
@@ -113,12 +116,13 @@ public class RaceManager : NetworkBehaviour
     }
 
     private void RacePhaseChange(RacePhase prev, RacePhase current, bool asServer) {
-        print("race phase changed to " + current);
 
         // If this is the case, waitingForPlayerObjectManager will be true and phase will be changed again
-        if(waitingForPlayerInput) {
+        if(waitingForPlayerInput)
             return;
-        }
+
+        // Call phase change event
+        RacePhaseChanged?.Invoke(prev, current);
 
         PlayerInputManager pim = PlayerObjectManager.Instance.GetPlayerInputManager();
 
