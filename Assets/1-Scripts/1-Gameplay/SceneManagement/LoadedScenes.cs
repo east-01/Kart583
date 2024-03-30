@@ -12,15 +12,20 @@ public class LoadedScenes : MonoBehaviour
     [SerializeField]
     private Dictionary<SceneLookupData, Scene> loadedScenes;
 
-    // Start is called before the first frame update
-    void Start()
+    private void OnEnable() 
     {
-        
+        // TODO: Subscribe from client/server scene load events
     }
 
-    // Update is called once per frame
-    void Update()
+    private void OnDisable() 
     {
-        
+        // TODO: Unsubscribe from client/server scene load events
     }
+
+    public Scene GetScene(SceneLookupData sceneLookupData, bool allowNameOnlyLookup) 
+    {
+        // TODO: Grab from SceneDelegate class
+    }
+
 }
+
