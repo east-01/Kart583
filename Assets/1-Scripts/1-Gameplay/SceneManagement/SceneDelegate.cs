@@ -16,6 +16,7 @@ using UnityEngine.SceneManagement;
 /// https://lucid.app/lucidchart/df418eac-4680-413e-9bbd-19c1bc7376ef/edit?viewport_loc=-2414%2C-625%2C2387%2C1147%2C0_0&invitationId=inv_a757cd21-5e23-440e-8b4d-cd3943fe5ef7
 /// </summary>
 [RequireComponent(typeof(LobbyManager))]
+[RequireComponent(typeof(LoadedScenes))]
 public class SceneDelegate : NetworkBehaviour
 {
 
@@ -52,23 +53,13 @@ public class SceneDelegate : NetworkBehaviour
         _lobbyManager = GetComponent<LobbyManager>();
     }
 
-    void OnEnable() 
-    { 
-        InstanceFinder.SceneManager.OnLoadEnd += RegisterScenes; 
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
-    }
-
-    void OnDisable() { 
-        if(InstanceFinder.SceneManager != null)
-            InstanceFinder.SceneManager.OnLoadEnd -= RegisterScenes; 
-    }
-
     /* Move a network connection to a specific scene.<br>
      * Process outlined here: https://github.com/FirstGearGames/FishNet/discussions/564#discussioncomment-8212721
      *   1. Ensure client has scene loaded, if not, load it
      *   2. Client tells server they have scene
      *   3. We can perform AddConnectionToScene */
 
+#region Handshake
     [Server]
     public void LoadSceneForGameLobby(string lobbyID, SceneLookupData lookupData) 
     {
@@ -186,32 +177,6 @@ public class SceneDelegate : NetworkBehaviour
         }
     }
 
-    private void SceneManager_SceneLoaded(Scene scene, LoadSceneMode loadSceneMode) 
-    {
-        // We don't care about the servers UnityEngine SceneManager. That's for RegisterScenes.
-        if(!base.IsClient)
-            return;
-        if(scene != null && loadTarget != null && scene.name != loadTarget.Name) {
-            Debug.LogWarning("Scene load didn't match load target.");
-            return;
-        }
-
-        // Scene loaded, add to loadedScenes Dictionary. Also done in RegisterScenes for server
-        loadedScenes.Add(new(scene.handle, scene.name), scene);
-
-        NetworkConnection client = base.LocalConnection;
-        SceneDelegateDebug("SceneDelegate#SceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.");
-        foreach(Scene otherScene in client.Scenes) {
-            if(otherScene != scene) {
-                SceneDelegateDebug($"SceneDelegate#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client");
-                base.SceneManager.RemoveConnectionsFromScene(new NetworkConnection[] { client }, otherScene);
-            }
-        }
-
-        ServerRpcClientLoadedScene(base.LocalConnection, loadTarget);
-        SceneDelegateDebug($"SceneDelegate#SceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"");
-    }
-
     [ServerRpc(RequireOwnership = false)]
     private void ServerRpcClientLoadedScene(NetworkConnection client, SceneLookupData lookup) 
     {
@@ -236,50 +201,7 @@ public class SceneDelegate : NetworkBehaviour
     {
         ClientAddedToSceneEvent?.Invoke(client, lookup);
     }
-
-    private void RegisterScenes(SceneLoadEndEventArgs args)
-    {
-
-        LevelAtlas la = _atlasPrefab.GetComponent<LevelAtlas>();
-        foreach(Scene scene in args.LoadedScenes) {
-            SceneDelegateDebug($"{(base.IsServer ? "Server" : "Client")} loaded scene " + scene.name + ", handle: " + scene.handle);
-
-            // Find which lobby is expecing this scene
-            SceneLookupData sceneLookupData = new(scene.handle, scene.name);
-            SceneLookupData sceneLookupDataNoHandle = new(0, scene.name); // Check for handleless lookup
-            if(!expectingScene.ContainsKey(sceneLookupData) && !expectingScene.ContainsKey(sceneLookupDataNoHandle)) {
-                if(scene.name != SceneNames.MENU_SERVER)
-                    Debug.LogWarning($"Scene \"{scene.name}\" was loaded without any lobby expecting it."); // Only send this warning message for scenes other than the server dash
-                continue;
-            }
-
-            GameLobby expectingLobby = null;
-            if(expectingScene.ContainsKey(sceneLookupData))
-                expectingLobby = expectingScene[sceneLookupData];
-            else if(expectingScene.ContainsKey(sceneLookupDataNoHandle))
-                expectingLobby = expectingScene[sceneLookupDataNoHandle];
-            else
-                throw new InvalidOperationException("Shouldn't be able to reach this");
-
-            expectingLobby.RegisterLoadedScene(sceneLookupData, scene);
-
-            // Scene loaded, add it to loadedScenes dictionary, also done in SceneManager_SceneLoaded
-            loadedScenes.Add(sceneLookupData, scene);
-        }
-
-        // Disable event systems
-        if(base.IsServer) {
-            int disabledEventSystems = 0;
-            foreach(EventSystem system in FindObjectsOfType<EventSystem>()) {
-                system.enabled = false;
-                disabledEventSystems++;
-            }
-            print($"Disabled {disabledEventSystems} event system(s).");
-        }
-
-        if(args.SkippedSceneNames.Length > 0)
-            SceneDelegateDebug($"RegisterScenes skipped {args.SkippedSceneNames.Length} scene(s).");
-    }
+#endregion
 
     public void CheckInitialGlobalScene() 
     {
