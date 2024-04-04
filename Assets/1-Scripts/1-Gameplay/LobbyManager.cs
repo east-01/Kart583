@@ -81,6 +81,10 @@ public class LobbyManager : NetworkBehaviour
     [Server]
     public void UpdateLobby(string lobbyID, LobbyUpdateReason reason) 
     {
+        if(lobbyID == null) {
+            Debug.LogError("Can't update lobby because lobbyID is null.");
+            return;
+        }
         if(!lobbies.ContainsKey(lobbyID)) {
             Debug.LogError($"Couldn't update lobby \"{lobbyID}\" because it's not registered in the LobbyManager.");
             return;
@@ -106,6 +110,10 @@ public class LobbyManager : NetworkBehaviour
     [Client]
     public void RequestLobbyUpdate() 
     {
+        if(GetLobbyID() == null) {
+            Debug.LogWarning("Can't request lobby update since current lobby id is null.");
+            return;
+        }
         ServerRpcUpdateLobby(GetLobbyID());
     }
 

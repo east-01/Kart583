@@ -20,7 +20,7 @@ public class ResultsBuilder : MonoBehaviour, GameplayManagerBehavior
 
     void Awake() 
     {        
-        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     
         gameObject.SetActive(false);
     }

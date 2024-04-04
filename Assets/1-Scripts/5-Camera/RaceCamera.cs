@@ -17,7 +17,7 @@ public class RaceCamera : MonoBehaviour, GameplayManagerBehavior
 
     void Awake() 
     {
-        SceneDelegate.Instance.SubscribeForGameplayManager(this);        
+        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);        
     }
 
     void Start() 

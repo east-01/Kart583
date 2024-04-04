@@ -32,7 +32,7 @@ public class BotPath : KartBehavior, GameplayManagerBehavior
     new protected void Awake() 
     {
         base.Awake();
-        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)

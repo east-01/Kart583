@@ -57,6 +57,7 @@ MonoBehaviour:
   - {fileID: 5244667296191878687}
   - {fileID: 5244667296191878685}
   - {fileID: 8016103563887908404}
+  - {fileID: 704151461757926555}
   <ParentNetworkObject>k__BackingField: {fileID: 0}
   <ChildNetworkObjects>k__BackingField: []
   SerializedTransformProperties:
@@ -95,6 +96,7 @@ MonoBehaviour:
   playStartAnimation: 1
   startAnimationDuration: 3
   ready: 0
+  lobbyID: 
 --- !u!114 &5244667296191878687
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -151,7 +153,7 @@ MonoBehaviour:
   _componentIndexCache: 3
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}
-  kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+  kartPrefab: {fileID: 5130578726108140990, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
 --- !u!114 &704151461757926555
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -164,6 +166,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bafacc7c977acf143acd635e5b08c7c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 7290347010873503086}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 7290347010873503086}

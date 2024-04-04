@@ -26,7 +26,7 @@ public class ItemImage : MonoBehaviour, GameplayManagerBehavior
 
     void Awake() 
     {
-        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)

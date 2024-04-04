@@ -27,7 +27,7 @@ public class LevelEnter_GSM : IState, GameplayManagerBehavior
         _players = gsm.PlayerKarts;
         _bots = gsm.BotsPrefabs;
 
-        SceneDelegate.Instance.SubscribeForGameplayManager(this);
+        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)

@@ -22,7 +22,7 @@ public class ScreenManager : MonoBehaviour, GameplayManagerBehavior
 
 	private void Awake() 
 	{
-		SceneDelegate.Instance.SubscribeForGameplayManager(this);
+		SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
 	}
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)
