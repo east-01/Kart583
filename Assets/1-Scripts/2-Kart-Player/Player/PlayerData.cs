@@ -30,6 +30,7 @@ public struct PlayerData {
     /// The hex color that the player picked in the player select menu.
     /// </summary>
 	public string hexColor;
+    public int points;
 
     public readonly string Summary { get { return $"[PlayerData{{{uuid[..3]}}} name: \"{name}\" type: {kartType} ready: {ready}]"; } }
 }

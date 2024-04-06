@@ -11,4 +11,14 @@ public class SceneNames
     public static readonly string MENU_SERVER = "MenuServer";
     public static readonly string MAP_ATUIN = "ATuinShipyard";
     public static readonly string MAP_TEST_TRACK = "TestTrack";
+
+    public static bool IsLobbyScene(string sceneName) 
+    {
+        return sceneName == MENU_LOBBY;
+    } 
+
+    public static bool IsMapScene(string sceneName) 
+    {
+        return sceneName == MAP_TEST_TRACK || sceneName == MAP_ATUIN;
+    }
 }

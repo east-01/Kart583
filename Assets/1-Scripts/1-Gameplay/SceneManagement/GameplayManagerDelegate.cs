@@ -56,7 +56,7 @@ public class GameplayManagerDelegate : MonoBehaviour
         }
         Scene objectsScene = (gameplayManagerBehavior as MonoBehaviour).gameObject.scene;
         FishNet.Managing.Scened.SceneLookupData lookupData = new(objectsScene.handle, objectsScene.name);
-        if(!_sceneDelegate.IsSceneLoaded(lookupData)) 
+        if(!_sceneDelegate.IsSceneRegistered(lookupData)) 
             return false;
 
         GameplayManager toReturn = _sceneDelegate.GetSceneElements(lookupData).GameplayManager;

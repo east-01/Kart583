@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using FishNet;
 using FishNet.Connection;
@@ -24,11 +25,40 @@ public class SceneDelegate : NetworkBehaviour
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance._gameplayManagerDelegate; } }
     public static LobbyManager LobbyManager { get { return Instance._lobbyManager; } }
 
+    private GameplayManagerDelegate _gameplayManagerDelegate;
+    private LobbyManager _lobbyManager;
+    [SerializeField]
+    private GameObject _atlasPrefab;
+
+    [SerializeField]
+    private Dictionary<SceneLookupData, SceneElements> loadedScenes = new();
+    [SerializeField]
+    private List<SceneElements> loadedScenesList = new();
+
+    /// <summary>
+    /// Client side only, the data that we're trying to get the client to load
+    /// </summary>
+    private SceneLookupData clientLoadTarget;
+
+#region Events
     public delegate void SceneRegisteredHandler(SceneLookupData sceneLookupData); // We don't provide SceneElements here to require users of event to go through SceneDelegate
     /// <summary>
     /// Called when a scene is registered with the SceneDelegate
     /// </summary>
     public event SceneRegisteredHandler SceneRegisteredEvent;
+
+    public delegate void SceneWillDeregisterHandler(SceneLookupData sceneLookupData); // No SceneElements here, see scene registered handler
+    /// <summary>
+    /// Called when a scene is told to unload on the server but before the unload actually happens.
+    /// In place to allow things in the scene to wrap up properly.
+    /// </summary>
+    public event SceneWillDeregisterHandler SceneWillDeregisterEvent;
+
+    public delegate void SceneDeregisteredHandler(SceneLookupData sceneLookupData); // No SceneElements here, see scene registered handler
+    /// <summary>
+    /// Called when a scene is deregistered with the scene delegate;
+    /// </summary>
+    public event SceneDeregisteredHandler SceneDeregisteredEvent;
 
     public delegate void ClientAddedToSceneHandler(NetworkConnection client, SceneLookupData sceneLookupData);
     /// <summary>
@@ -36,20 +66,7 @@ public class SceneDelegate : NetworkBehaviour
     /// For now, only is called on the client that was added.
     /// </summary>
     public event ClientAddedToSceneHandler ClientAddedToSceneEvent;
-
-    private GameplayManagerDelegate _gameplayManagerDelegate;
-    private LobbyManager _lobbyManager;
-    [SerializeField]
-    private GameObject _atlasPrefab;
-
-    private Dictionary<SceneLookupData, GameLobby> expectingScene = new(); // Server only, connects GameLobbies to scenes
-    private Dictionary<SceneLookupData, SceneElements> loadedScenes = new();
-    private Dictionary<SceneLookupData, GameplayManager> gameplayManagers = new();
-
-    /// <summary>
-    /// Client side only, the data that we're trying to get the client to load
-    /// </summary>
-    private SceneLookupData loadTarget;
+#endregion
 
 #region Initializers
     void Awake() 
@@ -66,48 +83,68 @@ public class SceneDelegate : NetworkBehaviour
     private void OnEnable() 
     { 
         InstanceFinder.SceneManager.OnLoadEnd += FishSceneManager_SceneLoaded; 
+        InstanceFinder.SceneManager.OnUnloadEnd += FishSceneManager_SceneUnloaded;
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += UnitySceneManager_SceneLoaded;
+
+        StartCoroutine(RefreshLoadedScenesListTask());
     }
 
     private void OnDisable() { 
-        if(InstanceFinder.SceneManager != null)
+        if(InstanceFinder.SceneManager != null) {
             InstanceFinder.SceneManager.OnLoadEnd -= FishSceneManager_SceneLoaded; 
+            InstanceFinder.SceneManager.OnUnloadEnd -= FishSceneManager_SceneUnloaded;
+        }
     }
 #endregion
 
-#region EventHandlers/SceneRegistration
+#region Scene Loading/Unloading
+    /* Loading */
+    [Server]
+    public void LoadSceneAsServer(SceneLookupData lookupData) 
+    {
+        SceneLoadData sld = new SceneLoadData(lookupData);
+        sld.Options.AllowStacking = true;
+        sld.Options.AutomaticallyUnload = false;
+        sld.ReplaceScenes = ReplaceOption.All;
+
+        base.SceneManager.LoadConnectionScenes(sld);
+        SceneDelegateDebug($"Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}");
+    }
+
+    [Client]
+    public void LoadSceneAsClient(SceneLookupData lookupData) 
+    {
+        clientLoadTarget = lookupData;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(lookupData.Name, LoadSceneMode.Single);
+        SceneDelegateDebug($"Client calling load scene \"{lookupData.Name}\"");
+    }
+
+    [TargetRpc]
+    public void TargetRpcLoadSceneAsClient(NetworkConnection client, SceneLookupData lookupData) 
+    {
+        LoadSceneAsClient(lookupData);
+    }
+
+    /* Unloading */
+    [Server]
+    public void UnloadSceneAsServer(SceneLookupData lookupData) 
+    {
+        SceneWillDeregisterEvent?.Invoke(lookupData);
+
+        SceneUnloadData sud = new(lookupData);
+        base.SceneManager.UnloadConnectionScenes(sud);
+        SceneDelegateDebug($"Telling server to unload scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}");
+    } 
+#endregion
+
+#region EventHandlers and SceneRegistration
     /// <summary>
     /// The server side scene manager load event
     /// </summary>
-    /// <param name="args"></param>
-    /// <exception cref="InvalidOperationException"></exception>
     private void FishSceneManager_SceneLoaded(SceneLoadEndEventArgs args)
     {
         foreach(Scene scene in args.LoadedScenes) {
             SceneDelegate.SceneDelegateDebug($"{(base.IsServer ? "Server" : "Client")} loaded scene " + scene.name + ", handle: " + scene.handle);
-
-            // Find which lobby is expecing this scene
-            SceneLookupData sceneLookupData = new(scene.handle, scene.name);
-            SceneLookupData sceneLookupDataNoHandle = new(0, scene.name); // Check for handleless lookup
-            if(!expectingScene.ContainsKey(sceneLookupData) && !expectingScene.ContainsKey(sceneLookupDataNoHandle)) {
-                if(scene.name != SceneNames.MENU_SERVER)
-                    Debug.LogWarning($"Scene \"{scene.name}\" was loaded without any lobby expecting it."); // Only send this warning message for scenes other than the server dash
-                continue;
-            }
-
-            GameLobby expectingLobby = null;
-            if(expectingScene.ContainsKey(sceneLookupData))
-                expectingLobby = expectingScene[sceneLookupData];
-            else if(expectingScene.ContainsKey(sceneLookupDataNoHandle))
-                expectingLobby = expectingScene[sceneLookupDataNoHandle];
-            else
-                throw new InvalidOperationException("Shouldn't be able to reach this");
-
-            expectingLobby.RegisterLoadedScene(sceneLookupData, scene);
-
-            // ---Scene loaded, add it to loadedScenes dictionary, also done in SceneManager_SceneLoaded
-            // ---loadedScenes.Add(sceneLookupData, scene);
-
             RegisterScene(scene);
         }
 
@@ -118,11 +155,11 @@ public class SceneDelegate : NetworkBehaviour
                 system.enabled = false;
                 disabledEventSystems++;
             }
-            print($"Disabled {disabledEventSystems} event system(s).");
+            SceneDelegateDebug($"RegisterScenes disabled {disabledEventSystems} event system(s).");
         }
 
         if(args.SkippedSceneNames.Length > 0)
-            SceneDelegate.SceneDelegateDebug($"RegisterScenes skipped {args.SkippedSceneNames.Length} scene(s).");
+            SceneDelegateDebug($"RegisterScenes skipped {args.SkippedSceneNames.Length} scene(s).");
     }
 
     /// <summary>
@@ -133,28 +170,36 @@ public class SceneDelegate : NetworkBehaviour
         // We don't care about the servers UnityEngine SceneManager. That's for RegisterScenes.
         if(!base.IsClient)
             return;
-        if(scene != null && loadTarget != null && scene.name != loadTarget.Name) {
+
+        if(scene != null && clientLoadTarget is not null && scene.name != clientLoadTarget.Name) {
             Debug.LogWarning("Scene load didn't match load target.");
             return;
         }
 
-        // ---Scene loaded, add to loadedScenes Dictionary. Also done in RegisterScenes for server
-        // ---loadedScenes.Add(new(scene.handle, scene.name), scene);
-        // Register scene
         RegisterScene(scene);
 
         NetworkConnection client = base.LocalConnection;
-        SceneDelegate.SceneDelegateDebug("LoadedScenes#UnitySceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.");
+        SceneDelegateDebug("LoadedScenes#UnitySceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.");
         foreach(Scene otherScene in client.Scenes) {
             if(otherScene != scene) {
-                SceneDelegate.SceneDelegateDebug($"LoadedScenes#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client");
+                SceneDelegateDebug($"LoadedScenes#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client");
                 base.SceneManager.RemoveConnectionsFromScene(new NetworkConnection[] { client }, otherScene);
             }
         }
 
-        ServerRpcClientLoadedScene(base.LocalConnection, loadTarget);
+        ServerRpcClientLoadedScene(base.LocalConnection, clientLoadTarget);
 
-        SceneDelegate.SceneDelegateDebug($"SceneDelegate#UnitySceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"");
+        SceneDelegateDebug($"SceneDelegate#UnitySceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"");
+    }
+
+    /// <summary>
+    /// Server side scene unload event.
+    /// </summary>
+    private void FishSceneManager_SceneUnloaded(SceneUnloadEndEventArgs args) 
+    {
+        foreach(UnloadedScene scene in args.UnloadedScenesV2) {
+            DeregisterScene(new(scene.Handle, scene.Name));
+        }
     }
 
     /// <summary>
@@ -174,159 +219,188 @@ public class SceneDelegate : NetworkBehaviour
         SceneDelegateDebug($"Registered scene \"{lookupData}\". Calling event.");
         SceneRegisteredEvent?.Invoke(lookupData);
     }
+
+    private void DeregisterScene(SceneLookupData lookupData) 
+    {
+        if(!IsSceneRegistered(lookupData)) {
+            Debug.LogWarning($"Failed to dereigster scene \"{lookupData}\". It is not registered.");
+            return;
+        }
+
+        loadedScenes.Remove(lookupData);
+
+        SceneDelegateDebug($"Deregistered scene \"{lookupData}\". Calling event.");
+        SceneDeregisteredEvent?.Invoke(lookupData);
+    }
+
+    IEnumerator RefreshLoadedScenesListTask() 
+    {
+        while(gameObject.activeSelf) {
+            RefreshLoadedScenesList();
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    private void RefreshLoadedScenesList() 
+    {
+        loadedScenesList.Clear();
+        foreach(SceneElements elements in loadedScenes.Values) {
+            loadedScenesList.Add(elements);
+        }
+    }
 #endregion
 
-    /* Move a network connection to a specific scene.<br>
-     * Process outlined here: https://github.com/FirstGearGames/FishNet/discussions/564#discussioncomment-8212721
-     *   1. Ensure client has scene loaded, if not, load it
-     *   2. Client tells server they have scene
-     *   3. We can perform AddConnectionToScene */
-
-#region Handshake
+#region Client Movement
+    /// <summary>
+    /// Adds a client to a scene while removing them from other scenes they could be in.
+    /// </summary>
     [Server]
-    public void LoadSceneForGameLobby(string lobbyID, SceneLookupData lookupData) 
+    public void AddClientToScene(NetworkConnection client, SceneLookupData serverSceneLookupData) 
     {
-        GameLobby gameLobby = _lobbyManager.GetLobby(lobbyID);
-        if(gameLobby == null) {
-            Debug.LogError("Tried to load a scene for a game lobby but lobby id doesn't exist.");
+        if(serverSceneLookupData == null) {
+            Debug.LogError("Can't move client to scene because SceneLookupData is null.");
+            return;
+        }
+        if(!IsSceneRegistered(serverSceneLookupData)) {
+            Debug.LogError($"Tried to move client to scene \"{serverSceneLookupData}\" but the scene isn't loaded.");
             return;
         }
 
-        expectingScene.Add(lookupData, gameLobby);
+        // Remove from existing scene
+        if(GetClientScene(client) is not null)
+            RemoveClientFromScene(client);
 
-        SceneLoadData sld = new SceneLoadData(lookupData);
-        sld.Options.AllowStacking = true;
-        sld.Options.AutomaticallyUnload = false;
-        sld.ReplaceScenes = ReplaceOption.All;
-
-        base.SceneManager.LoadConnectionScenes(sld);
-        SceneDelegateDebug($"SceneDelegate#LoadSceneForGameLobby: Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}");
+        TargetRpcEnsureSceneLoaded(client, serverSceneLookupData);
     }
 
+    /// <summary>
+    /// This internal side of AddClient to scene actually performs the SceneManager#AddConnectionToScene
+    ///   method and perfomrs the event call
+    /// </summary>
     [Server]
-    public void MoveToLobby(NetworkConnection client) 
+    private void Internal_AddClientToScene(NetworkConnection client, SceneLookupData serverSceneLookupData) 
     {
-        GameLobby gameLobby = _lobbyManager.GetLobby(client);
-        if(gameLobby == null) {
-            Debug.LogError("Tried to move client connection to lobby scene but connection doesn't have an assigned GameLobby.");
+        if(!Internal_AddClientToSceneElements(client, serverSceneLookupData)) {
+            Debug.LogError("Failed to add client to new scene.");
             return;
         }
-        
-        int existingHandle = 0;
-        if(gameLobby.LobbySceneData is not null) {
-            existingHandle = gameLobby.LobbySceneData.Handle;
-        }
 
-        SceneLookupData lookupData;
-        if(existingHandle != 0) {
-            lookupData = gameLobby.LobbySceneData;
-            SceneDelegateDebug("SceneDelegate#MoveToLobby: Handle exists, scene name is: " + lookupData.Name);
-        } else {
-            lookupData = new SceneLookupData(SceneNames.MENU_LOBBY);
-            SceneDelegateDebug("SceneDelegate#MoveToLobby: Creating new lookup data since we dont have a handle stored");
-        }
-
-        if(gameLobby.LobbyScene == null)
-            LoadSceneForGameLobby(gameLobby.ID, lookupData);
-
-        if(gameLobby.MapScene != null && gameLobby.IsMapLevelEmpty()) {
-            SceneDelegateDebug("SceneDelegate#MoveToLobby: Found map scene empty, deleting it");
-            gameLobby.DeleteMapScene();
-        } else {
-            print($"SceneDelegate#MoveToLobby: Map scene couldn't delete. is null: {gameLobby.MapScene == null} is empty: {gameLobby.IsMapLevelEmpty()}");
-        }
-
-        TargetRpcEnsureSceneLoaded(client, lookupData);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcMoveToLobby(NetworkConnection client) 
-    {
-        MoveToLobby(client);
-        //_lobbyManager.UpdateLobby(_lobbyManager.GetLobbyID(client), LobbyUpdateReason.PLAYER_JOIN);
-    }
-
-    [Client]
-    public void MoveClientToLobby() 
-    {
-        ServerRpcMoveToLobby(base.LocalConnection);
+        base.SceneManager.AddConnectionToScene(client, loadedScenes[serverSceneLookupData].Scene);
+        TargetRpcClientAddedToScene(client, serverSceneLookupData);
     }
 
     [Server]
-    public void MoveToMap(NetworkConnection client) 
+    public void RemoveClientFromScene(NetworkConnection client) 
     {
-        GameLobby gameLobby = _lobbyManager.GetLobby(client);
-        if(gameLobby == null) {
-            Debug.LogError("Tried to move client connection to map scene but connection doesn't have an assigned GameLobby.");
-            return;
-        }
-        
-        int existingHandle = 0;
-        if(gameLobby.MapSceneData is not null) {
-            existingHandle = gameLobby.MapSceneData.Handle;
-        }
-        
-        SceneLookupData lookupData;
-        if(existingHandle != 0) {
-            lookupData = gameLobby.MapSceneData;
-            SceneDelegateDebug("SceneDelegate#MoveToMap: Handle exists, scene name is: " + lookupData.Name);
-        } else {
-            lookupData = new SceneLookupData(LevelAtlas.RetrieveData(gameLobby.Level.Value).sceneName);
-            SceneDelegateDebug("SceneDelegate#MoveToMap: Creating new lookup data since we dont have a handle stored");
-        }
-
-        if(gameLobby.MapScene == null)
-            LoadSceneForGameLobby(gameLobby.ID, lookupData);
-
-        TargetRpcEnsureSceneLoaded(client, lookupData);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcMoveToMap(NetworkConnection client) 
-    {
-        MoveToMap(client);
-    }
-
-    [TargetRpc]
-    private void TargetRpcEnsureSceneLoaded(NetworkConnection client, SceneLookupData lookupData) 
-    {
-        if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != lookupData.Name) {
-            loadTarget = lookupData;
-            UnityEngine.SceneManagement.SceneManager.LoadScene(lookupData.Name, LoadSceneMode.Single);
-            SceneDelegateDebug($"SceneDelegate#TargetRpcEnsureSceneLoaded: Client calling load scene \"{lookupData.Name}\"");
-        } else {
-            SceneDelegateDebug($"SceneDelegate#TargetRpcEnsureSceneLoaded: Scene \"{lookupData.Name}\" is already loaded, skipping to SceneDelegate#ServerRpcClientLoadedScene");
-            ServerRpcClientLoadedScene(base.LocalConnection, lookupData);
-        }
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void ServerRpcClientLoadedScene(NetworkConnection client, SceneLookupData lookup) 
-    {
-        GameLobby gameLobby = _lobbyManager.GetLobby(client);
-        if(gameLobby == null) {
-            Debug.LogError("Tried ensure client loaded scene but client isn't in a lobby.");
+        SceneLookupData currentScene = GetClientScene(client);
+        if(currentScene is null) {
+            Debug.LogError("Can't remove client from scene since the clients current scene is null.");
             return;
         }
 
-        Scene? targetScene = gameLobby.GetLoadedScene(lookup, true);
-        if(targetScene == null) {
-            Debug.LogError($"Client loaded scene but GameLobby doesn't have corresponding scene loaded. Lookup info: {lookup.Name} handle: {lookup.Handle}");
+        if(!loadedScenes.ContainsKey(currentScene)) {
+            Debug.LogError($"Can't remove client from scene \"{currentScene}\" because it's not loaded.");
             return;
         }
 
-        base.SceneManager.AddConnectionToScene(client, targetScene.Value);
-        TargetRpcClientAddedToScene(client, lookup);
+        if(!Internal_RemoveClientFromSceneElements(client, currentScene))  {
+            Debug.LogError($"Failed to remove client from scene \"{currentScene}\"");
+            return;
+        }
+
+        SceneElements elements = loadedScenes[currentScene];
+
+        base.SceneManager.RemoveConnectionsFromScene(new NetworkConnection[] {client}, elements.Scene);
+
+        if(elements.ClientCount == 0 && elements.DeleteOnLastClientRemove)
+            UnloadSceneAsServer(currentScene);
     }
 
+    /// <summary>
+    /// Issue ClientAddedToSceneEvent to corresponding client.
+    /// </summary>
     [TargetRpc]
     private void TargetRpcClientAddedToScene(NetworkConnection client, SceneLookupData lookup) 
     {
         ClientAddedToSceneEvent?.Invoke(client, lookup);
     }
+
+    /// <summary>
+    /// Add a client to scene elements, returns success status.
+    /// </summary>
+    private bool Internal_AddClientToSceneElements(NetworkConnection client, SceneLookupData serverSceneLookupData) 
+    {
+        SceneElements elements = loadedScenes[serverSceneLookupData];
+        if(elements.Clients.Contains(client)) {
+            Debug.LogError($"Tried to add client to scene elements for scene \"{serverSceneLookupData}\" but they were already in the list!");
+            return false;
+        }
+
+        elements.Clients.Add(client);
+        loadedScenes[serverSceneLookupData] = elements;
+        return true;
+    }
+
+    /// <summary>
+    /// Removes a client from scene elements, returns success status.
+    /// </summary>
+    private bool Internal_RemoveClientFromSceneElements(NetworkConnection client, SceneLookupData serverSceneLookupData) 
+    {
+        SceneElements elements = loadedScenes[serverSceneLookupData];
+        if(!elements.Clients.Contains(client)) {
+            Debug.LogError($"Tried to remove client from scene elements for scene \"{serverSceneLookupData}\" but they weren't in the list!");
+            return false;
+        }
+
+        elements.Clients.Remove(client);
+        loadedScenes[serverSceneLookupData] = elements;
+        return true;
+    }
 #endregion
 
-    public bool IsSceneLoaded(SceneLookupData lookupData) { return loadedScenes.ContainsKey(lookupData); }
+#region Handshake
+    /*NOTE: 
+      During the handshake, we're passing around the SERVER SCENE LOOKUP DATA. This is
+        an important distinction because the serverSceneLookupData has the reference for the
+        corresponding SceneElements in the loadedScenes dictionary.
+      The client only cares about the scene name since they'll load just a single scene,
+        but the reference is important to keep. */
+
+    /// <summary>
+    /// Ensure that the specified SceneLookupData is loaded on the client.
+    /// If the current scene name (on the client) matches the name in lookupData, we will skip
+    ///   loading the scene and automatically call ServerRpcClientLoadedScene.
+    /// If the current scene name does NOT match the name in lookup data, we will call
+    ///   LoadSceneAsClient to load it.
+    /// </summary>
+    [TargetRpc]
+    private void TargetRpcEnsureSceneLoaded(NetworkConnection client, SceneLookupData serverSceneLookupData) 
+    {
+        clientLoadTarget = null;
+        if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != serverSceneLookupData.Name) {
+            LoadSceneAsClient(serverSceneLookupData);
+        } else {
+            SceneDelegateDebug($"SceneDelegate#TargetRpcEnsureSceneLoaded: Scene \"{serverSceneLookupData.Name}\" is already loaded, skipping to SceneDelegate#ServerRpcClientLoadedScene");
+            ServerRpcClientLoadedScene(base.LocalConnection, serverSceneLookupData);
+        }
+    }
+
+    /// <summary>
+    /// Signal to the server that the client has loaded the specified scene.
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    private void ServerRpcClientLoadedScene(NetworkConnection client, SceneLookupData serverSceneLookupData) 
+    {
+        if(!IsSceneRegistered(serverSceneLookupData)) {
+            Debug.LogError($"Client loaded scene but server doesn't have corresponding scene loaded. Lookup info: {serverSceneLookupData.Name} handle: {serverSceneLookupData.Handle}");
+            return;
+        }
+        Internal_AddClientToScene(client, serverSceneLookupData);
+    }
+#endregion
+
+#region Getters/Setters
+    public bool IsSceneRegistered(SceneLookupData lookupData) { return loadedScenes.ContainsKey(lookupData); }
     public SceneElements GetSceneElements(SceneLookupData lookupData) 
     {
         if(!loadedScenes.ContainsKey(lookupData)) {
@@ -335,6 +409,33 @@ public class SceneDelegate : NetworkBehaviour
         }
         return loadedScenes[lookupData];     
     }
+
+    public void SetSceneElements(SceneLookupData lookupData, SceneElements newElements) 
+    {
+        if(!loadedScenes.ContainsKey(lookupData)) {
+            Debug.LogError($"Can't set scene elements for lookupData \"{lookupData}\". The scene must be loaded for you to set it's elements.");
+            return;
+        }
+        if(loadedScenes[lookupData].Scene != newElements.Scene) {
+            Debug.LogError($"Can't set scene elements, scene mismatch.");
+            return;
+        }
+        loadedScenes[lookupData] = newElements;
+    }
+
+    /// <summary>
+    /// Looks for the scene that the client is in.
+    /// </summary>
+    public SceneLookupData GetClientScene(NetworkConnection client) 
+    {
+        foreach(SceneLookupData lookupData in loadedScenes.Keys) {
+            SceneElements elements = loadedScenes[lookupData];
+            if(elements.Clients.Contains(client))
+                return lookupData;
+        }
+        return null;
+    }
+#endregion
 
     public void CheckInitialGlobalScene() 
     {
@@ -369,9 +470,9 @@ public class SceneDelegate : NetworkBehaviour
 /// </summary>
 [Serializable]
 public struct SceneElements {
+    [SerializeField]
     private SceneLookupData lookupData;
 
-    [SerializeField]
     private Scene scene;
     /// <summary>
     /// The scene reference
@@ -418,5 +519,32 @@ public struct SceneElements {
             return gameplayManager;
         }
     }
+
+    [SerializeField]
+    private List<NetworkConnection> clients;
+    /// <summary>
+    /// A list of clients in the scene
+    /// </summary>
+    public List<NetworkConnection> Clients {
+        get {
+            clients ??= new();
+            return clients;
+        }
+    }
+    [SerializeField]
+    private int clientCount; // Exposed for serialization in editor
+    /// <summary>
+    /// The amount of clients in the scene
+    /// </summary>
+    public int ClientCount { get { 
+        clientCount = Clients.Count;
+        return clientCount; 
+    } }
+
+    /// <summary>
+    /// When true, the SceneDelegate will delete the scene when the last player is removed from
+    ///   the scene.
+    /// </summary>
+    public bool DeleteOnLastClientRemove;
 
 }

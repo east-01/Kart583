@@ -59,7 +59,8 @@ public class ScreenManager : MonoBehaviour, GameplayManagerBehavior
 		}
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
 			if(gameplayManager.HasLobby) {
-				SceneDelegate.Instance.MoveClientToLobby();
+				SceneDelegate.LobbyManager.RequestLobbyMove();
+				print("REQUESTED LOBBY MOVE");
 			} else {
 				GameObject tmo = GameObject.Find("TransitionManager");
 				tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_MAP);

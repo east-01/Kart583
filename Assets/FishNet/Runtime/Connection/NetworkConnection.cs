@@ -16,6 +16,7 @@ namespace FishNet.Connection
     /// <summary>
     /// A container for a connected client used to perform actions on and gather information for the declared client.
     /// </summary>
+    [Serializable]
     public partial class NetworkConnection : IEquatable<NetworkConnection>
     {
 

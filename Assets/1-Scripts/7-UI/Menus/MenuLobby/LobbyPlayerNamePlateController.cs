@@ -18,7 +18,7 @@ public class LobbyPlayerNamePlateController : MonoBehaviour
     public void ShowPlayerData(PlayerData data) 
     {
         playerNameText.text = data.name;
-        playerScoreText.text = "0";
+        playerScoreText.text = data.points + "";
 
         KartAtlas ka = atlasesPrefab.GetComponent<KartAtlas>();
         kartImage.sprite = ka.RetrieveData(data.kartType).image;

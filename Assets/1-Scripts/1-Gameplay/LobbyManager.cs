@@ -58,7 +58,7 @@ public class LobbyManager : NetworkBehaviour
         foreach(string id in lobbies.Keys) {
             GameLobby lobby = lobbies[id];
             // TODO: Add other determining factors like game state
-            if(lobby.OpenSlots > 0) {
+            if(lobby.OpenSlots > 0/* && lobby.State == LobbyState.WAITING_FOR_PLAYERS*/) {
                 lobbyToJoin = lobby;
                 break;
             }
@@ -68,11 +68,45 @@ public class LobbyManager : NetworkBehaviour
         if(lobbyToJoin == null) {
             lobbyToJoin = new GameLobby(this, GenerateLobbyID());
             lobbies.Add(lobbyToJoin.ID, lobbyToJoin);
-            // SceneDelegate.Instance.RequestLobbyScene(lobbyToJoin.ID);
         }
 
         connectionLobbyPair.Add(newClient, lobbyToJoin.ID); // This step must precede SceneDelegate#MoveToLobby which is in GameLobby#AddPlayer
         lobbyToJoin.AddPlayer(newClient, data);
+
+    }
+
+    /// <summary>
+    /// Request that the server moves the provided client NetworkConnection to the lobby scene
+    /// </summary>
+    [Client]
+    public void RequestLobbyMove() 
+    {
+        SceneDelegate.SceneDelegateDebug("Requesting lobby move.");
+        ServerRpcRequestLobbyMove(base.LocalConnection);
+    }  
+
+    /// <summary>
+    /// Request that the server moves the provided client NetworkConnection to the lobby scene
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcRequestLobbyMove(NetworkConnection client) 
+    {
+        MoveClientToLobby(client);
+    }
+
+    /// <summary>
+    /// Move the specified client to their lobby scene.
+    /// </summary>
+    [Server]
+    public void MoveClientToLobby(NetworkConnection client) 
+    {
+        GameLobby lobby = GetLobby(client);
+        if(lobby == null) {
+            Debug.LogError("Can't move client to lobby, they are not in one.");
+            return;
+        }
+        SceneDelegate.SceneDelegateDebug($"Client \"{client}\" requested to move to lobby \"{lobby.LobbySceneData}\"");
+        SceneDelegate.Instance.AddClientToScene(client, lobby.LobbySceneData);
     }
 
     /// <summary>
