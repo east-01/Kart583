@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class KartSelectController : MonoBehaviour
 {
 
-    [SerializeField] GameObject gameplayManagerPrefab;
+    [SerializeField] GameObject atlasesPrefab;
     [Header("Settings"), SerializeField] float scrollCooldown;
     [Header("Vehicle view"), SerializeField] TMP_Text vehicleNameText;
     [SerializeField] Image centerPosition;
@@ -35,12 +35,12 @@ public class KartSelectController : MonoBehaviour
 
         controlsReference = new PlayerControls();
 
-        highestStats = gameplayManagerPrefab.GetComponent<KartAtlas>().HighestStats;
+        highestStats = atlasesPrefab.GetComponent<KartAtlas>().HighestStats;
 
         if(parentPanel.PlayerObject.data.kartType != KartType.NONE)
             currentName = parentPanel.PlayerObject.data.kartType;
         else
-            currentName = 0;
+            currentName = (KartType)1;
 
         UpdateVisuals();
     }
@@ -54,12 +54,11 @@ public class KartSelectController : MonoBehaviour
         } else if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
             parentPanel.SetKartName(currentName);
         }
-
     }
 
     void UpdateVisuals() 
     {
-        KartAtlas ka = gameplayManagerPrefab.GetComponent<KartAtlas>();
+        KartAtlas ka = atlasesPrefab.GetComponent<KartAtlas>();
         // Update stats
         KartDataPackage kdp = ka.RetrieveData(currentName);
         KartSettings currentStats = kdp.settings;

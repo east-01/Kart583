@@ -142,6 +142,9 @@ public class KartsIRManager : NetworkBehaviour
 		GameObject poig = Instantiate(playerObjectInGamePrefab, kartLevelManager.KartContainer);
 		POIGDelegate poigDelegate = poig.GetComponent<POIGDelegate>();
 
+		player.poigDelegate = poigDelegate;
+		pkm.GetKartVisualsManager().LoadNameplate();
+
 		// Make connections for PlayerInput
 		Camera pcam = poigDelegate.Camera;
 		pcam.enabled = false;

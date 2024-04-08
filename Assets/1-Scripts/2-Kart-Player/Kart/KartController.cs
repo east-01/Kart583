@@ -298,7 +298,7 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 		if(collision.gameObject.CompareTag("Kart")) {
 			Vector3 collPoint = collision.GetContact(0).point;
 			
-			kartEffectManager.SpawnBumpEffect(collPoint);
+			kartVisualsManager.SpawnBumpEffect(collPoint);
 
 			rb.velocity += RemoveUpComponent(transform.position-collPoint)*15f + up*2f;
 			collision.rigidbody.velocity += RemoveUpComponent(collision.transform.position-collPoint)*15f + up*2f;

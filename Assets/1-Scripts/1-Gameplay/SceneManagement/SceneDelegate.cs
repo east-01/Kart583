@@ -455,7 +455,7 @@ public class SceneDelegate : NetworkBehaviour
         }
     }
 
-    private static bool sendSceneDelegateDebug = true;
+    private static bool sendSceneDelegateDebug = false;
     public static void SceneDelegateDebug(string message) {
         if(sendSceneDelegateDebug)
             print(message);

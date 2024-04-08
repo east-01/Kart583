@@ -63,7 +63,7 @@ public class PlayerObjectManager : MonoBehaviour
         obj.input = input;
         obj.data = new() {
             uuid = Guid.NewGuid().ToString(),
-            name = "Player " + (obj.PlayerIndex + 1)
+            name = ""/*"Player " + (obj.PlayerIndex + 1)*/
         };
 
         playerObjects.Add(obj);
@@ -100,6 +100,7 @@ public class PlayerObject
 {
     public PlayerInput input;
     public PlayerData data;
+    public POIGDelegate poigDelegate;
 
     public int PlayerIndex { get { return input.playerIndex; } }
 }

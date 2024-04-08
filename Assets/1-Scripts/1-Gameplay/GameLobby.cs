@@ -84,7 +84,7 @@ public class GameLobby
             case LobbyState.MAP_SELECTION:
                 if(level == null && timeInState >= MAP_PICK_TIME) {
                     // level = PickKartLevel();
-                    level = KartLevel.TEST_TRACK;
+                    level = KartLevel.ATUIN_SHIPYARD;
 
                     SceneLookupData newMapLookupData = new(SceneDelegate.Instance.LevelAtlas.RetrieveData(level.Value).sceneName);
                     SceneDelegate.Instance.LoadSceneAsServer(newMapLookupData);
@@ -217,27 +217,34 @@ public class GameLobby
         SendDebugMessage($"RaceManager phase changed to {current}");
         if(current == RacePhase.FINISHED) {
             state = LobbyState.WAITING_FOR_PLAYERS;
+            AwardPoints();
+        }
+    }
 
-            // Add points from results to lobby player data
-            Debug.LogWarning("TODO: Create a SyncPlayerData method that syncs player data from game to lobby. The RaceManager should award the points to each PlayerData struct instead of doing it here. Once this is done, we'll need to call SyncPlayerData because the new point values will not be stored in the GameLobby's 'players' dictionary.");
-            SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
-            foreach(string uuid in placements.Keys) {
-                NetworkConnection owningConnection = null;
-                foreach(NetworkConnection client in players.Keys) {
-                    if(players[client].uuid == uuid) {
-                        owningConnection = client;
-                        break;
-                    }
-                }
-                if(owningConnection == null) {
-                    Debug.LogError($"Couldn't find owning connection for uuid \"{uuid}\"");
-                    continue;
-                }
-                PlayerData data = players[owningConnection];
-                data.points += placements[uuid].pointsAwarded;
-                players[owningConnection] = data;
-                Debug.Log($"Awarded {placements[uuid].pointsAwarded} points to player \"{data.Summary}\". They now have {data.points} points.");
+    /// <summary>
+    /// Gets the placements dictionary from the RaceManager and adds the points awarded to each PlayerData.
+    /// </summary>
+    public void AwardPoints() 
+    {
+        if(gameplayManager == null) {
+            Debug.LogError("Can't award points, the gameplay manager is null.");
+            return;
+        }
+        if(gameplayManager.RaceManager.Phase != RacePhase.FINISHED) {
+            Debug.LogError("Can't award points, the RaceManager's phase isn't FINISHED");
+            return;
+        }
+
+        SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
+        List<NetworkConnection> playerKeys = new List<NetworkConnection>(players.Keys);
+        foreach(NetworkConnection client in playerKeys) {
+            PlayerData data = players[client];
+            if(!placements.ContainsKey(data.uuid)) {
+                Debug.LogWarning($"Tried to award points to \"{data.Summary}\" but they aren't in the placements dictionary.");
+                continue;
             }
+            data.points += placements[data.uuid].pointsAwarded;
+            players[client] = data;
         }
     }
 
@@ -247,7 +254,7 @@ public class GameLobby
         return (KartLevel)values.GetValue(new System.Random().Next(values.Length));
     }
 
-    private bool sendLobbyDebugMessages = true;
+    private bool sendLobbyDebugMessages = false;
     public void SendDebugMessage(string message) 
     {
         if(sendLobbyDebugMessages)

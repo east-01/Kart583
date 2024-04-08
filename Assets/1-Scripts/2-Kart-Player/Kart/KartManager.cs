@@ -18,7 +18,8 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	private PlayerData data;
 	[SyncVar] 
 	private bool isHuman;
-	private bool waitingForKartType;
+
+	public bool ownershipChanged = false;
 
 	new protected void Awake() 
 	{
@@ -29,15 +30,12 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	public void GameplayManagerLoaded(GameplayManager gameplayManager) 
 	{
 		this.gameplayManager = gameplayManager;
-
-		if(kartManager.GetPlayerData().kartType == KartType.NONE) 
-			waitingForKartType = true;
-		else
-			InitializeKartType();
 	}
 
     public override void OnOwnershipClient(NetworkConnection prevOwner)
     {
+		ownershipChanged = true;
+
 		// Sync enabled status with our ownership status
 		kartCtrl.enabled = base.IsOwner;
 		kartStateManager.enabled = base.IsOwner;
@@ -47,32 +45,6 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 
 		// Bot/Human driver scripts are determined in UseHumanDriver and UseBotDriver
     }
-
-    private void Update() 
-	{
-		if(waitingForKartType) {
-			if(kartManager.GetPlayerData().kartType != KartType.NONE) {
-				InitializeKartType();
-				waitingForKartType = false;
-			} else 
-				return;
-		}
-	}
-
-	public void InitializeKartType() 
-	{
-		KartDataPackage kdp = gameplayManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
-		kartCtrl.settings = kdp.settings;
-	
-		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);
-		newKartModel.GetComponent<KartModel>().SetKartController(kartCtrl);
-		kartCtrl.kartModel = newKartModel.transform;
-
-		if(kartCtrl.kartModel != null) 
-			kartCtrl.initKartModelY = kartCtrl.kartModel.localPosition.y;
-		else
-			Debug.LogWarning("KartController on \"" + kartCtrl.gameObject.name + "\" doesn't have a kartModel assigned."); 
-	}
 
 	/** Connects the PlayerInput to the HumanDriver script in the kart's brain. */
 	public void UseHumanDriver(PlayerInput input) 

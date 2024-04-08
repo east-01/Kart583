@@ -13,6 +13,8 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] TMP_Text titleText;
     [SerializeField] List<GameObject> toolTips;
     
+    [SerializeField] GameObject nameSelect;
+    [SerializeField] TMP_InputField nameInputField;
     [SerializeField] GameObject colorSelect;
     [SerializeField] Button colorFirstSelection;
     [SerializeField] GameObject kartSelect;
@@ -32,7 +34,7 @@ public class PlayerPanelController : MonoBehaviour
         // This is so we can have consistent name references in ActionTriggered
         controlsReference = new PlayerControls();
 
-        phase = PlayerBuildPhase.COLOR_SELECT;
+        phase = PlayerBuildPhase.NAME_SELECT;
         origPanelColor = GetComponent<Image>().color;
     }
 
@@ -51,6 +53,8 @@ public class PlayerPanelController : MonoBehaviour
                 playerObj.data.kartType = KartType.NONE;
             } else if(playerObj.data.hexColor != null) {
                 playerObj.data.hexColor = null;
+            } else if(playerObj.data.name.Length > 0) {
+                playerObj.data.name = "";
             }
             UpdatePanel();
         }
@@ -68,11 +72,15 @@ public class PlayerPanelController : MonoBehaviour
     public void UpdateBuildPhase() 
     {
         // Disable everything so we can enable only what we want
-        List<GameObject> everything = new() {colorSelect, kartSelect, readyButton.gameObject, readyText};
+        List<GameObject> everything = new() {nameSelect, colorSelect, kartSelect, readyButton.gameObject, readyText};
         everything.ForEach(go => go.SetActive(false));
 
         // Enable correct thing based on what data we have
-        if(playerObj.data.hexColor == null) {
+        if(playerObj.data.name.Length == 0) {
+            phase = PlayerBuildPhase.NAME_SELECT;
+            nameSelect.SetActive(true); 
+            nameInputField.ActivateInputField();
+        } else if(playerObj.data.hexColor == null) {
             phase = PlayerBuildPhase.COLOR_SELECT;
             colorSelect.SetActive(true);
             colorFirstSelection.Select();
@@ -104,6 +112,14 @@ public class PlayerPanelController : MonoBehaviour
         playerObj.input.onActionTriggered += ActionTriggered;  
 
         toolTips.ForEach(tt => tt.GetComponent<ToolTip>().SetObservedInput(obj.input));
+    }
+
+    public void SubmitText() 
+    {
+        if(Time.time <= lastPhaseChangeTime + phaseChangeCooldown) return;        
+
+        playerObj.data.name = nameInputField.text;
+        UpdatePanel();
     }
 
     /** This method is called by each color select button, fields set in editor. */
@@ -157,5 +173,5 @@ public class PlayerPanelController : MonoBehaviour
 
 public enum PlayerBuildPhase 
 {
-    COLOR_SELECT, VEHICLE_SELECT, WAITING_FOR_READY, READY
+    NAME_SELECT, COLOR_SELECT, VEHICLE_SELECT, WAITING_FOR_READY, READY
 }

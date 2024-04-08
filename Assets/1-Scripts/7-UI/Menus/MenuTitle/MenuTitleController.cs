@@ -4,8 +4,10 @@ public class MenuTitleController : MonoBehaviour
 {
     public TitleShipFlight titleShip;
 
-    public void ClickedStart() 
+    public void ClickedStart(bool isMultiplayer) 
     {
+        CoreManager.Instance.isMultiplayer = isMultiplayer;
+
         GameObject tmo = GameObject.Find("TransitionManager");
         tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_PLAYER);
     }

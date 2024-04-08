@@ -249,6 +249,7 @@ public class RaceManager : NetworkBehaviour
         }
     }
 
+    public RacePhase Phase { get { return phase; } }
     public float RaceTime { get { return raceTime; }}
     public bool CanMove { get { return raceTime >= 0; } }
 

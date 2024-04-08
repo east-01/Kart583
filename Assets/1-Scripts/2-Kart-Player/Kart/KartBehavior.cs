@@ -20,7 +20,7 @@ public class KartBehavior : NetworkBehaviour
     protected KartStateManager kartStateManager;
     protected KartItemManager kartItemManager;
     protected PositionTracker posTracker;
-    protected KartEffectManager kartEffectManager;
+    protected KartVisualsManager kartVisualsManager;
 
     // Brain
     protected BotDriver botDriver;
@@ -41,7 +41,7 @@ public class KartBehavior : NetworkBehaviour
         kartStateManager = kartManager.GetComponent<KartStateManager>();
         kartItemManager = kartManager.GetComponent<KartItemManager>();
         posTracker = kartManager.GetComponent<PositionTracker>();
-        kartEffectManager = kartManager.GetComponent<KartEffectManager>();
+        kartVisualsManager = kartManager.GetComponent<KartVisualsManager>();
 
         // Objects on children of manager
         botDriver = kartManager.GetComponentInChildren<BotDriver>();
@@ -64,7 +64,7 @@ public class KartBehavior : NetworkBehaviour
     public KartStateManager GetKartStateManager() { return kartStateManager; }
     public KartItemManager GetKartItemManager() { return kartItemManager; }
     public PositionTracker GetPositionTracker() { return posTracker; }
-    public KartEffectManager GetKartEffectManager() { return kartEffectManager; }
+    public KartVisualsManager GetKartVisualsManager() { return kartVisualsManager; }
     public BotDriver GetBotDriver() { return botDriver; }
     public BotPath GetBotPath() { return botPath; }
     public HumanDriver GetHumanDriver() { return humanDriver; }
