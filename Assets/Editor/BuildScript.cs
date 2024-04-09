@@ -5,6 +5,15 @@ public class BuildScript
 {
     public static void PerformBuild()
     {
-        BuildPipeline.BuildPlayer(EditorBuildSettings.scenes, $"{Application.dataPath}/../Builds", BuildTarget.StandaloneWindows, BuildOptions.None);
+        BuildPlayerOptions options = new();
+        options.target = BuildTarget.StandaloneWindows;
+        options.locationPathName = "C:/Users/mulle/Desktop/Servers/Webserver";
+        options.options = BuildOptions.None;
+        string[] scenes = new string[EditorBuildSettings.scenes.Length];
+        for(int i = 0; i < scenes.Length; i++) {
+            scenes[i] = EditorBuildSettings.scenes[i].path;
+        }
+        options.scenes = scenes;
+        BuildPipeline.BuildPlayer(options);
     }
 }
