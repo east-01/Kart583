@@ -7,7 +7,7 @@ public class BuildScript
     {
         BuildPlayerOptions options = new();
         options.target = BuildTarget.StandaloneWindows;
-        options.locationPathName = "C:/Users/mulle/Desktop/Servers/Webserver";
+        options.locationPathName = "C:/Users/mulle/Desktop/Servers/Webserver/DriftBrothers";
         options.options = BuildOptions.None;
         string[] scenes = new string[EditorBuildSettings.scenes.Length];
         for(int i = 0; i < scenes.Length; i++) {
