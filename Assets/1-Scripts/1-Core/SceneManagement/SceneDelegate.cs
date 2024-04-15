@@ -137,7 +137,7 @@ public class SceneDelegate : NetworkBehaviour
     } 
 #endregion
 
-#region EventHandlers and SceneRegistration
+#region Event Handlers
     /// <summary>
     /// The server side scene manager load event
     /// </summary>
@@ -201,7 +201,9 @@ public class SceneDelegate : NetworkBehaviour
             DeregisterScene(new(scene.Handle, scene.Name));
         }
     }
+#endregion
 
+#region Scene Registration
     /// <summary>
     /// Registers the scene in the SceneDelegate and issues a SceneRegisteredEvent when done.
     /// </summary>

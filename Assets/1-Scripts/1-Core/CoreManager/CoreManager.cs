@@ -11,6 +11,7 @@ public class CoreManager : MonoBehaviour
 {
 
     public static CoreManager Instance;
+    public static ScreenManager ScreenManager { get { return Instance.screenManager; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
 
     [Header("Prefabs"), SerializeField] private GameObject networkManagerPrefab;
@@ -20,6 +21,7 @@ public class CoreManager : MonoBehaviour
 
     [Header("Settings")] public bool isMultiplayer;
 
+    private ScreenManager screenManager;
     private TransitionManager transitionManager;
 
     private bool notifiedOfRelease = false;
@@ -39,6 +41,7 @@ public class CoreManager : MonoBehaviour
             notifiedOfRelease = true;
         }
 
+        screenManager = GetComponent<ScreenManager>();
         transitionManager = GetComponent<TransitionManager>();
 
         CheckNetworkManager();

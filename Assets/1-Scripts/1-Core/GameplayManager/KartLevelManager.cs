@@ -14,7 +14,6 @@ public class KartLevelManager : MonoBehaviour
     private Transform kartContainer;
     private Transform itemContainer;
     private RaceCamera raceCamera;
-    private ScreenManager screenManager;
     private IntroCamData introCamData;
 
     /// <summary>
@@ -42,8 +41,6 @@ public class KartLevelManager : MonoBehaviour
         GameObject rco = GameObject.Find("RaceCamera");
         if(rco != null) raceCamera = rco.GetComponent<RaceCamera>();
 
-        screenManager = rco.GetComponentInChildren<ScreenManager>();
-
         GameObject icdo = GameObject.Find("IntroCamData");
         if(icdo != null) 
             introCamData = icdo.GetComponent<IntroCamData>();
@@ -53,7 +50,6 @@ public class KartLevelManager : MonoBehaviour
         if(kartContainer == null) problems.Add("Failed to find KartContainer. Add an empty object named KartContainer as a child of KartLevel.");
         if(itemContainer == null) problems.Add("Failed to find ItemContainer. Add an empty object named ItemContainer as a child of KartLevel. ");
         if(raceCamera == null) problems.Add("Failed to find Race Camera. " + (rco == null ? "No race camera object found." : "Game object found, no RaceCamera script component though."));
-        if(screenManager == null) problems.Add("RaceCamera object doesn't have a ScreenManager script component!");
         if(introCamData == null) warnings.Add("Failed to find IntroCamData. " + (icdo == null ? "No intro cam data object found." : "Game object found, no IntroCamData script component though."));
 
         return (problems, warnings);
@@ -64,7 +60,6 @@ public class KartLevelManager : MonoBehaviour
     public Transform KartContainer { get { return kartContainer; } }
     public Transform ItemContainer { get { return itemContainer; } }
     public RaceCamera RaceCamera { get { return raceCamera; } }
-    public ScreenManager ScreenManager { get { return screenManager; } } 
     public IntroCamData IntroCamData { get { return introCamData; } }
 
     public bool HasRaceCamera { get { return raceCamera != null; } }

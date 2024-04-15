@@ -620,6 +620,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: CoreManager
       objectReference: {fileID: 0}
+    - target: {fileID: 4432673322478699195, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4432673322478699195, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4432673322478699195, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: -67.18436
+      objectReference: {fileID: 0}
+    - target: {fileID: 8368344245623766134, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8368344247045600117, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8577002329458259215, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_RootOrder
       value: 0

@@ -144,7 +144,7 @@ public class RaceManager : NetworkBehaviour
                 break;
             case RacePhase.FINISHED:
                 if(!asServer) {
-                    ScreenManager sm = kartLevelManager.ScreenManager;
+                    ScreenManager sm = CoreManager.ScreenManager;
                     sm.ResultsBuilder.gameObject.SetActive(true);
                     sm.ResultsBuilder.waitingForPlacements = true;
                     sm.ConnectPlayerInput(PlayerObjectManager.Instance.GetPlayerObjects()[0]);                    

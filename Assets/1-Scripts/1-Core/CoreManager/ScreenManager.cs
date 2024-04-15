@@ -1,7 +1,7 @@
 using System;
-using FishNet;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 /** This class is responsible for managing splitscreen behaviour
       as well as the full-screen HUD. 
@@ -11,6 +11,8 @@ using UnityEngine.InputSystem;
 public class ScreenManager : MonoBehaviour, GameplayManagerBehavior
 {
 
+	[SerializeField]
+	private GameObject inGameCanvas;
 	[SerializeField] 
 	private GameObject continueTooltip;
 
@@ -23,6 +25,8 @@ public class ScreenManager : MonoBehaviour, GameplayManagerBehavior
 	private void Awake() 
 	{
 		SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+
+		UnityEngine.SceneManagement.SceneManager.activeSceneChanged += SceneManager_ActiveSceneChanged;
 	}
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)
@@ -34,6 +38,14 @@ public class ScreenManager : MonoBehaviour, GameplayManagerBehavior
 	{
 		if(currentPlayer != null)
 			currentPlayer.input.onActionTriggered -= ActionTriggered;
+	}
+
+	/// <summary>
+	/// Detect when the active scene changes and enable/disable menus
+	/// </summary>
+	private void SceneManager_ActiveSceneChanged(Scene currentScene, Scene newScene) 
+	{
+		inGameCanvas.SetActive(SceneNames.IsMapScene(newScene.name));
 	}
 
 	/** Connect a player object's input to the screen */

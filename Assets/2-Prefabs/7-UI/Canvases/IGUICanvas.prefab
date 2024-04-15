@@ -68,6 +68,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   placementRowPrefab: {fileID: 1691723544140477301, guid: faaeedc5499dcf549aa6e9f79a69ed74, type: 3}
   resultsContainer: {fileID: 8282425688031789317}
+  waitingForPlacements: 0
 --- !u!95 &6391836509769197421
 Animator:
   serializedVersion: 5
@@ -230,7 +231,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
