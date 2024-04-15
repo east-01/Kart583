@@ -116,8 +116,7 @@ public class MenuPlayerController : MenuController
         if(!PlayerObjectManager.Instance.GetPlayerObjects().All(po => po.data.ready)) return;
 
         string targetScene = CoreManager.Instance.isMultiplayer ? SceneNames.MENU_LOBBY : SceneNames.MENU_MAP;
-        GameObject tmo = GameObject.Find("TransitionManager");
-        tmo.GetComponent<TransitionManager>().LoadScene(targetScene);
+        CoreManager.TransitionManager.LoadScene(targetScene);
 
         PlayerObjectManager.Instance.GetPlayerInputManager().DisableJoining();
     }
@@ -127,8 +126,7 @@ public class MenuPlayerController : MenuController
     /// </summary>
     protected override void SendMenuBack() 
     {
-        GameObject tmo = GameObject.Find("TransitionManager");
-        tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_TITLE);        
+        CoreManager.TransitionManager.LoadScene(SceneNames.MENU_TITLE);
     }
 
 }

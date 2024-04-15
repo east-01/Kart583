@@ -34,8 +34,7 @@ public class LevelIcon : MonoBehaviour
         if(buildIndex == -1) 
             throw new InvalidOperationException("Scene \"" + data.sceneName + "\" doesn't exist (or doesn't have a build index at least)");
         
-        GameObject tmo = GameObject.Find("TransitionManager");
-        tmo.GetComponent<TransitionManager>().LoadScene(data.sceneName);
+        CoreManager.TransitionManager.LoadScene(data.sceneName);
     }
 
 }

@@ -8,9 +8,7 @@ public class MenuTitleController : MenuController
     public void ClickedStart(bool isMultiplayer) 
     {
         CoreManager.Instance.isMultiplayer = isMultiplayer;
-
-        GameObject tmo = GameObject.Find("TransitionManager");
-        tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_PLAYER);
+        CoreManager.TransitionManager.LoadScene(SceneNames.MENU_PLAYER);
     }
 
     public void ClickedOptions() 

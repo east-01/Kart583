@@ -5,28 +5,21 @@ using UnityEngine.SceneManagement;
 public class TransitionManager : MonoBehaviour
 {
 
-    [SerializeField] GameObject transitionDelegatePrefab;
-
     /* Fade in/out related objects */
     public Animator transition;
     public GameObject child;
     public float transitionTime = 0.5f;
     
     private Animator menuTransition;
-    private TransitionDelegate transitionDelegate;
+
+    /* Between scene data */
+    private string precedingScene;
+    private Quaternion rotation;
+    private Vector3 rotVector;
 
     void Awake() 
     {
         child.SetActive(true);
-
-        // Look for transition delegate
-        GameObject td = GameObject.Find("TransitionDelegate");
-        if(td == null) {
-            td = Instantiate(transitionDelegatePrefab);
-            td.name = "TransitionDelegate";
-            DontDestroyOnLoad(td);   
-        }
-        transitionDelegate = td.GetComponent<TransitionDelegate>();
 
         // Attempt to find menu transition
         if(SceneManager.GetActiveScene().name.StartsWith("Menu")) {
@@ -34,15 +27,15 @@ public class TransitionManager : MonoBehaviour
             menuTransition = mco.GetComponent<Animator>();
 
             GameObject menuCamera = GameObject.Find("MenuCamera");
-            menuCamera.transform.rotation = transitionDelegate.rotation;
+            menuCamera.transform.rotation = rotation;
             MenuCameraDrift mcd = menuCamera.GetComponent<MenuCameraDrift>();
-            mcd.SetRotationVector(transitionDelegate.rotVector);
+            mcd.SetRotationVector(rotVector);
             mcd.SetRotationVectorSelectTime(Random.Range(15, 25));
         }
 
         /* Wake up animation */
-        if(!transitionDelegate.precedingScene.StartsWith("Menu") ||
-           transitionDelegate.precedingScene == SceneNames.MENU_MAP) {
+        if(precedingScene != null && !precedingScene.StartsWith("Menu") ||
+           precedingScene == SceneNames.MENU_MAP) {
             transition.SetTrigger("FadeFromBlack");
         }
 
@@ -69,12 +62,12 @@ public class TransitionManager : MonoBehaviour
             yield return new WaitForSeconds(transitionTime);
         }
 
-        // Set transition delegate fields
-        transitionDelegate.precedingScene = SceneManager.GetActiveScene().name;
+        // Set between transition fields
+        precedingScene = SceneManager.GetActiveScene().name;
         if(SceneManager.GetActiveScene().name.StartsWith("Menu")) {
             GameObject menuCamera = GameObject.Find("MenuCamera");
-            transitionDelegate.rotation = menuCamera.transform.rotation;
-            transitionDelegate.rotVector = menuCamera.GetComponent<MenuCameraDrift>().GetRotationVector();
+            rotation = menuCamera.transform.rotation;
+            rotVector = menuCamera.GetComponent<MenuCameraDrift>().GetRotationVector();
         }
 
         SceneManager.LoadScene(sceneName);

@@ -62,8 +62,7 @@ public class ScreenManager : MonoBehaviour, GameplayManagerBehavior
 				SceneDelegate.LobbyManager.RequestLobbyMove();
 				print("REQUESTED LOBBY MOVE");
 			} else {
-				GameObject tmo = GameObject.Find("TransitionManager");
-				tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_MAP);
+				CoreManager.TransitionManager.LoadScene(SceneNames.MENU_MAP);
 			}
         }
 	}

@@ -38,8 +38,7 @@ public class MenuMapController : MenuController
 
     protected override void SendMenuBack()
     {
-        GameObject tmo = GameObject.Find("TransitionManager");
-        tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_PLAYER);
+        CoreManager.TransitionManager.LoadScene(SceneNames.MENU_PLAYER);
     }
 
 }

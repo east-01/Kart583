@@ -85,9 +85,7 @@ public class MenuLobbyController : MenuController
     protected override void SendMenuBack()
     {
         networkStateManager.StopClient();
-
-        GameObject tmo = GameObject.Find("TransitionManager");
-        tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_TITLE);
+        CoreManager.TransitionManager.LoadScene(SceneNames.MENU_TITLE);
     }
 
     public NetworkManager ConnectedNetworkManager { get { return networkManager; } }
