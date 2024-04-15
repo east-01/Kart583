@@ -140,7 +140,7 @@ MonoBehaviour:
   m_NotificationBehavior: 3
   m_MaxPlayerCount: 4
   m_AllowJoining: 0
-  m_JoinBehavior: 1
+  m_JoinBehavior: 0
   m_PlayerJoinedEvent:
     m_PersistentCalls:
       m_Calls:
@@ -174,7 +174,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   m_JoinAction:
-    m_UseReference: 1
+    m_UseReference: 0
     m_Action:
       m_Name: Join
       m_Type: 0

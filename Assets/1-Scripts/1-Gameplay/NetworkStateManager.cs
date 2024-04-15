@@ -2,7 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using FishNet;
 using FishNet.Managing;
+using FishNet.Managing.Transporting;
 using FishNet.Transporting;
+using FishNet.Transporting.Multipass;
+using FishNet.Transporting.Tugboat;
+using FishNet.Transporting.UTP;
 using TMPro;
 using UnityEngine;
 
@@ -10,6 +14,9 @@ using UnityEngine;
 /// Manages the current state of the network and should persist between scene changes.
 /// </summary>
 [RequireComponent(typeof(NetworkManager))]
+[RequireComponent(typeof(TransportManager))]
+[RequireComponent(typeof(Tugboat))]
+[RequireComponent(typeof(FishyUnityTransport))]
 public class NetworkStateManager : MonoBehaviour
 {
 
@@ -33,9 +40,12 @@ public class NetworkStateManager : MonoBehaviour
 
         _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
+
+        // Switch transport between FishyUnityTransport and Tugboat
+        GetComponent<TransportManager>().Transport = GameVersion.IsDevelopment ? GetComponent<Tugboat>() : GetComponent<FishyUnityTransport>();
+
     }
 
-    // Update is called once per frame
     void Update()
     {
         if(Input.GetKeyDown(KeyCode.F2) && Input.GetKey(KeyCode.LeftShift)) {
@@ -45,14 +55,29 @@ public class NetworkStateManager : MonoBehaviour
             else
                 _networkManager.ServerManager.StartConnection();
         }
+    }
 
-        if(Input.GetKeyDown(KeyCode.F1) && Input.GetKey(KeyCode.LeftShift)) {
-            print("Pressed client toggle.");
-            if (_clientConnectionState != LocalConnectionState.Stopped)
-                _networkManager.ClientManager.StopConnection();
-            else
-                _networkManager.ClientManager.StartConnection();
+    public void StartClient() 
+    {
+        if(ServerConnectionState != LocalConnectionState.Stopped) {
+            Debug.LogError("Can't start client when server is active.");
+            return;
         }
+
+        if(ClientConnectionState != LocalConnectionState.Stopped) {
+            Debug.LogWarning("Ignoring StartClient call. Client is already started.");
+            return;            
+        }
+
+        _networkManager.ClientManager.StartConnection();
+    }
+
+    public void StopClient() 
+    {
+        if(ClientConnectionState == LocalConnectionState.Stopped)
+            return;
+
+        _networkManager.ClientManager.StopConnection();
     }
 
     private void OnDestroy()

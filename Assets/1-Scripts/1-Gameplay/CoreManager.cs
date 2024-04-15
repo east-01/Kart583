@@ -1,7 +1,6 @@
 using System;
 using AClockworkBerry;
 using FishNet;
-using FishNet.Connection;
 using FishNet.Managing;
 using UnityEngine;
 
@@ -20,15 +19,21 @@ public class CoreManager : MonoBehaviour
 
     [Header("Settings")] public bool isMultiplayer;
 
+    private bool notifiedOfRelease = false;
+
     private void Awake() 
     {
         if(Instance != null) {
-            Debug.Log("CoreManager already spawned. Deleting self.");
             Destroy(gameObject);
             return;
         } else {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+        }
+
+        if(!notifiedOfRelease && !GameVersion.IsDevelopment) {
+            Debug.Log($"<color=aqua>Running release build {GameVersion.Version}</color>");
+            notifiedOfRelease = true;
         }
 
         CheckNetworkManager();
@@ -85,5 +90,14 @@ public class CoreManager : MonoBehaviour
 
         Instantiate(screenLoggerPrefab);
     }
+
+    /// <summary>
+    /// Check if the running instance is a server instance. More reliable than InstanceFinder because 
+    ///   it will handle cases where a NetworkManager doesn't exist.
+    /// </summary>
+    public bool IsServer { get {
+        if(NetworkManager.Instances.Count == 0) return false;
+        return InstanceFinder.IsServer;
+    } }
 
 }

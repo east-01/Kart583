@@ -43,7 +43,7 @@ public class PlayerObjectManager : MonoBehaviour
         playerObjects = new();
     }
 
-	void OnEnable()
+	private void OnEnable()
     {
 		playerInputManager.onPlayerJoined += PlayerJoined;
         playerInputManager.onPlayerLeft += PlayerLeft;
@@ -55,16 +55,30 @@ public class PlayerObjectManager : MonoBehaviour
         playerInputManager.onPlayerLeft -= PlayerLeft;		
 	}
 
+    private void Update() 
+    {
+        // We always need an input for player 1
+        if(playerObjects.Count == 0 && !InputPromptActive) {
+            PromptForInput();
+        } else if(playerObjects.Count > 0 && InputPromptActive) {
+            ClearInputPrompt();
+        }
+    }
+
     public void PlayerJoined(PlayerInput input) 
     {
         input.gameObject.transform.SetParent(transform);
 
         PlayerObject obj = new();
         obj.input = input;
-        obj.data = new() {
-            uuid = Guid.NewGuid().ToString(),
-            name = ""/*"Player " + (obj.PlayerIndex + 1)*/
-        };
+        
+        if(input.playerIndex == 0 && PlayerPrefs.HasKey(PlayerData.PLAYER_1_DATA))
+            obj.data = PlayerData.LoadFromPlayerPrefs(PlayerData.PLAYER_1_DATA).Value;
+        else
+            obj.data = new() {
+                uuid = Guid.NewGuid().ToString(),
+                name = ""/*"Player " + (obj.PlayerIndex + 1)*/
+            };
 
         playerObjects.Add(obj);
         PlayerObjectJoinedEvent?.Invoke(obj);
@@ -75,9 +89,20 @@ public class PlayerObjectManager : MonoBehaviour
 
     }
 
+    public void RemovePlayer(PlayerObject obj) 
+    {
+        Debug.LogWarning("TODO: Implement PlayerObjectManager#RemovePlayer");
+    }
+
+    /// <summary>
+    /// Prompt the user for input so that we have a player one.
+    /// We don't want to show the input prompt canvas because this is the only
+    ///   place where there isn't a player one right when the scene opens.
+    /// </summary>
     public void PromptForInput() 
     { 
-        inputPromptCanvas.SetActive(true); 
+        if(SceneManager.GetActiveScene().name != SceneNames.MENU_TITLE)
+            inputPromptCanvas.SetActive(true); 
         playerInputManager.EnableJoining();
     }
 
@@ -87,10 +112,21 @@ public class PlayerObjectManager : MonoBehaviour
         playerInputManager.DisableJoining();
     }
 
-    public bool InputPromptActive { get { return inputPromptCanvas.activeSelf; } }
+    public bool InputPromptActive { get { 
+        // Weird logic here because we don't want to show the input prompt on the title screen. Explained in PromptForInput
+        if(SceneManager.GetActiveScene().name == SceneNames.MENU_TITLE)
+            return playerInputManager.joiningEnabled;
+        else
+            return inputPromptCanvas.activeSelf; 
+    } }
 
     public PlayerInputManager GetPlayerInputManager() { return playerInputManager; }
     public List<PlayerObject> GetPlayerObjects() { return playerObjects; }
+    public PlayerObject PlayerOne { get { 
+        if(playerObjects.Count == 0)
+            return null;
+        return playerObjects[0]; 
+    } }
 
     public int PlayerObjectCount { get { return playerObjects.Count; } }
 

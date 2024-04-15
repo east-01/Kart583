@@ -77,6 +77,9 @@ public class MenuLobbyViewController : MonoBehaviour
 
     public void UpdateView() 
     {
+        if(_controller.ConnectedNetworkManager == null)
+            return;
+
         NetworkStateManager nsm = _controller.ConnectedNetworkManager.GetComponent<NetworkStateManager>();
         bool isConnected = _lobbyManager != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started;
         if(isConnected)

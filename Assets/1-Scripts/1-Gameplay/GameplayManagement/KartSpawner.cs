@@ -102,7 +102,7 @@ public class KartSpawner : NetworkBehaviour
 	{		
         PlayerData bdata = new() {
 			uuid = Guid.NewGuid().ToString(),
-            name = SelectRandomBotName(),
+            name = SelectUniqueRandomBotName(),
 			kartType = SelectRandomKartType()
         };
 		KartManager bkm = SpawnKart(null, bdata);
@@ -138,14 +138,19 @@ public class KartSpawner : NetworkBehaviour
 		return (KartType)enumVals.GetValue(new System.Random().Next(1, enumVals.Length));
 	}
 
-	public string SelectRandomBotName() 
+	public string SelectUniqueRandomBotName() 
 	{
 		for(int attempt = 0; attempt < rlBotNames.Length; attempt++) {
-			string selection = rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)] + " (Bot)";
+			string selection = SelectRandomBotName() + " (Bot)";
 			if(IsNameUnique(selection))
 				return selection;
 		}
 		return "Bot";
 	}	
+
+	public static string SelectRandomBotName() 
+	{
+		return rlBotNames[UnityEngine.Random.Range(0, rlBotNames.Length)];
+	}
 
 }

@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -33,4 +31,23 @@ public struct PlayerData {
     public int points;
 
     public readonly string Summary { get { return $"[PlayerData{{{uuid[..3]}}} name: \"{name}\" type: {kartType} ready: {ready}]"; } }
+
+    public static string PLAYER_1_DATA = "PLAYER_1_DATA";
+
+    public readonly void SaveToPlayerPrefs(string key) 
+    {
+        Debug.Log(this.Summary);
+        string json = JsonUtility.ToJson(this);
+        PlayerPrefs.SetString(key, json);
+        PlayerPrefs.Save();
+    }
+
+    public static PlayerData? LoadFromPlayerPrefs(string key) 
+    {
+        if(!PlayerPrefs.HasKey(key))
+            return null;
+
+        string json = PlayerPrefs.GetString(key);
+        return JsonUtility.FromJson<PlayerData>(json);
+    }
 }

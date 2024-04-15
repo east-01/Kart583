@@ -1,3 +1,4 @@
+using System.Collections;
 using FishNet;
 using FishNet.Managing;
 using FishNet.Transporting;
@@ -8,11 +9,13 @@ using UnityEngine;
 /// Acts as a backend, actual UI stuff happens in MenuLobbyViewController.
 /// </summary>
 [RequireComponent(typeof(MenuLobbyViewController))]
-public class MenuLobbyController : MonoBehaviour
+public class MenuLobbyController : MenuController
 {
 
     private MenuLobbyViewController _viewController;
     private NetworkManager networkManager; // The networkmanager that this menu is connected to.
+    private NetworkStateManager networkStateManager;
+    private float lastStartRequestTime;
 
     private void Start() 
     {
@@ -24,6 +27,7 @@ public class MenuLobbyController : MonoBehaviour
             Debug.LogError("MenuLobbyController failed to connect to a NetworkManager.");
             return;
         }
+        networkStateManager = networkManager.GetComponent<NetworkStateManager>();
 
         networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
@@ -41,10 +45,26 @@ public class MenuLobbyController : MonoBehaviour
                 PlayerObjectManager.Instance.ClearInputPrompt();
             }
         }
+
+        if(PlayerObjectManager.Instance.PlayerObjectCount > 0 && 
+           Time.time - lastStartRequestTime > 1 && 
+           networkStateManager.ClientConnectionState == LocalConnectionState.Stopped && 
+           networkStateManager.ServerConnectionState == LocalConnectionState.Stopped) {
+            lastStartRequestTime = Time.time;
+            StartCoroutine(StartClient());
+        }
     }
 
-    private void OnDestroy()
+    private IEnumerator StartClient() 
     {
+        yield return new WaitForSeconds(0.3f);
+        networkStateManager.StartClient();
+    }
+
+    protected new void OnDestroy()
+    {
+        base.OnDestroy();
+        
         if (networkManager == null)
             return;
 
@@ -60,6 +80,14 @@ public class MenuLobbyController : MonoBehaviour
     private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs args)
     {
         _viewController.UpdateView();
+    }
+
+    protected override void SendMenuBack()
+    {
+        networkStateManager.StopClient();
+
+        GameObject tmo = GameObject.Find("TransitionManager");
+        tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_TITLE);
     }
 
     public NetworkManager ConnectedNetworkManager { get { return networkManager; } }

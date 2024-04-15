@@ -1,6 +1,7 @@
 using UnityEngine;
+using UnityEngine.UI;
 
-public class MenuTitleController : MonoBehaviour
+public class MenuTitleController : MenuController
 {
     public TitleShipFlight titleShip;
 
@@ -21,5 +22,10 @@ public class MenuTitleController : MonoBehaviour
     public void ClickedQuit() 
     {
         Application.Quit();
+    }
+
+    protected override void SendMenuBack()
+    {
+        
     }
 }

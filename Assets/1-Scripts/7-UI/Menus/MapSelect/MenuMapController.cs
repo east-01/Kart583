@@ -7,12 +7,12 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /** This class is responsible for the overarching operation of the map select menu */
-public class MenuMapController : MonoBehaviour
+public class MenuMapController : MenuController
 {
     
     [SerializeField] List<GameObject> toolTips;
 
-    void Start() 
+    private void Start() 
     {
         // If we're missing the player object manager send us to player menu to get it
         if(PlayerObjectManager.Instance == null) {
@@ -29,10 +29,17 @@ public class MenuMapController : MonoBehaviour
         MapSelectBuilder builder = GetComponent<MapSelectBuilder>();
         builder.ReloadMenu();  
         Button toSelect = builder.MenuElements[0].GetComponent<Button>();
-        toSelect.Select();
+        if(p0.currentControlScheme != "KeyboardMouse")
+            toSelect.Select();
 
         // Set observed inputs on tooltips
         toolTips.ForEach(tt => tt.GetComponent<ToolTip>().SetObservedInput(p0));
+    }
+
+    protected override void SendMenuBack()
+    {
+        GameObject tmo = GameObject.Find("TransitionManager");
+        tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_PLAYER);
     }
 
 }

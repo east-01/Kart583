@@ -134,8 +134,9 @@ PlayerSettings:
     16:10: 1
     16:9: 1
     Others: 1
-  bundleVersion: 0.1
-  preloadedAssets: []
+  bundleVersion: 0.4d
+  preloadedAssets:
+  - {fileID: 11400000, guid: db11999420f0e5945bbbe3d2760a5a7b, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -154,7 +155,8 @@ PlayerSettings:
   resetResolutionOnWindowResize: 0
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
-  applicationIdentifier: {}
+  applicationIdentifier:
+    Standalone: com.East.In-Space--No-Once-Can-Hear-You-Drift--Drift-Brothers-
   buildNumber:
     Standalone: 0
     iPhone: 0

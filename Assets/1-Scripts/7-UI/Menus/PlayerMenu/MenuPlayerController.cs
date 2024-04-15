@@ -1,17 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using GameKit.Utilities;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
-using UnityEngine.UI;
-using UnityEngineInternal;
 
 /** The PlayerMenuController will interface between the PlayerObjectManager and
       the child PlayerPanelControllers */
-public class MenuPlayerController : MonoBehaviour
+public class MenuPlayerController : MenuController
 {
 
     [SerializeField] private GameObject playerPanelPrefab;
@@ -23,27 +17,44 @@ public class MenuPlayerController : MonoBehaviour
 
     void Start() 
     {
-        PlayerObjectManager.Instance.GetPlayerInputManager().EnableJoining();
-        PlayerObjectManager.Instance.PlayerObjectJoinedEvent += HandleJoin;
+        DisablePlayerOneInputEvents(true);
+
+        PlayerObjectManager pom = PlayerObjectManager.Instance;
+
+        pom.GetPlayerInputManager().EnableJoining();
+        pom.PlayerObjectJoinedEvent += HandleJoin;
 
         maxPlayers = CoreManager.Instance.isMultiplayer ? 1 : 4;
 
         // Spawn player menus for ppl already in the player input manager
-        if(PlayerObjectManager.Instance.GetPlayerObjects().Count > 0)
-            Debug.LogWarning("TODO: Handle existing player objects at start");
+        if(pom.PlayerObjectCount > 0)
+            foreach(PlayerObject obj in pom.GetPlayerObjects()) {
+                AddPanel(obj);
+            }
     }
 
-    void OnDestroy() 
+    protected new void OnDestroy() 
     {
+        base.OnDestroy();
         PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= HandleJoin;
     }
 
     private void HandleJoin(PlayerObject obj) 
     {
+        AddPanel(obj);
+    }
+
+    private void HandleLeave(PlayerObject obj) 
+    {
+
+    }   
+
+    private void AddPanel(PlayerObject obj) 
+    {
         // Spawn player panel
         GameObject playerPanel = Instantiate(playerPanelPrefab, playerPanelContainer.transform);
         PlayerPanelController playerPanelController = playerPanel.GetComponent<PlayerPanelController>();
-        playerPanelController.SetPlayerObject(obj);
+        playerPanelController.SetPlayerObject(this, obj);
         playerPanelController.UpdateVisuals();
 
         // Connect ui input
@@ -52,10 +63,31 @@ public class MenuPlayerController : MonoBehaviour
         UpdatePanels();
     }
 
-    private void HandleLeave(PlayerObject obj) 
+    public void RemovePanel(PlayerObject obj, bool removePlayerInput) 
     {
+        if(obj.PlayerIndex == 0) {
+            SendMenuBack();
+            return;
+        }
 
-    }   
+        for(int i = 0; i < playerPanelContainer.transform.childCount; i++) {
+            GameObject child = playerPanelContainer.transform.GetChild(i).gameObject;
+            PlayerPanelController ppc = child.GetComponentInChildren<PlayerPanelController>();
+            if(ppc == null)
+                continue;
+
+            if(ppc.PlayerObject.PlayerIndex == obj.PlayerIndex) {
+                Destroy(child);
+
+                if(removePlayerInput)
+                    PlayerObjectManager.Instance.RemovePlayer(obj);
+                
+                return; // Call return so error message isn't shown
+            }
+        }
+
+        Debug.LogError("Failed to remove player panel for object " + obj);
+    }
 
     /// <summary>
     /// Moves PlayerPanels to where they belong and manages the joinMessage.
@@ -88,6 +120,15 @@ public class MenuPlayerController : MonoBehaviour
         tmo.GetComponent<TransitionManager>().LoadScene(targetScene);
 
         PlayerObjectManager.Instance.GetPlayerInputManager().DisableJoining();
+    }
+
+    /// <summary>
+    /// Called by RemovePanel when the player one panel gets removed
+    /// </summary>
+    protected override void SendMenuBack() 
+    {
+        GameObject tmo = GameObject.Find("TransitionManager");
+        tmo.GetComponent<TransitionManager>().LoadScene(SceneNames.MENU_TITLE);        
     }
 
 }

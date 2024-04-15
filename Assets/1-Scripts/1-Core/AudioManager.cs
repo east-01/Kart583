@@ -17,6 +17,9 @@ public class AudioManager : MonoBehaviour
             instance = this;
             DontDestroyOnLoad(gameObject);
         }
+
+        if(CoreManager.Instance.IsServer)
+            AudioListener.volume = 0;
     }
     
 }

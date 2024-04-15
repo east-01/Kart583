@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using TMPro;
@@ -21,7 +22,9 @@ public class PlayerPanelController : MonoBehaviour
     [SerializeField] Button readyButton;
     [SerializeField] GameObject readyText;
 
+    private MenuPlayerController menuPlayerController;
     private PlayerObject playerObj;
+
     private PlayerControls controlsReference;
 
     private PlayerBuildPhase phase;
@@ -34,8 +37,9 @@ public class PlayerPanelController : MonoBehaviour
         // This is so we can have consistent name references in ActionTriggered
         controlsReference = new PlayerControls();
 
-        phase = PlayerBuildPhase.NAME_SELECT;
         origPanelColor = GetComponent<Image>().color;
+
+        // Initial build phase set when player object is set.
     }
 
     private void OnDisable() 
@@ -55,6 +59,10 @@ public class PlayerPanelController : MonoBehaviour
                 playerObj.data.hexColor = null;
             } else if(playerObj.data.name.Length > 0) {
                 playerObj.data.name = "";
+            } else if(playerObj.data.name == "") {
+                nameInputField.DeactivateInputField();
+                menuPlayerController.RemovePanel(playerObj, playerObj.PlayerIndex != 0);
+                return;
             }
             UpdatePanel();
         }
@@ -77,6 +85,12 @@ public class PlayerPanelController : MonoBehaviour
 
         // Enable correct thing based on what data we have
         if(playerObj.data.name.Length == 0) {
+            // TODO: Add on screen keyboard for name select
+            if(playerObj.input.currentControlScheme == "Gamepad") {
+                playerObj.data.name = KartSpawner.SelectRandomBotName();
+                UpdatePanel();
+                return;
+            }
             phase = PlayerBuildPhase.NAME_SELECT;
             nameSelect.SetActive(true); 
             nameInputField.ActivateInputField();
@@ -106,12 +120,19 @@ public class PlayerPanelController : MonoBehaviour
         GetComponent<Image>().color = playerObj.data.hexColor != null ? HexToColor(playerObj.data.hexColor) : origPanelColor;
     }
 
-    public void SetPlayerObject(PlayerObject obj) 
+    public void SetPlayerObject(MenuPlayerController menuPlayerController, PlayerObject obj) 
     { 
+        this.menuPlayerController = menuPlayerController;
+
         playerObj = obj; 
         playerObj.input.onActionTriggered += ActionTriggered;  
 
         toolTips.ForEach(tt => tt.GetComponent<ToolTip>().SetObservedInput(obj.input));
+
+        // Set player to unready in case it's set as ready
+        playerObj.data.ready = false;
+
+        UpdateBuildPhase();
     }
 
     public void SubmitText() 
@@ -143,6 +164,9 @@ public class PlayerPanelController : MonoBehaviour
     public void SetReady() 
     {
         if(Time.time <= lastPhaseChangeTime + phaseChangeCooldown) return;
+
+        if(playerObj.PlayerIndex == 0)
+            playerObj.data.SaveToPlayerPrefs(PlayerData.PLAYER_1_DATA);
 
         playerObj.data.ready = true;
         UpdatePanel();
