@@ -34,7 +34,7 @@ public class ItemSlotAnimator : MonoBehaviour, GameplayManagerBehavior
 
     void Awake() 
     {
-        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+        CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }
 
     void Start() 

@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 786467654113088898}
   - component: {fileID: 786467654113088897}
-  - component: {fileID: 5662397296972225814}
   - component: {fileID: 3998657301122485672}
   - component: {fileID: 786467654113088896}
   m_Layer: 0
@@ -52,18 +51,6 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 786467654113088896}
   _atlasPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
   loadedScenesList: []
---- !u!114 &5662397296972225814
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 786467654113088903}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 771a4be08c4002c4f98c933beb51f6eb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &3998657301122485672
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -17,7 +17,7 @@ public class MenuPlayerController : MenuController
 
     void Start() 
     {
-        DisablePlayerOneInputEvents(true);
+        allowInputEvents = false;
 
         PlayerObjectManager pom = PlayerObjectManager.Instance;
 

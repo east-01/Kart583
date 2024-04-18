@@ -23,7 +23,7 @@ public class PositionDisplay : MonoBehaviour, GameplayManagerBehavior
 
     void Awake() 
     {
-        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+        CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)

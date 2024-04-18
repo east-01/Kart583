@@ -4,9 +4,10 @@ using FishNet;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /** This class will build the results rows out of the ResultRow prefabs. */
-public class ResultsBuilder : MonoBehaviour, GameplayManagerBehavior
+public class ResultsMenuController : MenuController, GameplayManagerBehavior
 {
 
     private GameplayManager gameplayManager;
@@ -18,11 +19,11 @@ public class ResultsBuilder : MonoBehaviour, GameplayManagerBehavior
     private List<GameObject> menuElements;
     public bool waitingForPlacements = false;
 
-    void Awake() 
+    protected new void Awake() 
     {        
-        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
-    
-        gameObject.SetActive(false);
+        base.Awake();
+
+        CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)
@@ -40,6 +41,22 @@ public class ResultsBuilder : MonoBehaviour, GameplayManagerBehavior
             ShowResults();
         }
     }
+
+	protected override void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) 
+	{
+		if(gameplayManager == null) {
+			Debug.LogError("Tried to perfom InputAction on ScreenManager when gameplayManager is null!");
+			return;
+		}
+		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
+			if(gameplayManager.HasLobby) {
+				SceneDelegate.LobbyManager.RequestLobbyMove();
+				print("REQUESTED LOBBY MOVE");
+			} else {
+				CoreManager.TransitionManager.LoadScene(SceneNames.MENU_MAP);
+			}
+        }
+	}
 
     public void ShowResults() 
     {

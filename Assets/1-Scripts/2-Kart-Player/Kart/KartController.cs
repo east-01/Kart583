@@ -84,7 +84,7 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 	new protected void Awake() 
 	{
 		base.Awake();
-		SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+		CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
 	}
 
 	public void GameplayManagerLoaded(GameplayManager gameplayManager) 

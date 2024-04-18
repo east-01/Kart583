@@ -3,10 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using FishNet;
 using FishNet.Connection;
-using FishNet.Editing;
 using FishNet.Managing.Scened;
 using FishNet.Object;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -16,16 +14,13 @@ using UnityEngine.SceneManagement;
 ///   into scenes. Some of the more confusing code I've written. See flowchart:
 /// https://lucid.app/lucidchart/df418eac-4680-413e-9bbd-19c1bc7376ef/edit?viewport_loc=-2414%2C-625%2C2387%2C1147%2C0_0&invitationId=inv_a757cd21-5e23-440e-8b4d-cd3943fe5ef7
 /// </summary>
-[RequireComponent(typeof(GameplayManagerDelegate))]
 [RequireComponent(typeof(LobbyManager))]
 public class SceneDelegate : NetworkBehaviour
 {
 
     public static SceneDelegate Instance;
-    public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance._gameplayManagerDelegate; } }
     public static LobbyManager LobbyManager { get { return Instance._lobbyManager; } }
 
-    private GameplayManagerDelegate _gameplayManagerDelegate;
     private LobbyManager _lobbyManager;
     [SerializeField]
     private GameObject _atlasPrefab;
@@ -71,12 +66,12 @@ public class SceneDelegate : NetworkBehaviour
 #region Initializers
     void Awake() 
     {
+        print("awoken on SceneDelegate");
         if(Instance != null)
             throw new InvalidOperationException("Tried to create a new SceneDelegate when one already exists.");
 
         Instance = this;
 
-        _gameplayManagerDelegate = GetComponent<GameplayManagerDelegate>();
         _lobbyManager = GetComponent<LobbyManager>();
     }
 

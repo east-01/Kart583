@@ -10,8 +10,6 @@ public class TransitionManager : MonoBehaviour
     public GameObject child;
     public float transitionTime = 0.5f;
     
-    private Animator menuTransition;
-
     /* Between scene data */
     private string precedingScene;
     private Quaternion rotation;
@@ -20,18 +18,6 @@ public class TransitionManager : MonoBehaviour
     void Awake() 
     {
         child.SetActive(true);
-
-        // Attempt to find menu transition
-        if(SceneManager.GetActiveScene().name.StartsWith("Menu")) {
-            GameObject mco = GameObject.Find("MenuCanvas");
-            menuTransition = mco.GetComponent<Animator>();
-
-            GameObject menuCamera = GameObject.Find("MenuCamera");
-            menuCamera.transform.rotation = rotation;
-            MenuCameraDrift mcd = menuCamera.GetComponent<MenuCameraDrift>();
-            mcd.SetRotationVector(rotVector);
-            mcd.SetRotationVectorSelectTime(Random.Range(15, 25));
-        }
 
         /* Wake up animation */
         if(precedingScene != null && !precedingScene.StartsWith("Menu") ||
@@ -55,7 +41,7 @@ public class TransitionManager : MonoBehaviour
 
         bool isMenuTransition = SceneManager.GetActiveScene().name.StartsWith("Menu") && sceneName.StartsWith("Menu");
         if(isMenuTransition) {
-            menuTransition.SetTrigger("Animate");
+            FindMenuObjects().Item1.SetTrigger("Animate");
             yield return new WaitForSeconds(0.5f);
         } else {
             transition.SetTrigger("FadeToBlack");
@@ -73,4 +59,33 @@ public class TransitionManager : MonoBehaviour
         SceneManager.LoadScene(sceneName);
     }
     
+    /// <summary>
+    /// Find the objects related to the menu.
+    /// </summary>
+    /// <returns>The menu transition animator and the MenuCamera GameObject</returns>
+    private (Animator, GameObject) FindMenuObjects() 
+    {
+        if(!SceneManager.GetActiveScene().name.StartsWith("Menu"))
+            return (null, null);
+
+        // Attempt to find menu transition
+        GameObject mco = GameObject.Find("MenuCanvas");
+        Animator menuCanvasAnimator = mco.GetComponent<Animator>();
+
+        GameObject menuCamera = GameObject.Find("MenuCamera");
+        menuCamera.transform.rotation = rotation;
+        MenuCameraDrift mcd = menuCamera.GetComponent<MenuCameraDrift>();
+        mcd.SetRotationVector(rotVector);
+        mcd.SetRotationVectorSelectTime(Random.Range(15, 25));
+
+        if(menuCanvasAnimator == null) {
+            Debug.LogError("Failed to find menu canvas animator");
+        }
+        if(menuCamera == null) {
+            Debug.LogError("Failed to find menu camera");
+        }
+
+        return (menuCanvasAnimator, menuCamera);
+    }
+
 }

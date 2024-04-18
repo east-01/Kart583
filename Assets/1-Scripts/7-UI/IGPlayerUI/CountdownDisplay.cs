@@ -32,7 +32,7 @@ public class CountdownDisplay : MonoBehaviour, GameplayManagerBehavior
     {
         rt = GetComponent<RectTransform>();
 
-        SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+        CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)

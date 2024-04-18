@@ -7,17 +7,10 @@ using UnityEngine.SceneManagement;
 /// Is responsible for finding GameplayManagers in a scene and distributing
 ///   said GameplayManagers to GameplayManagerBehaviours that request them.
 /// </summary>
-[RequireComponent(typeof(SceneDelegate))]
 public class GameplayManagerDelegate : MonoBehaviour
 {
 
-    private SceneDelegate _sceneDelegate;
     private List<GameplayManagerBehavior> waitingForGameplayManagers = new();
-
-    private void Awake() 
-    {
-        _sceneDelegate = GetComponent<SceneDelegate>();
-    }
 
     private void Update() 
     {
@@ -56,10 +49,12 @@ public class GameplayManagerDelegate : MonoBehaviour
         }
         Scene objectsScene = (gameplayManagerBehavior as MonoBehaviour).gameObject.scene;
         FishNet.Managing.Scened.SceneLookupData lookupData = new(objectsScene.handle, objectsScene.name);
-        if(!_sceneDelegate.IsSceneRegistered(lookupData)) 
+        if(SceneDelegate.Instance == null)
+            return false;
+        if(!SceneDelegate.Instance.IsSceneRegistered(lookupData)) 
             return false;
 
-        GameplayManager toReturn = _sceneDelegate.GetSceneElements(lookupData).GameplayManager;
+        GameplayManager toReturn = SceneDelegate.Instance.GetSceneElements(lookupData).GameplayManager;
 
         if(toReturn == null)
             return false;

@@ -33,7 +33,7 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 	new protected void Awake() 
 	{
 		base.Awake();
-		SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+		CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
 	}
 
 	void Start() 

@@ -37,7 +37,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 	new protected void Awake() 
 	{
 		base.Awake();
-		SceneDelegate.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+		CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
 	}
 
     void Start() 

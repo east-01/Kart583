@@ -616,9 +616,37 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1642841953172812826, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _scenePathHash
+      value: 1175023302
+      objectReference: {fileID: 0}
+    - target: {fileID: -1642841953172812826, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: <SceneId>k__BackingField
+      value: 5046686656484603221
+      objectReference: {fileID: 0}
+    - target: {fileID: -1642841953172812826, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkBehaviours.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1642841953172812826, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkBehaviours.Array.data[0]
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: -1642841953172812826, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkBehaviours.Array.data[1]
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 72735794780100705, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_Name
       value: CoreManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 3271591870060729175, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkObjectCache
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3271591870060729175, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _componentIndexCache
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4432673322478699195, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_AnchorMax.x
@@ -631,6 +659,14 @@ PrefabInstance:
     - target: {fileID: 4432673322478699195, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_SizeDelta.x
       value: -67.18436
+      objectReference: {fileID: 0}
+    - target: {fileID: 6583986117286712415, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkObjectCache
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6583986117286712415, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _componentIndexCache
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8368344245623766134, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_IsActive

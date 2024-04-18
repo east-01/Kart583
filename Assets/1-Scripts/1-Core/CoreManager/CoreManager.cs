@@ -7,11 +7,13 @@ using UnityEngine;
 /// <summary>
 /// The CoreManager should be placed in all scenes. It will spawn other essential managers.
 /// </summary>
+[RequireComponent(typeof(GameplayManagerDelegate))]
+[RequireComponent(typeof(TransitionManager))]
 public class CoreManager : MonoBehaviour
 {
 
     public static CoreManager Instance;
-    public static ScreenManager ScreenManager { get { return Instance.screenManager; } }
+    public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
 
     [Header("Prefabs"), SerializeField] private GameObject networkManagerPrefab;
@@ -21,7 +23,7 @@ public class CoreManager : MonoBehaviour
 
     [Header("Settings")] public bool isMultiplayer;
 
-    private ScreenManager screenManager;
+    private GameplayManagerDelegate gameplayManagerDelegate;
     private TransitionManager transitionManager;
 
     private bool notifiedOfRelease = false;
@@ -41,7 +43,7 @@ public class CoreManager : MonoBehaviour
             notifiedOfRelease = true;
         }
 
-        screenManager = GetComponent<ScreenManager>();
+        gameplayManagerDelegate = GetComponent<GameplayManagerDelegate>();
         transitionManager = GetComponent<TransitionManager>();
 
         CheckNetworkManager();
