@@ -515,14 +515,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   firstSelect: {fileID: 0}
-  autoFocusOnPlayerOne: 1
+  autoFocusOnPlayerOne: 0
   subMenus:
   - id: ResultsMenu
     menuController: {fileID: 2171543652483300327}
   - id: PauseMenu
     menuController: {fileID: 6697900567963345722}
   tooltips: []
-  ResultsBuilder: {fileID: 2171543652483300327}
 --- !u!1 &2372056490205488958
 GameObject:
   m_ObjectHideFlags: 0

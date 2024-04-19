@@ -2,17 +2,20 @@ using System;
 using AClockworkBerry;
 using FishNet;
 using FishNet.Managing;
+using JetBrains.Annotations;
 using UnityEngine;
 
 /// <summary>
 /// The CoreManager should be placed in all scenes. It will spawn other essential managers.
 /// </summary>
+[RequireComponent(typeof(DevSettings))]
 [RequireComponent(typeof(GameplayManagerDelegate))]
 [RequireComponent(typeof(TransitionManager))]
 public class CoreManager : MonoBehaviour
 {
 
     public static CoreManager Instance;
+    public static DevSettings DevSettings { get { return Instance.devSettings;} }
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
 
@@ -22,7 +25,9 @@ public class CoreManager : MonoBehaviour
     [SerializeField] private GameObject screenLoggerPrefab;
 
     [Header("Settings")] public bool isMultiplayer;
+    [SerializeField] private int playerLimit = 8;
 
+    private DevSettings devSettings;
     private GameplayManagerDelegate gameplayManagerDelegate;
     private TransitionManager transitionManager;
 
@@ -43,6 +48,7 @@ public class CoreManager : MonoBehaviour
             notifiedOfRelease = true;
         }
 
+        devSettings = GetComponent<DevSettings>();
         gameplayManagerDelegate = GetComponent<GameplayManagerDelegate>();
         transitionManager = GetComponent<TransitionManager>();
 
@@ -108,6 +114,13 @@ public class CoreManager : MonoBehaviour
     public bool IsServer { get {
         if(NetworkManager.Instances.Count == 0) return false;
         return InstanceFinder.IsServer;
+    } }
+
+    public int PlayerLimit { get {
+        if(DevSettings.OverridePlayerLimit)
+            return DevSettings.playerLimit;
+        else
+            return playerLimit;
     } }
 
 }

@@ -143,7 +143,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  mapTitleText: {fileID: 0}
+  mapTitleText: {fileID: 264920589019564646}
   startAnimationTimeLeft: 0
 --- !u!45 &6976801468129761730
 Skybox:
@@ -327,6 +327,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: IGUICanvas
       objectReference: {fileID: 0}
+    - target: {fileID: 2372056490205488958, guid: e53a7c096918a9f4b9a10b2e89d3ed3b, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7587840693645384179, guid: e53a7c096918a9f4b9a10b2e89d3ed3b, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -346,3 +350,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 2372056489437898785, guid: e53a7c096918a9f4b9a10b2e89d3ed3b, type: 3}
   m_PrefabInstance: {fileID: 2541739999807237446}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &264920589019564646 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2372056490205488928, guid: e53a7c096918a9f4b9a10b2e89d3ed3b, type: 3}
+  m_PrefabInstance: {fileID: 2541739999807237446}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

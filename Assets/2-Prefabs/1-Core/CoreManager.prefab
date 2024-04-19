@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8577002329458259215}
+  - component: {fileID: 4474566219191650411}
   - component: {fileID: 141262640191590162}
   - component: {fileID: 7823777009711212984}
   - component: {fileID: 67028911781127713}
@@ -35,6 +36,33 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4474566219191650411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 72735794780100705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f6d0d019cba52c48a9f0fc1a49ef0c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  atlasesPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
+  masterEnable: 1
+  overridePlayerLimit: 1
+  playerLimit: 1
+  loadMode: 1
+  overrideMapPick: 1
+  map: 0
+  haveStandalonePlayerRunAsServer: 1
+  manualLobbyPlayerWaitSwitch: 1
+  overrideRaceProgressAtStart: 1
+  raceProgress: 0.9
+  overrideLapCount: 1
+  lapCount: 1
+  overrideBots: 1
+  bots: 0
 --- !u!114 &141262640191590162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52,6 +80,7 @@ MonoBehaviour:
   playerObjectManagerPrefab: {fileID: 1451273396316291034, guid: 1d5be95719efe044689066dd96520717, type: 3}
   screenLoggerPrefab: {fileID: 101706, guid: e0aeafd6ca709b5449035c42f4e3879e, type: 3}
   isMultiplayer: 0
+  playerLimit: 8
 --- !u!114 &7823777009711212984
 MonoBehaviour:
   m_ObjectHideFlags: 0

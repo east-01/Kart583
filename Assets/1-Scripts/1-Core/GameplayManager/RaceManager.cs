@@ -259,10 +259,22 @@ public class RaceManager : NetworkBehaviour
 [Serializable]
 public struct RaceSettings 
 {
-    public int laps;
+    [SerializeField] private int laps;
+    public readonly int Laps { get {
+        if(CoreManager.DevSettings.OverrideLapCount)
+            return CoreManager.DevSettings.lapCount;
+        else
+            return laps;
+    } }
     public float startDelay;
     public float startBoostPercent;
-    public bool bots;
+    [SerializeField] private bool bots;
+    public readonly bool Bots { get {
+        if(CoreManager.DevSettings.OverrideBots)
+            return CoreManager.DevSettings.bots;
+        else
+            return bots;
+    } }
     public int botLimit;
 }
 

@@ -76,15 +76,16 @@ public class GameLobby
 
         switch(state) {
             case LobbyState.WAITING_FOR_PLAYERS:
-                // PLAYER_WAIT_TIME == -1 is manual switch mode
-                bool timePassed = PLAYER_WAIT_TIME != -1 && timeInState >= PLAYER_WAIT_TIME;
-                if(Input.GetKeyDown(KeyCode.F4) || OpenSlots == 0 || timePassed)
+                bool timePassed = CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && timeInState >= PLAYER_WAIT_TIME;
+                if(Input.GetKeyDown(KeyCode.F4) || (!CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0) || timePassed)
                     state = LobbyState.MAP_SELECTION;
                 break;
             case LobbyState.MAP_SELECTION:
                 if(level == null && timeInState >= MAP_PICK_TIME) {
-                    // level = PickKartLevel();
-                    level = KartLevel.ATUIN_SHIPYARD;
+                    if(CoreManager.DevSettings.OverrideMapPick)
+                        level = CoreManager.DevSettings.map;
+                    else 
+                        level = PickKartLevel();
 
                     SceneLookupData newMapLookupData = new(SceneDelegate.Instance.LevelAtlas.RetrieveData(level.Value).sceneName);
                     SceneDelegate.Instance.LoadSceneAsServer(newMapLookupData);
@@ -248,7 +249,7 @@ public class GameLobby
         }
     }
 
-    public KartLevel PickKartLevel() 
+    public static KartLevel PickKartLevel() 
     {
         Array values = Enum.GetValues(typeof(KartLevel));
         return (KartLevel)values.GetValue(new System.Random().Next(values.Length));
@@ -300,7 +301,7 @@ public class GameLobby
     public Dictionary<NetworkConnection, PlayerData> Players { get { return players; } }
     public int PlayerCount { get { return players.Count; } }
 
-    public int OpenSlots { get { return KartsIRManager.PlayerLimit - players.Count; } }
+    public int OpenSlots { get { return CoreManager.Instance.PlayerLimit - players.Count; } }
 
 }
 

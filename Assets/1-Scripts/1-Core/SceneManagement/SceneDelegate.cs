@@ -100,6 +100,7 @@ public class SceneDelegate : NetworkBehaviour
         SceneLoadData sld = new SceneLoadData(lookupData);
         sld.Options.AllowStacking = true;
         sld.Options.AutomaticallyUnload = false;
+        sld.Options.LocalPhysics = LocalPhysicsMode.Physics3D;
         sld.ReplaceScenes = ReplaceOption.All;
 
         base.SceneManager.LoadConnectionScenes(sld);

@@ -56,6 +56,9 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
         hasStartedRace = false;
         hasFinishedRace = false;
         lapNumber = 0;
+
+        if(kartManager.IsHuman && CoreManager.DevSettings.OverrideRaceProgressAtStart)
+            SetRaceProgress(CoreManager.DevSettings.raceProgress);
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)
@@ -85,7 +88,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
         if(gameplayManager == null)
             return;
 
-        if(gameplayManager.RaceManager.RaceTime < 0) {
+        if(gameplayManager.RaceManager.RaceTime < 0 && !(kartManager.IsHuman && CoreManager.DevSettings.OverrideRaceProgressAtStart)) {
             waypointIndex = waypoints.Count-1;
             lapNumber = 0;
         }
@@ -102,6 +105,20 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
             RaceFinished();
         }
     
+    }
+
+    private void SetRaceProgress(float raceProgress) 
+    {
+        raceProgress = Mathf.Clamp01(raceProgress);
+        
+        hasStartedRace = raceProgress > 0;
+        hasFinishedRace = raceProgress == 1;
+
+        lapNumber = (int)raceProgress*gameplayManager.RaceManager.settings.Laps;
+        waypointIndex = (int)raceProgress*waypoints.Count;
+
+        kartManager.transform.position = GetCurrentWaypoint().position;
+        kartManager.transform.forward = (GetNextWaypoint().position-GetCurrentWaypoint().position).normalized;
     }
 
     private void RaceFinished() 
@@ -179,7 +196,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     public float GetRaceCompletion() 
     {
         RaceManager rm = gameplayManager.RaceManager;
-        return Mathf.Lerp((float)lapNumber/rm.settings.laps, Mathf.Clamp01((float)(lapNumber+1)/rm.settings.laps), lapCompletion);
+        return Mathf.Lerp((float)lapNumber/rm.settings.Laps, Mathf.Clamp01((float)(lapNumber+1)/rm.settings.Laps), lapCompletion);
     }
 
     public int CompareTo(PositionTracker other)

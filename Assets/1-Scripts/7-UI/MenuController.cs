@@ -139,6 +139,11 @@ public abstract class MenuController : MonoBehaviour
     /// </summary>
     private void InitializeSubMenus() 
     {
+        if(cachedSubmenus != null && cachedSubmenus.Count > 0)
+            Debug.LogWarning($"Caching submenus on \"{this}\" but there's already {cachedSubmenus.Count} cached. This probably shouldn't happen.");
+        
+        cachedSubmenus = new();
+
         foreach(SubMenuData smd in subMenus) {
             if(smd.id.Length == 0) {
                 Debug.LogError($"SubMenu data on \"{this}\" has an empty string. Not caching it.");

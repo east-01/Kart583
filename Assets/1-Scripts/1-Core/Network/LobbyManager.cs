@@ -27,6 +27,12 @@ public class LobbyManager : NetworkBehaviour
 
     private bool waitingForInput;
 
+    private void Awake() 
+    {
+        if(GameLobby.PLAYER_WAIT_TIME <= 0)
+            Debug.LogWarning("GameLobby's PLAYER_WAIT_TIME is <= 0, this is not recommended.");
+    }
+
     private void Update () 
     {
         foreach(GameLobby lobby in lobbies.Values) { lobby.Update(); }

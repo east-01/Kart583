@@ -113,8 +113,8 @@ public class KartSpawner : NetworkBehaviour
     public void SpawnBots() 
     {
 		RaceSettings settings = gameplayManager.RaceManager.settings;
-        if(settings.bots) {
-            int botsToSpawn = Math.Min(settings.botLimit, KartsIRManager.PlayerLimit-playerManager.KartCount);
+        if(settings.Bots) {
+            int botsToSpawn = Math.Min(settings.botLimit, CoreManager.Instance.PlayerLimit-playerManager.KartCount);
             for(int i = 0; i < botsToSpawn; i++) {
                 SpawnBot();
             }

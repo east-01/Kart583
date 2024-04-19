@@ -947,6 +947,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   firstSelect: {fileID: 1306794275}
+  autoFocusOnPlayerOne: 0
+  subMenus: []
+  tooltips: []
   titleShip: {fileID: 1718099842}
 --- !u!1001 &1627728046
 PrefabInstance:

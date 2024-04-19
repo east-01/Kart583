@@ -43,7 +43,7 @@ public class PositionDisplay : MonoBehaviour, GameplayManagerBehavior
         PositionTracker positionTracker = parent.subject.GetPositionTracker();
 
         // Lap text
-        lapText.text = "LAP " + Mathf.Clamp(positionTracker.lapNumber+1, 0, rm.settings.laps) + "/" + rm.settings.laps;
+        lapText.text = "LAP " + Mathf.Clamp(positionTracker.lapNumber+1, 0, rm.settings.Laps) + "/" + rm.settings.Laps;
         lapText.color = lapTextColor;
 
         // Position text

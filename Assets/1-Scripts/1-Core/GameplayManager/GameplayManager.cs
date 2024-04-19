@@ -13,9 +13,6 @@ using UnityEngine;
 public class GameplayManager : NetworkBehaviour
 {
 
-    // /** Singleton instance of the Gameplay manager */
-    // public static GameplayManager Instance;
-
     [Header("Prefabs")]
     [SerializeField]
     private GameObject playerObjectManagerPrefab;

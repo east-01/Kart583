@@ -14,8 +14,6 @@ using UnityEngine;
 public class KartsIRManager : NetworkBehaviour
 {
 
-	public static readonly int PlayerLimit = 8;
-
 	[SerializeField] 
 	private GameObject playerObjectInGamePrefab;
 

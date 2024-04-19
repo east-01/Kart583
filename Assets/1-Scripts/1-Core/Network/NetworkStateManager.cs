@@ -1,10 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
-using FishNet;
 using FishNet.Managing;
 using FishNet.Managing.Transporting;
 using FishNet.Transporting;
-using FishNet.Transporting.Multipass;
 using FishNet.Transporting.Tugboat;
 using FishNet.Transporting.UTP;
 using TMPro;
@@ -48,12 +44,12 @@ public class NetworkStateManager : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.F2) && Input.GetKey(KeyCode.LeftShift)) {
+        if(Input.GetKeyDown(KeyCode.F12)) {
             print("Pressed server toggle.");
             if (_serverConnectionState != LocalConnectionState.Stopped)
-                _networkManager.ServerManager.StopConnection(true);
+                StopServer();
             else
-                _networkManager.ServerManager.StartConnection();
+                StartServer();
         }
     }
 
@@ -78,6 +74,29 @@ public class NetworkStateManager : MonoBehaviour
             return;
 
         _networkManager.ClientManager.StopConnection();
+    }
+
+    public void StartServer() 
+    {
+        if(ClientConnectionState != LocalConnectionState.Stopped) {
+            Debug.LogError("Can't start server when client is active.");
+            return;
+        }
+
+        if(ServerConnectionState != LocalConnectionState.Stopped) {
+            Debug.LogWarning("Ignoring StartServer call. Client is already started.");
+            return;            
+        }
+
+        _networkManager.ServerManager.StartConnection();
+    }
+
+    public void StopServer() 
+    {
+        if(ServerConnectionState == LocalConnectionState.Stopped)
+            return;
+
+        _networkManager.ServerManager.StopConnection(true);
     }
 
     private void OnDestroy()
