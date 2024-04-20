@@ -46,6 +46,7 @@ public class MenuLobbyController : MenuController
             }
         }
 
+        // Logic that requests to start client every 0.3 seconds
         if(PlayerObjectManager.Instance.PlayerObjectCount > 0 && 
            Time.time - lastStartRequestTime > 1 && 
            networkStateManager.ClientConnectionState == LocalConnectionState.Stopped && 
@@ -53,6 +54,9 @@ public class MenuLobbyController : MenuController
             lastStartRequestTime = Time.time;
             StartCoroutine(StartClient());
         }
+
+        if(GameVersion.IsDevelopment && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
+            SceneDelegate.LobbyManager.RequestForceMapPick();
     }
 
     private IEnumerator StartClient() 

@@ -69,4 +69,6 @@ public class KartBehavior : NetworkBehaviour
     public BotPath GetBotPath() { return botPath; }
     public HumanDriver GetHumanDriver() { return humanDriver; }
 
+    public PlayerObject OwnerPlayerObject { get { return kartManager.POIGDelegate.owner; } }
+
 }

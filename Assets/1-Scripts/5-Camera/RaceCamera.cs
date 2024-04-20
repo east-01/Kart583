@@ -11,6 +11,7 @@ public class RaceCamera : MonoBehaviour, GameplayManagerBehavior
     private GameplayManager gameplayManager;
     private KartLevelManager kartLevelManager;
 
+    public IGScreenMenuController igScreenMenuController;
     public AnimationCurve titleFade;
     public TMP_Text mapTitleText;
     public float startAnimationTimeLeft;

@@ -52,6 +52,7 @@ public class LobbyManager : NetworkBehaviour
         }
     }
 
+#region Client Movement
     [ServerRpc(RequireOwnership = false)]
     public void ServerRpcJoinLobby(NetworkConnection newClient, PlayerData data) 
     {
@@ -114,7 +115,9 @@ public class LobbyManager : NetworkBehaviour
         SceneDelegate.SceneDelegateDebug($"Client \"{client}\" requested to move to lobby \"{lobby.LobbySceneData}\"");
         SceneDelegate.Instance.AddClientToScene(client, lobby.LobbySceneData);
     }
+#endregion
 
+#region Lobby Updating
     /// <summary>
     /// Fires the TargetRpcLobbyUpdatedEvent for all clients connected to a specific lobby
     /// </summary>
@@ -161,7 +164,9 @@ public class LobbyManager : NetworkBehaviour
     public void TargetRpcLobbyUpdatedEvent(NetworkConnection conn, LobbyData lobbyData, LobbyUpdateReason reason) {
         LobbyUpdated?.Invoke(lobbyData, reason);
     }
+#endregion
 
+#region Getters
     /// <summary>
     /// Gets the lobby id for the LocalConnection. Is a shortcut for:
     /// </summary>
@@ -200,6 +205,37 @@ public class LobbyManager : NetworkBehaviour
         if(!lobbies.ContainsKey(id))
             return null;
         return lobbies[id];
+    }
+#endregion
+
+    /// <summary>
+    /// Is the same thing as the server instance pressing GameLobby#FORCE_MAP_PICK_KEY.
+    /// Only works for development builds.
+    /// </summary>
+    [Client]
+    public void RequestForceMapPick() 
+    {
+        ServerRpcRequestForceMapPick(base.LocalConnection);        
+    }
+
+    /// <summary>
+    /// Is the same thing as the server instance pressing GameLobby#FORCE_MAP_PICK_KEY.
+    /// Only works for development builds.
+    /// </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcRequestForceMapPick(NetworkConnection client) 
+    {
+        if(!GameVersion.IsDevelopment) {
+            Debug.LogWarning("Can't force map pick. We're not in a development build.");
+            return;
+        }
+        GameLobby lobby = GetLobby(client);
+        if(lobby == null) {
+            Debug.LogError("Can't force map pick, client is not in a lobby.");
+            return;
+        }
+
+        lobby.state = LobbyState.MAP_SELECTION;
     }
 
     [Server]

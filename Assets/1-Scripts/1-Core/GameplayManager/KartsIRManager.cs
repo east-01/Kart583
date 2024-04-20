@@ -140,6 +140,7 @@ public class KartsIRManager : NetworkBehaviour
 		GameObject poig = Instantiate(playerObjectInGamePrefab, kartLevelManager.KartContainer);
 		POIGDelegate poigDelegate = poig.GetComponent<POIGDelegate>();
 
+		poigDelegate.owner = player;
 		player.poigDelegate = poigDelegate;
 		pkm.GetKartVisualsManager().LoadNameplate();
 

@@ -16,12 +16,13 @@ public class GameLobby
 
     public static readonly float PLAYER_WAIT_TIME = 30;
     public static readonly float MAP_PICK_TIME = 3;
+    public static readonly KeyCode FORCE_MAP_PICK_KEY = KeyCode.F4;
 
     private LobbyManager manager;
     private string id;
 
     private LobbyState _state;
-    private LobbyState state { 
+    public LobbyState state { 
         get { return _state; }
         set {
             SendDebugMessage($"Setting state to {value}");
@@ -77,7 +78,7 @@ public class GameLobby
         switch(state) {
             case LobbyState.WAITING_FOR_PLAYERS:
                 bool timePassed = CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && timeInState >= PLAYER_WAIT_TIME;
-                if(Input.GetKeyDown(KeyCode.F4) || (!CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0) || timePassed)
+                if(Input.GetKeyDown(FORCE_MAP_PICK_KEY) || (!CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0) || timePassed)
                     state = LobbyState.MAP_SELECTION;
                 break;
             case LobbyState.MAP_SELECTION:

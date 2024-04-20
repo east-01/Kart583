@@ -8,25 +8,20 @@ public class DevSettings : MonoBehaviour
 
     [SerializeField] private GameObject atlasesPrefab;
 
-    [Space]
     [SerializeField] private bool masterEnable;
 
-    [Header("General")]
     [SerializeField] private bool overridePlayerLimit = false;
     public int playerLimit = -1;
 
-    [Space]
-    public LoadMode loadMode = LoadMode.NONE;
+    [SerializeField] public LoadMode loadMode = LoadMode.NONE;
 
     [SerializeField] private bool overrideMapPick = false;
     public KartLevel map = KartLevel.TEST_TRACK;
 
-    [Header("Networking settings")]
-    public bool haveStandalonePlayerRunAsServer = false;
+    [SerializeField] private bool haveStandalonePlayerRunAsServer = false;
     [SerializeField] private bool manualLobbyPlayerWaitSwitch = false;
 
 
-    [Header("Race Settings Overrides")]
     [SerializeField] private bool overrideRaceProgressAtStart = false;
     public float raceProgress = 0;
 
@@ -35,8 +30,10 @@ public class DevSettings : MonoBehaviour
     [SerializeField] private bool overrideBots = false;
     public bool bots = false;
 
-    /* Public boolean accessors */
+    /* Public accessors */
     public bool Enable { get { return masterEnable && GameVersion.IsDevelopment; } }
+    public LoadMode LoadMode { get { return Enable ? loadMode : LoadMode.NONE; } }
+    public bool HaveStandalonePlayerRunAsServer { get { return Enable && haveStandalonePlayerRunAsServer; } }
     public bool ManualLobbyPlayerWaitSwitch { get { return Enable && manualLobbyPlayerWaitSwitch; } }
     public bool OverridePlayerLimit { get { return Enable && overridePlayerLimit; } }
     public bool OverrideMapPick { get { return Enable && overrideMapPick; } }
@@ -54,13 +51,13 @@ public class DevSettings : MonoBehaviour
 
         PrintDevSettings("#ffff99");
 
-        if(haveStandalonePlayerRunAsServer && !Application.isEditor) {
+        if(HaveStandalonePlayerRunAsServer && !Application.isEditor) {
             NetworkStateManager nsm = InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>();
             nsm.StartServer();
             return;
         }
 
-        if(loadMode != LoadMode.NONE)
+        if(LoadMode != LoadMode.NONE)
             SimulateLoad();
     }
 
@@ -70,16 +67,16 @@ public class DevSettings : MonoBehaviour
     /// </summary>
     public void SimulateLoad() 
     {
-        if(loadMode == LoadMode.NONE) {
+        if(LoadMode == LoadMode.NONE) {
             Debug.LogError("Tried to simulate load but the LoadMode was set to NONE.");
             return;
         }
 
-        CoreManager.Instance.isMultiplayer = loadMode == LoadMode.LOAD_LOBBY;
+        CoreManager.Instance.isMultiplayer = LoadMode == LoadMode.LOAD_LOBBY;
 
-        if(loadMode == LoadMode.LOAD_LOBBY) {
+        if(LoadMode == LoadMode.LOAD_LOBBY) {
             CoreManager.TransitionManager.LoadScene(SceneNames.MENU_LOBBY);
-        } else if(loadMode == LoadMode.LOAD_MAP_LOCAL) {
+        } else if(LoadMode == LoadMode.LOAD_MAP_LOCAL) {
             KartLevel mapPick = OverrideMapPick ? map : GameLobby.PickKartLevel();
             if(!OverrideMapPick) 
                 Debug.Log($"<color=green>SimulateLoad: loading into local play map but override map pick is off, picked {mapPick} randomly.</color>");

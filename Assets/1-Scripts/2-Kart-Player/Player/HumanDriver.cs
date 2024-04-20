@@ -6,8 +6,11 @@ using UnityEngine.InputSystem;
 
 /** Human Driver script is the layer that connects the Input System
       to the KartController. */
-public class HumanDriver : KartBehavior
+public class HumanDriver : KartBehavior, GameplayManagerBehavior
 {
+
+    private GameplayManager gameplayManager;
+    private KartLevelManager kartLevelManager;
 
     private PlayerInput input;
 
@@ -21,6 +24,12 @@ public class HumanDriver : KartBehavior
     void OnDisable() 
     {
         input.onActionTriggered -= ActionTriggered;
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.kartLevelManager = gameplayManager.KartLevelManager;
     }
 
     public void ConnectPlayerInput(PlayerInput input) 
@@ -51,6 +60,13 @@ public class HumanDriver : KartBehavior
                 break;
             case "Item":
                 kartItemManager.PerformItemInput(context.performed);
+                break;
+            case "Pause":
+                MenuController pauseMenu = kartLevelManager.RaceCamera.igScreenMenuController.GetSubMenu(IGScreenMenuController.PAUSE_MENU_ID);
+                if(pauseMenu.IsOpen)
+                    pauseMenu.Close();
+                else
+                    pauseMenu.Open(OwnerPlayerObject);
                 break;
             default:
                 break;

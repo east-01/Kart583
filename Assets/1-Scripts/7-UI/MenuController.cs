@@ -12,6 +12,10 @@ public abstract class MenuController : MonoBehaviour
 
     [SerializeField]
     protected Selectable firstSelect;
+    /// <summary>
+    /// Automatically focus on player one when they are available.
+    /// Does not happen if there's already a focused player.
+    /// </summary>
     [SerializeField]
     private bool autoFocusOnPlayerOne;
 
@@ -28,16 +32,18 @@ public abstract class MenuController : MonoBehaviour
 
     protected void Awake() 
     {
-        PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoined;
-
-        if(PlayerObjectManager.Instance.PlayerOne != null && autoFocusOnPlayerOne)
-            SetFocus(PlayerObjectManager.Instance.PlayerOne);
-
         controlsReference = new();
 
         InitializeSubMenus();
 
         menuControllerLoadedProperly = true;
+    }
+
+    protected void OnEnable() 
+    {
+        PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoined;
+        if(autoFocusOnPlayerOne && focusedPlayer == null && PlayerObjectManager.Instance.PlayerOne != null)
+            SetFocus(PlayerObjectManager.Instance.PlayerOne);
     }
 
     protected void OnDestroy() 
@@ -50,7 +56,7 @@ public abstract class MenuController : MonoBehaviour
     protected void OnDisable() 
     {
         if(focusedPlayer != null)
-            Debug.LogWarning($"Disabling MenuController \"{this}\" while it still has a focused player.");
+            RemoveFocus();
     }
 
     public void SetFocus(PlayerObject playerObj) 
@@ -112,6 +118,24 @@ public abstract class MenuController : MonoBehaviour
     /// </summary>
     protected virtual void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) {}
 
+#region Open and Close
+    public void Open(PlayerObject focus = null) 
+    {
+        gameObject.SetActive(true);
+
+        if(focus != null)
+            SetFocus(focus);
+        else if(!autoFocusOnPlayerOne)
+            RemoveFocus();
+    }
+
+    public void Close() 
+    {
+        RemoveFocus();
+        gameObject.SetActive(false);
+    }
+#endregion
+
 #region Navigation
     /// <summary>
     /// Send the current menu back to the one before it.
@@ -119,12 +143,22 @@ public abstract class MenuController : MonoBehaviour
     /// </summary>
     protected virtual void SendMenuBack() 
     {
-        // TODO: Send submenu to parent menu if it exists 
+        if(parentMenu == null)
+            return;
+
+        Close();
+        parentMenu.Open();
     }
 
     public void OpenSubMenu(string id, PlayerObject focus = null) 
     {
-        // TODO: Open sub menu
+        MenuController subMenu = GetSubMenu(id);
+        if(subMenu == null) {
+            Debug.LogError($"MenuController \"{this}\" failed to open SubMenu id \"{id}\"");
+            return;
+        }
+
+        subMenu.Open(focus);
     }
 #endregion
 
@@ -159,7 +193,7 @@ public abstract class MenuController : MonoBehaviour
             MenuController subMenu = smd.menuController;
 
             subMenu.SetParentMenuController(this);
-            subMenu.gameObject.SetActive(false);
+            subMenu.Close();
         }
     }
 
@@ -182,7 +216,7 @@ public abstract class MenuController : MonoBehaviour
     /// <summary>
     /// Get a sub menu controller from its string id
     /// </summary>
-    protected MenuController GetSubMenu(string id) 
+    public MenuController GetSubMenu(string id) 
     {
         if(!cachedSubmenus.ContainsKey(id))
             return null;
@@ -195,6 +229,15 @@ public abstract class MenuController : MonoBehaviour
             return true;
         return focusedPlayer.input.currentControlScheme != "KeyboardMouse";
     } }
+
+    public bool enableDebug = true;
+    public void MenuDebug(string message) 
+    {
+        if(!enableDebug) return;
+        Debug.Log($"[{this}] {message}");
+    }
+
+    public bool IsOpen { get { return gameObject.activeSelf; } }
 
 }
 

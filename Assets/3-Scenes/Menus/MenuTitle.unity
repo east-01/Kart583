@@ -950,6 +950,7 @@ MonoBehaviour:
   autoFocusOnPlayerOne: 0
   subMenus: []
   tooltips: []
+  enableDebug: 1
   titleShip: {fileID: 1718099842}
 --- !u!1001 &1627728046
 PrefabInstance:
