@@ -41,6 +41,10 @@ public class GameplayManager : NetworkBehaviour
     void Awake() 
     {
 
+        if(!CoreManager.IsMultiplayer) {
+            GetComponent<NetworkObject>().SetIsNetworked(false);
+        }
+
         List<string> problems = new();
         List<string> warnings = new();
 

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using FishNet.Object;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -51,7 +52,13 @@ public class KartLevelManager : MonoBehaviour
 
         if(spawnPositions == null) problems.Add("Failed to find SpawnPositions. " + (spo == null ? "No spawn position object found." : "Game object found, no SpawnPositions script component though."));
         if(waypoints == null) problems.Add("Failed to find Waypoints. " + (wpo == null ? "No waypoint object found." : "Game object found, no Waypoints script component though."));
-        if(kartContainer == null) problems.Add("Failed to find KartContainer. Add an empty object named KartContainer as a child of KartLevel.");
+        if(kartContainer == null) 
+            problems.Add("Failed to find KartContainer. Add an empty object named KartContainer as a child of KartLevel.");
+        else if(!CoreManager.IsMultiplayer) {
+            kartContainer.GetComponent<NetworkObject>().SetIsNetworked(false);
+        }
+
+
         if(itemContainer == null) problems.Add("Failed to find ItemContainer. Add an empty object named ItemContainer as a child of KartLevel. ");
         if(raceCamera == null) problems.Add("Failed to find Race Camera. " + (rco == null ? "No race camera object found." : "Game object found, no RaceCamera script component though."));
         if(screenManager == null) problems.Add("Failed to find ScreenManager.");

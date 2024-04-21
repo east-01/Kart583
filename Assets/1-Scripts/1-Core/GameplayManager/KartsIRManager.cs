@@ -35,7 +35,9 @@ public class KartsIRManager : NetworkBehaviour
 		kartSpawner = GetComponent<KartSpawner>();
 
 		kartSpawner.KartSpawnedEvent += KartManager_KartSpawned;
-		SceneDelegate.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToScene;
+		PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoined;
+		if(SceneDelegate.Instance != null)
+			SceneDelegate.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToScene;
 
 		print("TODO: Subscribe to player object spawned event in KartsIRManager, late join purposes.");
 	}
@@ -48,7 +50,9 @@ public class KartsIRManager : NetworkBehaviour
 	private void OnDestroy() 
 	{
 		kartSpawner.KartSpawnedEvent -= KartManager_KartSpawned;
-		SceneDelegate.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToScene;
+		PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoined;
+		if(SceneDelegate.Instance != null)
+			SceneDelegate.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToScene;
 	}
 
 	void Update()
@@ -66,6 +70,11 @@ public class KartsIRManager : NetworkBehaviour
 			i++; 
 		});
     }
+
+	private void PlayerObjectManager_PlayerJoined(PlayerObject newPlayer) 
+	{
+		SpawnPlayer(newPlayer);
+	}
 
     private void SceneDelegate_ClientAddedToScene(NetworkConnection client, SceneLookupData sceneLookupData)
     {

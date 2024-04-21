@@ -18,6 +18,7 @@ public class CoreManager : MonoBehaviour
     public static DevSettings DevSettings { get { return Instance.devSettings;} }
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
+    public static bool IsMultiplayer { get { return Instance.isMultiplayer; } }
 
     [Header("Prefabs"), SerializeField] private GameObject networkManagerPrefab;
     [SerializeField] private GameObject sceneDelegatePrefab;
