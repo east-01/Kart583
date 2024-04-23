@@ -117,6 +117,30 @@ public class CoreManager : MonoBehaviour
         return InstanceFinder.IsServer;
     } }
 
+    /// <summary>
+    /// Used as a replacement for the [Server] tag in cases where we want to handle bother networked
+    ///   and local code.
+    /// </summary>
+    public bool InstancedServerRequirement { get { 
+        if(IsMultiplayer && !InstanceFinder.IsServer)
+            return false;
+        else
+            return true;
+    } }
+    public static bool ServerRequirement { get { return Instance.InstancedServerRequirement;} }
+
+    /// <summary>
+    /// Used as a replacement for the [Client] tag in cases where we want to handle both networked
+    ///   and local code.
+    /// </summary>
+    public bool InstancedClientRequirement { get {
+        if(IsMultiplayer && !InstanceFinder.IsClient)
+            return false;
+        else
+            return true;
+    } }
+    public static bool ClientRequirement { get { return Instance.InstancedClientRequirement;} }
+
     public int PlayerLimit { get {
         if(DevSettings.OverridePlayerLimit)
             return DevSettings.playerLimit;

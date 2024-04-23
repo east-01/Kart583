@@ -8,7 +8,6 @@ using UnityEngine;
   * Other classes will refer to this to access game data. */
 [RequireComponent(typeof(RaceManager))]
 [RequireComponent(typeof(KartsIRManager))]
-[RequireComponent(typeof(KartSpawner))]
 [RequireComponent(typeof(ItemManager))]
 public class GameplayManager : NetworkBehaviour
 {
@@ -30,7 +29,6 @@ public class GameplayManager : NetworkBehaviour
 
     private RaceManager _raceManager;
     private KartsIRManager _kartsIRManager;
-    private KartSpawner _kartSpawner;
     private ItemManager _itemManager;
 
     private KartLevelManager kartLevelManager;
@@ -51,7 +49,6 @@ public class GameplayManager : NetworkBehaviour
         // Load everything
         _raceManager = GetComponent<RaceManager>();
         _kartsIRManager = GetComponent<KartsIRManager>();
-        _kartSpawner = GetComponent<KartSpawner>();
         _itemManager = GetComponent<ItemManager>();
 
         // Initialize KartLevelManager
@@ -81,7 +78,6 @@ public class GameplayManager : NetworkBehaviour
 
     public RaceManager RaceManager { get { return _raceManager; } }
     public KartsIRManager PlayerManager { get { return _kartsIRManager; } }
-    public KartSpawner KartSpawner { get { return _kartSpawner; } }
     public ItemManager ItemManager { get { return _itemManager; } }
 
     public KartLevelManager KartLevelManager { get { return kartLevelManager; } }
