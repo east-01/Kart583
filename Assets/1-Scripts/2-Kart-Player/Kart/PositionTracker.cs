@@ -19,14 +19,18 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     public float segmentCompletion;
     public float lapCompletion;
     [SyncVar]
+    private float syncRaceCompletion;
     private float raceCompletion;
     public float RaceCompletion {
-        get { return raceCompletion; }
+        get { return CoreManager.IsMultiplayer ? syncRaceCompletion : raceCompletion; }
         set {
-            if(base.IsServer) 
+            if(CoreManager.IsMultiplayer) {
+                if(base.IsServer) 
+                    raceCompletion = value;
+                else if(base.IsOwner)
+                    ServerRpcSetRaceCompletion(value);
+            } else
                 raceCompletion = value;
-            else if(base.IsOwner)
-                ServerRpcSetRaceCompletion(value);
         }
     }
     public int lapNumber;
@@ -124,9 +128,9 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     private void RaceFinished() 
     {
         if(base.IsServer)
-            gameplayManager.RaceManager.CompletedRace(kartManager.GetPlayerData(), raceCompletion);
+            gameplayManager.RaceManager.CompletedRace(kartManager.GetPlayerData(), RaceCompletion);
         else if(base.IsClient && base.IsOwner)
-            gameplayManager.RaceManager.ServerRpcCompletedRace(kartManager.GetPlayerData(), raceCompletion);
+            gameplayManager.RaceManager.ServerRpcCompletedRace(kartManager.GetPlayerData(), RaceCompletion);
 
         if(kartManager.HasPOIGDelegate) {
             kartManager.POIGDelegate.HUD.enabled = false;

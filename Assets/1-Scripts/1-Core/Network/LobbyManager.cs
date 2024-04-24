@@ -241,8 +241,8 @@ public class LobbyManager : NetworkBehaviour
     [Server]
     private string GenerateLobbyID() 
     {
-		for(int attempt = 0; attempt < KartSpawner.rlBotNames.Length; attempt++) {
-			string selection = KartSpawner.rlBotNames[UnityEngine.Random.Range(0, KartSpawner.rlBotNames.Length)];
+		for(int attempt = 0; attempt < KartsIRManager.rlBotNames.Length; attempt++) {
+			string selection = KartsIRManager.rlBotNames[UnityEngine.Random.Range(0, KartsIRManager.rlBotNames.Length)];
 			if(GetLobby(selection) == null)
 				return selection;
 		}

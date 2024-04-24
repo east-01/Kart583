@@ -14,10 +14,41 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	[SerializeField] 
 	private POIGDelegate poigDelegate;
 
-	[SerializeField, SyncVar(OnChange = nameof(PlayerDataChanged))] 
+	[SyncVar(OnChange = nameof(PlayerDataChanged))] 
+	private PlayerData syncData;
 	private PlayerData data;
+	public PlayerData Data {
+		get { return CoreManager.IsMultiplayer ? syncData : data; }
+		set {
+			if(CoreManager.IsMultiplayer) {
+				if(base.IsServer)
+					syncData = value; 
+				else 
+					ServerRpcSetPlayerData(value);
+			} else {
+				PlayerData prevData = data;
+				PlayerDataChanged(prevData, value, false);
+				data = value;
+			}
+		}
+	}
+
 	[SyncVar] 
+	private bool syncIsHuman;
 	private bool isHuman;
+	public bool IsHuman {
+		get { return CoreManager.IsMultiplayer ? syncIsHuman : isHuman;}
+		set {
+			if(CoreManager.IsMultiplayer) {
+				if(base.IsServer)
+					syncIsHuman = value;
+				else
+					ServerRpcSetIsHuman(value);
+			} else
+				isHuman = value;
+		}
+	}
+	public bool IsBot { get { return !IsHuman; } }
 
 	public bool ownershipChanged = false;
 
@@ -58,11 +89,8 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 			humanDriver.ConnectPlayerInput(input);
 		}
 
-		if(base.IsClient) {
-			ServerRpcSetIsHuman(true);
-			ServerRpcSetReady(true);
-		} else
-			throw new InvalidOperationException("Tried to ready human driver without being a client.");
+		IsHuman = true;
+		ReadyUp();
 	}
 
 	public void UseBotDriver() 
@@ -72,33 +100,29 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 		botItemManager.enabled = true;
 		humanDriver.enabled = false;
 
-		if(base.IsClient) { // Used when the player finishes race and switches to bot controller
-			ServerRpcSetIsHuman(false);
-			ServerRpcSetReady(true);
-		} else if(base.IsServer) {
-			isHuman = false;
-			data.ready = true;
-		}
+		IsHuman = false;
+		ReadyUp();
 	}
 
-	public void SetPlayerData(PlayerData data) 
-	{
-		this.data = data;
+	public void ReadyUp() {
+		PlayerData data = Data;
+		data.ready = true;
+		Data = data;
 	}
+
+	[ServerRpc]
+	public void ServerRpcSetPlayerData(PlayerData data) { SetPlayerData(data); }
+	public void SetPlayerData(PlayerData data) { this.Data = data; }
+
+	[ServerRpc]
+	public void ServerRpcSetIsHuman(bool isHuman) { this.IsHuman = isHuman; }
 
 	private void PlayerDataChanged(PlayerData prev, PlayerData current, bool asServer) 
 	{
-		gameObject.name = KartSpawner.KartNamePrefix + data.name;
+		gameObject.name = KartsIRManager.KartNamePrefix + Data.name;
 	}
 
-	[ServerRpc]
-	public void ServerRpcSetReady(bool readyStatus) { data.ready = readyStatus; }
-	[ServerRpc]
-	public void ServerRpcSetIsHuman(bool isHuman) { this.isHuman = isHuman; }
-
-	public PlayerData GetPlayerData() { return data; }
-	public bool IsHuman { get { return isHuman; } }
-	public bool IsBot { get { return !isHuman; } }
+	public PlayerData GetPlayerData() { return Data; }
 
 	public bool HasPOIGDelegate { get { return poigDelegate != null; } }
 	public POIGDelegate POIGDelegate { 

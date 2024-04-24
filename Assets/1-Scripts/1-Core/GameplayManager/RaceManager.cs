@@ -59,7 +59,7 @@ public class RaceManager : NetworkBehaviour
         // Spawn bots if we're not waiting on a late join
         // If we are waiting for a late join, the bots will be spawn after said player joins
         if(phase != RacePhase.LATE_JOIN) 
-            gameplayManager.KartSpawner.SpawnBots();
+            gameplayManager.PlayerManager.SpawnBots();
 
     }
 
@@ -133,7 +133,7 @@ public class RaceManager : NetworkBehaviour
                 break;
             case RacePhase.WAITING_FOR_PLAYERS:
                 if(asServer) {
-                    gameplayManager.KartSpawner.SpawnBots();
+                    gameplayManager.PlayerManager.SpawnBots();
                     placements.Clear();
                 }
                 break;
@@ -164,12 +164,18 @@ public class RaceManager : NetworkBehaviour
     /// <summary>
     /// Used by clients after they join
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
     public void PassLateJoin() 
     {
+        if(base.IsClient) {
+            ServerRpcPassLateJoin();
+            return;
+        }
         if(phase == RacePhase.LATE_JOIN)
             phase = RacePhase.WAITING_FOR_PLAYERS;
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcPassLateJoin() { PassLateJoin(); }
 
     /** Prepare's the player objects and splitscreen manager for the race */
     public void PrepareRace() 

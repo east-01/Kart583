@@ -140,8 +140,10 @@ public class KartsIRManager : NetworkBehaviour
 		newKart.name = KartNamePrefix + data.name;
 
 		// Spawn for server
-		base.ServerManager.Spawn(newKart, owner, gameplayManager.GameLobby.MapScene.Value);
-		newKart.GetComponent<NetworkObject>().SetParent(kartLevelManager.KartContainer.GetComponent<EmptyNetworkBehaviour>());
+		if(CoreManager.IsMultiplayer) {
+			base.ServerManager.Spawn(newKart, owner, gameplayManager.GameLobby.MapScene.Value);
+			newKart.GetComponent<NetworkObject>().SetParent(kartLevelManager.KartContainer.GetComponent<EmptyNetworkBehaviour>());
+		}
 
         // PlayerData management
 		data.ready = false;
@@ -149,9 +151,8 @@ public class KartsIRManager : NetworkBehaviour
 		newKartManager.SetPlayerData(data);
 
 		// Run event
-		if(CoreManager.IsMultiplayer) {
+		if(CoreManager.IsMultiplayer)
 			ObserversRpcAddKart(owner, data);
-		}
 
 		return newKartManager;
 	}
