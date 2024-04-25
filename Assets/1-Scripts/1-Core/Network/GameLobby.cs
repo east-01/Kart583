@@ -93,10 +93,7 @@ public class GameLobby
 
                     SendDebugMessage($"Picked level {level} and requesting map scene.");
                 } else if(level != null && MapScene != null) {
-                    foreach(NetworkConnection conn in players.Keys) {
-                        SceneDelegate.Instance.AddClientToScene(conn, mapSceneData);
-                    }
-                    
+                    MovePlayersToMap();                    
                     state = LobbyState.RACING;
                 }
                 break;
@@ -143,6 +140,13 @@ public class GameLobby
         SceneElements elements = SceneDelegate.Instance.GetSceneElements(mapSceneData);
         foreach(NetworkConnection client in elements.Clients) {
             SceneDelegate.Instance.AddClientToScene(client, lobbySceneData);
+        }
+    }
+
+    public void MovePlayersToMap() 
+    {
+        foreach(NetworkConnection conn in players.Keys) {
+            SceneDelegate.Instance.AddClientToScene(conn, mapSceneData);
         }
     }
 #endregion

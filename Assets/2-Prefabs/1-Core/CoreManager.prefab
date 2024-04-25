@@ -52,7 +52,7 @@ MonoBehaviour:
   masterEnable: 1
   overridePlayerLimit: 1
   playerLimit: 1
-  loadMode: 1
+  loadMode: 2
   overrideMapPick: 1
   map: 0
   haveStandalonePlayerRunAsServer: 1

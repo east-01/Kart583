@@ -55,7 +55,6 @@ public class CoreManager : MonoBehaviour
         CheckNetworkManager();
         CheckPlayerObjectManager();
         CheckScreenLogger();
-
     }
 
     private void Update() 
