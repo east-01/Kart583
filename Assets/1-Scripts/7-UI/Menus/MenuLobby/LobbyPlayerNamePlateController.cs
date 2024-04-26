@@ -6,9 +6,6 @@ public class LobbyPlayerNamePlateController : MonoBehaviour
 {
 
     [SerializeField]
-    private GameObject atlasesPrefab;
-
-    [SerializeField]
     private TMP_Text playerNameText;
     [SerializeField]
     private TMP_Text playerScoreText;
@@ -20,8 +17,7 @@ public class LobbyPlayerNamePlateController : MonoBehaviour
         playerNameText.text = data.name;
         playerScoreText.text = data.points + "";
 
-        KartAtlas ka = atlasesPrefab.GetComponent<KartAtlas>();
-        kartImage.sprite = ka.RetrieveData(data.kartType).image;
+        kartImage.sprite = CoreManager.KartAtlas.RetrieveData(data.kartType).image;
     }
 
 }

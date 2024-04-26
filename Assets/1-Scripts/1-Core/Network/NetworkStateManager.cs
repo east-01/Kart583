@@ -17,6 +17,10 @@ public class NetworkStateManager : MonoBehaviour
 {
 
     private NetworkManager _networkManager;
+    private TransportManager transportManager;
+    private Tugboat tugboat;
+    private FishyUnityTransport fishyUnityTransport;
+
     private LocalConnectionState _serverConnectionState;
     private LocalConnectionState _clientConnectionState;
 
@@ -33,12 +37,18 @@ public class NetworkStateManager : MonoBehaviour
     void Start() 
     {
         _networkManager = GetComponent<NetworkManager>();
+        transportManager = GetComponent<TransportManager>();
+        tugboat = GetComponent<Tugboat>();
+        fishyUnityTransport = GetComponent<FishyUnityTransport>();
 
         _networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
 
         // Switch transport between FishyUnityTransport and Tugboat
-        GetComponent<TransportManager>().Transport = GameVersion.IsDevelopment ? GetComponent<Tugboat>() : GetComponent<FishyUnityTransport>();
+        if(GameVersion.IsDevelopment)
+            UseLocalTransport();
+        else
+            UseGlobalTransport();
 
     }
 
@@ -53,12 +63,31 @@ public class NetworkStateManager : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (_networkManager == null)
+            return;
+
+        _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
+        _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
+    }
+
+#region TransportSelection
+    public bool IsUsingLocalTransport { get {
+        return transportManager.Transport = tugboat;
+    } }
+
+    public void UseLocalTransport() { transportManager.Transport = tugboat; }
+    public void UseGlobalTransport() { transportManager.Transport = fishyUnityTransport; }
+#endregion
+
+#region Server/Client Start and Stop
     public void StartClient() 
     {
-        if(ServerConnectionState != LocalConnectionState.Stopped) {
-            Debug.LogError("Can't start client when server is active.");
-            return;
-        }
+        // if(ServerConnectionState != LocalConnectionState.Stopped) {
+        //     Debug.LogError("Can't start client when server is active.");
+        //     return;
+        // }
 
         if(ClientConnectionState != LocalConnectionState.Stopped) {
             Debug.LogWarning("Ignoring StartClient call. Client is already started.");
@@ -78,10 +107,10 @@ public class NetworkStateManager : MonoBehaviour
 
     public void StartServer() 
     {
-        if(ClientConnectionState != LocalConnectionState.Stopped) {
-            Debug.LogError("Can't start server when client is active.");
-            return;
-        }
+        // if(ClientConnectionState != LocalConnectionState.Stopped) {
+        //     Debug.LogError("Can't start server when client is active.");
+        //     return;
+        // }
 
         if(ServerConnectionState != LocalConnectionState.Stopped) {
             Debug.LogWarning("Ignoring StartServer call. Client is already started.");
@@ -98,16 +127,9 @@ public class NetworkStateManager : MonoBehaviour
 
         _networkManager.ServerManager.StopConnection(true);
     }
+#endregion
 
-    private void OnDestroy()
-    {
-        if (_networkManager == null)
-            return;
-
-        _networkManager.ServerManager.OnServerConnectionState -= ServerManager_OnServerConnectionState;
-        _networkManager.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
-    }
-
+#region Events
     private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)
     {
         _clientConnectionState = args.ConnectionState;
@@ -129,5 +151,6 @@ public class NetworkStateManager : MonoBehaviour
             serverStatusText.gameObject.SetActive(false);
         }
     }
+#endregion
 
 }

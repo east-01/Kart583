@@ -16,8 +16,6 @@ public class GameplayManager : NetworkBehaviour
     [Header("Prefabs")]
     [SerializeField]
     private GameObject playerObjectManagerPrefab;
-    [SerializeField]
-    private GameObject atlasesPrefab;
 
     [Header("Settings")]
     public bool showWarnings = false;
@@ -82,10 +80,6 @@ public class GameplayManager : NetworkBehaviour
 
     public KartLevelManager KartLevelManager { get { return kartLevelManager; } }
     public GameLobby GameLobby { get { return lobby; } }
-
-    public ItemAtlas ItemAtlas { get { return atlasesPrefab.GetComponent<ItemAtlas>(); } }
-    public LevelAtlas LevelAtlas { get { return atlasesPrefab.GetComponent<LevelAtlas>(); } }
-    public KartAtlas KartAtlas { get { return atlasesPrefab.GetComponent<KartAtlas>(); } }
 
     [Server]
     public void SetGameLobby(GameLobby gameLobby) {

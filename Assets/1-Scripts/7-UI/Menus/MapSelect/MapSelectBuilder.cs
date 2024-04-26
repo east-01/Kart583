@@ -10,7 +10,6 @@ using UnityEngine.UI;
 public class MapSelectBuilder : MonoBehaviour
 {
     
-    public GameObject atlasesPrefab;
     public GameObject levelIconPrefab;
     public RectTransform levelIconContainer;
 
@@ -42,7 +41,7 @@ public class MapSelectBuilder : MonoBehaviour
             newMenuElements.Add(lvlIconObj);
 
             // Set attributes
-            LevelDataPackage data = atlasesPrefab.GetComponent<LevelAtlas>().RetrieveData((KartLevel)enumIdx);
+            LevelDataPackage data = CoreManager.LevelAtlas.RetrieveData((KartLevel)enumIdx);
             lvlIconObj.GetComponent<LevelIcon>().Load(data);
             
         }
@@ -58,7 +57,7 @@ public class MapSelectBuilder : MonoBehaviour
     public void SetPage(int page) { this.page = Math.Clamp(0, PageCount, page); }
 
     public int PageCount { get { 
-        int lvlCount = atlasesPrefab.GetComponent<LevelAtlas>().Levels.Count;
+        int lvlCount = CoreManager.LevelAtlas.Levels.Count;
         return (int)(lvlCount/(float)MaxPageSize) + 1; 
     } }
 

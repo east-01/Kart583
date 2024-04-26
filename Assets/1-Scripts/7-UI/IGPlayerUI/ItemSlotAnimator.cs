@@ -73,7 +73,7 @@ public class ItemSlotAnimator : MonoBehaviour, GameplayManagerBehavior
             if(lastImage) 
                 SpawnNewImage(true, this.result);
             else
-                SpawnNewImage(false, gameplayManager.ItemAtlas.RollRandom());
+                SpawnNewImage(false, CoreManager.ItemAtlas.RollRandom());
         }
 
     }

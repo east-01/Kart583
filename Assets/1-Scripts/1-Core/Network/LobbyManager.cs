@@ -33,6 +33,18 @@ public class LobbyManager : NetworkBehaviour
             Debug.LogWarning("GameLobby's PLAYER_WAIT_TIME is <= 0, this is not recommended.");
     }
 
+    public override void OnStartClient() 
+    {
+        if(!CoreManager.Instance.isMultiplayer)
+            return;
+
+        if(PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.GetPlayerObjects().Count > 0) {
+            ServerRpcJoinLobby(base.LocalConnection, PlayerObjectManager.Instance.GetPlayerObjects()[0].data);
+        } else {
+            waitingForInput = true;
+        }
+    }
+
     private void Update () 
     {
         foreach(GameLobby lobby in lobbies.Values) { lobby.Update(); }
@@ -40,15 +52,6 @@ public class LobbyManager : NetworkBehaviour
         if(waitingForInput && PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.GetPlayerObjects().Count > 0) {
             waitingForInput = false;
             ServerRpcJoinLobby(base.LocalConnection, PlayerObjectManager.Instance.GetPlayerObjects()[0].data);
-        }
-    }
-
-    public override void OnStartClient() 
-    {
-        if(PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.GetPlayerObjects().Count > 0) {
-            ServerRpcJoinLobby(base.LocalConnection, PlayerObjectManager.Instance.GetPlayerObjects()[0].data);
-        } else {
-            waitingForInput = true;
         }
     }
 

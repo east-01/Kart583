@@ -6,8 +6,6 @@ using UnityEngine;
 public class DevSettings : MonoBehaviour
 {
 
-    [SerializeField] private GameObject atlasesPrefab;
-
     [SerializeField] private bool masterEnable;
 
     [SerializeField] private bool overridePlayerLimit = false;
@@ -80,8 +78,7 @@ public class DevSettings : MonoBehaviour
             KartLevel mapPick = OverrideMapPick ? map : GameLobby.PickKartLevel();
             if(!OverrideMapPick) 
                 Debug.Log($"<color=green>SimulateLoad: loading into local play map but override map pick is off, picked {mapPick} randomly.</color>");
-            LevelAtlas la = atlasesPrefab.GetComponent<LevelAtlas>();
-            CoreManager.TransitionManager.LoadScene(la.RetrieveData(mapPick).sceneName);
+            CoreManager.Instance.LoadLocalMap(mapPick);
         }
     }
 

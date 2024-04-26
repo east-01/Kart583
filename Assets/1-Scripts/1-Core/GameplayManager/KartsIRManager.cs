@@ -36,19 +36,21 @@ public class KartsIRManager : NetworkBehaviour
 
 		kartSpawner.KartSpawnedEvent += KartManager_KartSpawned;
 		SceneDelegate.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToScene;
+		PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerObjectJoined;
 
 		print("TODO: Subscribe to player object spawned event in KartsIRManager, late join purposes.");
 	}
 
     void Start() 
 	{
-		// PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
+		PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
 	}
 
 	private void OnDestroy() 
 	{
 		kartSpawner.KartSpawnedEvent -= KartManager_KartSpawned;
 		SceneDelegate.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToScene;
+		PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerObjectJoined;
 	}
 
 	void Update()
@@ -75,6 +77,11 @@ public class KartsIRManager : NetworkBehaviour
 		print("client added to map scene, spawning player objects");
 		PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
     }
+
+	private void PlayerObjectManager_PlayerObjectJoined(PlayerObject newObject) 
+	{
+		SpawnPlayer(newObject);
+	}
 
 	/// <summary>
 	/// Spawns a kart using SpawnKart, queues up the PlayerObject to wait for when the server spawns the kart.

@@ -5,8 +5,6 @@ using UnityEngine;
 public class KartVisualsManager : KartBehavior
 {
     [SerializeField]
-    private KartAtlas atlasesPrefab;
-    [SerializeField]
     private GameObject bumpParticlePrefab;
 
     [SerializeField]
@@ -37,7 +35,7 @@ public class KartVisualsManager : KartBehavior
 
     public void LoadKartModel() 
     {
-        KartDataPackage kdp = atlasesPrefab.RetrieveData(kartManager.GetPlayerData().kartType);
+        KartDataPackage kdp = CoreManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
 		kartCtrl.settings = kdp.settings;
 	
 		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);

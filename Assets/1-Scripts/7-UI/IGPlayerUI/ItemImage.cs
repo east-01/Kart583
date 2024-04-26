@@ -78,7 +78,7 @@ public class ItemImage : MonoBehaviour, GameplayManagerBehavior
 
         this.animationTime = 0;    
 
-        GetComponent<Image>().sprite = gameplayManager.ItemAtlas.RetrieveData(item).itemIcon;
+        GetComponent<Image>().sprite = CoreManager.ItemAtlas.RetrieveData(item).itemIcon;
 
         gameObject.SetActive(true);
 

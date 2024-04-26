@@ -9,10 +9,24 @@ using UnityEngine.UI;
 public class LevelIcon : MonoBehaviour
 {
 
-    public GameObject mapImageObj;
-    public TMP_Text titleText;
+    private MenuMapController menuMapController;
+
+    [SerializeField] private GameObject mapImageObj;
+    [SerializeField] private TMP_Text titleText;
 
     private LevelDataPackage data;
+
+    private void Awake() 
+    {
+        MenuMapController[] menuMapControllers = FindObjectsOfType<MenuMapController>();
+        if(menuMapControllers.Length != 1) {
+            Debug.LogError($"Located more than one MenuMapController ({menuMapControllers.Length})");
+            gameObject.SetActive(false);
+            return;
+        }
+
+        menuMapController = menuMapControllers[0];
+    }
 
     /** Load a LevelDataPackage and update visuals. */
     public void Load(LevelDataPackage data) 
@@ -30,11 +44,7 @@ public class LevelIcon : MonoBehaviour
 
     public void Clicked() 
     {
-        int buildIndex = SceneUtility.GetBuildIndexByScenePath(data.sceneName);
-        if(buildIndex == -1) 
-            throw new InvalidOperationException("Scene \"" + data.sceneName + "\" doesn't exist (or doesn't have a build index at least)");
-        
-        CoreManager.TransitionManager.LoadScene(data.sceneName);
+        menuMapController.ClickedMapIcon(data.Level);
     }
 
 }

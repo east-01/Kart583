@@ -10,30 +10,19 @@ using UnityEngine.UI;
 public class MenuMapController : MenuController
 {
     
-    [SerializeField] List<GameObject> toolTips;
-
-    private void Start() 
+    protected new void Awake() 
     {
-        // If we're missing the player object manager send us to player menu to get it
-        if(PlayerObjectManager.Instance == null) {
-            SceneManager.LoadScene(SceneNames.MENU_PLAYER);
-            return;
-        }
-
-        // Find player 1's input and let them control
-        PlayerInput p0 = PlayerObjectManager.Instance.GetPlayerObjects()[0].input;
-        p0.uiInputModule = GetComponentInChildren<InputSystemUIInputModule>();
-        p0.SwitchCurrentActionMap("UI");
-
-        // Select first map
+        // We should load the map icons first so we can utilize MenuController's firstSelect feature
         MapSelectBuilder builder = GetComponent<MapSelectBuilder>();
         builder.ReloadMenu();  
-        Button toSelect = builder.MenuElements[0].GetComponent<Button>();
-        if(p0.currentControlScheme != "KeyboardMouse")
-            toSelect.Select();
+        firstSelect = builder.MenuElements[0].GetComponent<Button>();
 
-        // Set observed inputs on tooltips
-        toolTips.ForEach(tt => tt.GetComponent<ToolTip>().SetObservedInput(p0));
+        base.Awake();
+    }
+
+    public void ClickedMapIcon(KartLevel level) 
+    {   
+        CoreManager.Instance.LoadLocalMap(level);
     }
 
     protected override void SendMenuBack()

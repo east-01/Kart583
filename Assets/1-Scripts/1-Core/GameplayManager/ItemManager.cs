@@ -26,7 +26,7 @@ public class ItemManager : NetworkBehaviour
             return;
         }
 
-        GameObject itemPrefab = gameplayManager.ItemAtlas.RetrieveData(spawnData.itemType).worldItemPrefab;
+        GameObject itemPrefab = CoreManager.ItemAtlas.RetrieveData(spawnData.itemType).worldItemPrefab;
         if(itemPrefab == null) {
             Debug.LogError($"Item type \"{spawnData.itemType}\" doesn't have a world item prefab.");
             return;

@@ -79,6 +79,7 @@ MonoBehaviour:
   sceneDelegatePrefab: {fileID: 786467654113088903, guid: 59c0f57aad8c73042ae9d206018c26c0, type: 3}
   playerObjectManagerPrefab: {fileID: 1451273396316291034, guid: 1d5be95719efe044689066dd96520717, type: 3}
   screenLoggerPrefab: {fileID: 101706, guid: e0aeafd6ca709b5449035c42f4e3879e, type: 3}
+  atlasesPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
   isMultiplayer: 0
   playerLimit: 8
 --- !u!114 &7823777009711212984

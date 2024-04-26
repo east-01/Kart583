@@ -389,6 +389,9 @@ public class SceneDelegate : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void ServerRpcClientLoadedScene(NetworkConnection client, SceneLookupData serverSceneLookupData) 
     {
+        if(!CoreManager.Instance.isMultiplayer)
+            return;
+            
         if(!IsSceneRegistered(serverSceneLookupData)) {
             Debug.LogError($"Client loaded scene but server doesn't have corresponding scene loaded. Lookup info: {serverSceneLookupData.Name} handle: {serverSceneLookupData.Handle}");
             return;
@@ -438,6 +441,8 @@ public class SceneDelegate : NetworkBehaviour
     public void CheckInitialGlobalScene() 
     {
         if(!base.IsServer)
+            return;
+        if(!CoreManager.Instance.isMultiplayer)
             return;
 
         // Ensure that the server makes its global scene MenuServer, that way we'll be able

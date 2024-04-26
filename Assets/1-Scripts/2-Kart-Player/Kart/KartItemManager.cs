@@ -61,7 +61,7 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 
 		} else if(!pressed && heldItem != Item.NONE) {
 
-			GameObject worldItemPrefab = gameplayManager.ItemAtlas.RetrieveData(heldItem).worldItemPrefab;
+			GameObject worldItemPrefab = CoreManager.ItemAtlas.RetrieveData(heldItem).worldItemPrefab;
 			String err = null;
 			if(worldItemPrefab == null || worldItemPrefab.GetComponent<WorldItem>() == null)	
 				err = worldItemPrefab == null ? 
@@ -105,7 +105,7 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 			return false;
 
 		// Eventually this code will change to better give items based off of position
-        Item result = gameplayManager.ItemAtlas.RollRandom();
+        Item result = CoreManager.ItemAtlas.RollRandom();
 
 		slotItem = result;
 
@@ -149,7 +149,7 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 			heldItemImage.gameObject.SetActive(false);
 		} else {
 			heldItemImage.gameObject.SetActive(true);
-			heldItemImage.sprite = gameplayManager.ItemAtlas.RetrieveData(heldItem).itemIcon;
+			heldItemImage.sprite = CoreManager.ItemAtlas.RetrieveData(heldItem).itemIcon;
 		}
 
 		if(slotItem == Item.NONE && ItemSlotManager != null) {

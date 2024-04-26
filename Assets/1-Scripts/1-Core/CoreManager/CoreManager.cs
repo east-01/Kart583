@@ -18,11 +18,16 @@ public class CoreManager : MonoBehaviour
     public static DevSettings DevSettings { get { return Instance.devSettings;} }
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
+    public static NetworkStateManager NetworkStateManager { get { return InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>(); } }
+    public static LevelAtlas LevelAtlas { get { return Instance.atlasesPrefab.GetComponent<LevelAtlas>(); } }
+    public static KartAtlas KartAtlas { get { return Instance.atlasesPrefab.GetComponent<KartAtlas>(); } }
+    public static ItemAtlas ItemAtlas { get { return Instance.atlasesPrefab.GetComponent<ItemAtlas>(); } }
 
     [Header("Prefabs"), SerializeField] private GameObject networkManagerPrefab;
     [SerializeField] private GameObject sceneDelegatePrefab;
     [SerializeField] private GameObject playerObjectManagerPrefab;
     [SerializeField] private GameObject screenLoggerPrefab;
+    [SerializeField] private GameObject atlasesPrefab;
 
     [Header("Settings")] public bool isMultiplayer;
     [SerializeField] private int playerLimit = 8;
@@ -104,6 +109,23 @@ public class CoreManager : MonoBehaviour
             return;
 
         Instantiate(screenLoggerPrefab);
+    }
+
+    /// <summary>
+    /// Load a map for local play, ensures a local server is running and that we're connected to it.
+    /// </summary>
+    public void LoadLocalMap(KartLevel map) 
+    {
+        NetworkStateManager nsm = NetworkStateManager;
+        nsm.UseLocalTransport();
+
+        if(nsm.ServerConnectionState == FishNet.Transporting.LocalConnectionState.Stopped)
+            nsm.StartServer();
+
+        if(nsm.ClientConnectionState == FishNet.Transporting.LocalConnectionState.Stopped)
+            nsm.StartClient();
+
+        TransitionManager.LoadScene(LevelAtlas.RetrieveData(map).sceneName);
     }
 
     /// <summary>

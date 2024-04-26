@@ -32,6 +32,12 @@ public class MenuLobbyController : MenuController
         networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
 
+        // Ensure we're using the right transport
+        if(GameVersion.IsDevelopment)
+            CoreManager.NetworkStateManager.UseLocalTransport();
+        else
+            CoreManager.NetworkStateManager.UseGlobalTransport();
+
     }
 
     private void Update() {
