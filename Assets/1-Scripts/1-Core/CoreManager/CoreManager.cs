@@ -125,7 +125,8 @@ public class CoreManager : MonoBehaviour
         if(nsm.ClientConnectionState == FishNet.Transporting.LocalConnectionState.Stopped)
             nsm.StartClient();
 
-        TransitionManager.LoadScene(LevelAtlas.RetrieveData(map).sceneName);
+        SceneDelegate.Instance.LoadGlobalSceneAsServer(new(LevelAtlas.RetrieveData(map).sceneName));
+        // TransitionManager.LoadScene(LevelAtlas.RetrieveData(map).sceneName);
     }
 
     /// <summary>

@@ -107,6 +107,13 @@ public class SceneDelegate : NetworkBehaviour
         SceneDelegateDebug($"Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}");
     }
 
+    [Server]
+    public void LoadGlobalSceneAsServer(SceneLookupData lookupData) 
+    {
+        SceneLoadData sld = new SceneLoadData(lookupData);
+        base.SceneManager.LoadGlobalScenes(sld);
+    }
+
     [Client]
     public void LoadSceneAsClient(SceneLookupData lookupData) 
     {
@@ -140,12 +147,12 @@ public class SceneDelegate : NetworkBehaviour
     private void FishSceneManager_SceneLoaded(SceneLoadEndEventArgs args)
     {
         foreach(Scene scene in args.LoadedScenes) {
-            SceneDelegate.SceneDelegateDebug($"{(base.IsServer ? "Server" : "Client")} loaded scene " + scene.name + ", handle: " + scene.handle);
+            SceneDelegateDebug($"{(base.IsServer ? "Server" : "Client")} loaded scene " + scene.name + ", handle: " + scene.handle);
             RegisterScene(scene);
         }
 
         // Disable event systems
-        if(base.IsServer) {
+        if(base.IsServer && CoreManager.Instance.isMultiplayer) {
             int disabledEventSystems = 0;
             foreach(EventSystem system in FindObjectsOfType<EventSystem>()) {
                 system.enabled = false;
