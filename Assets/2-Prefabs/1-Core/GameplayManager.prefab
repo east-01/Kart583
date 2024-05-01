@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 6795377866323719207}
   - component: {fileID: 5244667296191878687}
   - component: {fileID: 5244667296191878685}
-  - component: {fileID: 8016103563887908404}
   - component: {fileID: 704151461757926555}
   m_Layer: 0
   m_Name: GameplayManager
@@ -56,7 +55,6 @@ MonoBehaviour:
   - {fileID: 6795377866323719207}
   - {fileID: 5244667296191878687}
   - {fileID: 5244667296191878685}
-  - {fileID: 8016103563887908404}
   - {fileID: 704151461757926555}
   <ParentNetworkObject>k__BackingField: {fileID: 0}
   <ChildNetworkObjects>k__BackingField: []
@@ -90,7 +88,6 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}
   playerObjectManagerPrefab: {fileID: 1451273396316291034, guid: 1d5be95719efe044689066dd96520717, type: 3}
-  atlasesPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
   showWarnings: 0
   showBotPathWarnings: 0
   playStartAnimation: 1
@@ -135,25 +132,10 @@ MonoBehaviour:
   _componentIndexCache: 2
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}
+  kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
   playerObjectInGamePrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
   kartObjects: []
   playerPositions: []
---- !u!114 &8016103563887908404
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5244667296191878682}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d23b6192233c3d4b88a298618abbeef, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 3
-  _addedNetworkObject: {fileID: 7290347010873503086}
-  _networkObjectCache: {fileID: 7290347010873503086}
-  kartPrefab: {fileID: 5130578726108140990, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
 --- !u!114 &704151461757926555
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -166,6 +148,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bafacc7c977acf143acd635e5b08c7c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 4
+  _componentIndexCache: 3
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}

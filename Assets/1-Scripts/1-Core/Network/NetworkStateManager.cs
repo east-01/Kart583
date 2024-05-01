@@ -127,6 +127,24 @@ public class NetworkStateManager : MonoBehaviour
 
         _networkManager.ServerManager.StopConnection(true);
     }
+
+    public void StartHost() 
+    {
+        if(ServerConnectionState == LocalConnectionState.Stopped)
+            StartServer();
+
+        if(ClientConnectionState == LocalConnectionState.Stopped)
+            StartClient();
+    }
+
+    public void StopHost() 
+    {
+        if(ServerConnectionState != LocalConnectionState.Stopped)
+            StopServer();
+
+        if(ClientConnectionState != LocalConnectionState.Stopped)
+            StopClient();
+    }
 #endregion
 
 #region Events

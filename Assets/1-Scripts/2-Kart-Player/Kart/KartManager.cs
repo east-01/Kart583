@@ -49,18 +49,23 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	/** Connects the PlayerInput to the HumanDriver script in the kart's brain. */
 	public void UseHumanDriver(PlayerInput input) 
 	{
-
-		if(base.IsOwner) {
+		if(base.IsOwner || CoreManager.IsLocal) {
 			botPath.enabled = false;
 			botDriver.enabled = false;
 			botItemManager.enabled = false;
 			humanDriver.enabled = true;
 			humanDriver.ConnectPlayerInput(input);
+		} else {
+			Debug.LogError($"Failed to use human driver on kart. Not owner, owner is: \"{base.Owner}\".");
+			return;
 		}
 
-		if(base.IsClient) {
+		if(base.IsClient && !base.IsHost) {
 			ServerRpcSetIsHuman(true);
 			ServerRpcSetReady(true);
+		} else if(base.IsServer) {
+			isHuman = true;
+			data.ready = true;
 		} else
 			throw new InvalidOperationException("Tried to ready human driver without being a client.");
 	}
@@ -88,7 +93,7 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 
 	private void PlayerDataChanged(PlayerData prev, PlayerData current, bool asServer) 
 	{
-		gameObject.name = KartSpawner.KartNamePrefix + data.name;
+		gameObject.name = KartsIRManager.KartNamePrefix + data.name;
 	}
 
 	[ServerRpc]

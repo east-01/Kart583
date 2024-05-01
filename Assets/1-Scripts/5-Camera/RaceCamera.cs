@@ -30,6 +30,7 @@ public class RaceCamera : MonoBehaviour, GameplayManagerBehavior
     public void GameplayManagerLoaded(GameplayManager gameplayManager)
     {
         this.gameplayManager = gameplayManager;
+        print($"<color=aqua>setting kartLevelManager as: {gameplayManager.KartLevelManager}</color>");
         this.kartLevelManager = gameplayManager.KartLevelManager;
     }
 

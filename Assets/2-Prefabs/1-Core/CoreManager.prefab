@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 141262640191590162}
   - component: {fileID: 7823777009711212984}
   - component: {fileID: 67028911781127713}
+  - component: {fileID: 153415242143646867}
   m_Layer: 0
   m_Name: CoreManager
   m_TagString: Untagged
@@ -48,11 +49,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f6d0d019cba52c48a9f0fc1a49ef0c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  atlasesPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
   masterEnable: 1
   overridePlayerLimit: 1
   playerLimit: 1
-  loadMode: 2
+  loadMode: 0
   overrideMapPick: 1
   map: 0
   haveStandalonePlayerRunAsServer: 1
@@ -109,6 +109,30 @@ MonoBehaviour:
   transition: {fileID: 3274048165059866362}
   child: {fileID: 7980930209459765430}
   transitionTime: 0.5
+--- !u!114 &153415242143646867
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 72735794780100705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 034443e31657e674ca38d3ced156cdba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  channelDatas:
+  - channel: 1
+    color: {r: 0.8509804, g: 0.2695938, b: 0, a: 1}
+  - channel: 3
+    color: {r: 0.5188043, g: 1, b: 0.2679245, a: 1}
+  - channel: 2
+    color: {r: 0.9150943, g: 0.5203897, b: 0, a: 1}
+  - channel: 4
+    color: {r: 0.8679245, g: 0.77293026, b: 0, a: 1}
+  - channel: 5
+    color: {r: 1, g: 1, b: 0.6, a: 1}
+  verbosity: 5
 --- !u!1 &7980930209459765430
 GameObject:
   m_ObjectHideFlags: 0

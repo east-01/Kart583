@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object.Synchronizing;
@@ -25,14 +26,13 @@ public class GameLobby
     public LobbyState state { 
         get { return _state; }
         set {
-            SendDebugMessage($"Setting state to {value}");
+            BLog.Log($"{MessagePrefix}Setting state to {value}", LogChannel.GameLobby, 1);
+            LobbyState prevState = _state;
             _state = value;
             timeInState = 0;
-            if(value == LobbyState.MAP_SELECTION) {
-                level = null;
-                MovePlayersToLobby();
-            }
-            manager.UpdateLobby(id, LobbyUpdateReason.STATE_CHANGE);
+            LobbyStateChanged(prevState, _state);
+            if(manager.HasLobby(id))
+                manager.UpdateLobby(id, LobbyUpdateReason.STATE_CHANGE);
         }
     }
     private float timeInState;
@@ -40,7 +40,6 @@ public class GameLobby
     private Dictionary<NetworkConnection, PlayerData> players = new(); // Players in lobby
 
     /* Scene related */
-    private SceneLookupData lobbySceneData;
     private SceneLookupData mapSceneData;
 
     /// <summary>
@@ -55,6 +54,7 @@ public class GameLobby
 
     /* Game related */
     private KartLevel? level;
+    private bool canAutoSelectLevel { get { return CoreManager.IsMultiplayer && CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch; } }
     private GameplayManager gameplayManager;
 
     public GameLobby(LobbyManager manager, string id) 
@@ -68,6 +68,12 @@ public class GameLobby
 
         state = LobbyState.WAITING_FOR_PLAYERS;
         level = null;
+
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if(CoreManager.IsLocal && SceneNames.IsMapScene(sceneName)) {
+            state = LobbyState.RACING;
+            level = CoreManager.LevelAtlas.SearchEnumBySceneName(sceneName);
+        }
     }
 
     public void Update() 
@@ -77,21 +83,22 @@ public class GameLobby
 
         switch(state) {
             case LobbyState.WAITING_FOR_PLAYERS:
-                bool timePassed = CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && timeInState >= PLAYER_WAIT_TIME;
-                if(Input.GetKeyDown(FORCE_MAP_PICK_KEY) || (!CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0) || timePassed)
+                bool timePassed = canAutoSelectLevel && timeInState >= PLAYER_WAIT_TIME;
+                bool noAvailableSpace = canAutoSelectLevel && !CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0;
+                if(Input.GetKeyDown(FORCE_MAP_PICK_KEY) || 
+                   noAvailableSpace || 
+                   timePassed || 
+                   CoreManager.IsLocal)
                     state = LobbyState.MAP_SELECTION;
                 break;
             case LobbyState.MAP_SELECTION:
-                if(level == null && timeInState >= MAP_PICK_TIME) {
+                if(level == null && canAutoSelectLevel && timeInState >= MAP_PICK_TIME) {
                     if(CoreManager.DevSettings.OverrideMapPick)
                         level = CoreManager.DevSettings.map;
                     else 
                         level = PickKartLevel();
 
-                    SceneLookupData newMapLookupData = new(SceneDelegate.Instance.LevelAtlas.RetrieveData(level.Value).sceneName);
-                    SceneDelegate.Instance.LoadSceneAsServer(newMapLookupData);
-
-                    SendDebugMessage($"Picked level {level} and requesting map scene.");
+                    SetLevel(level.Value);
                 } else if(level != null && MapScene != null) {
                     MovePlayersToMap();                    
                     state = LobbyState.RACING;
@@ -99,17 +106,6 @@ public class GameLobby
                 break;
             case LobbyState.RACING:
                 break;
-        }
-
-        if(LobbyScene == null && Time.time - lastLobbyRequestTime >= 5f) {
-            SceneDelegate.Instance.LoadSceneAsServer(new(SceneNames.MENU_LOBBY));
-            lastLobbyRequestTime = Time.time;
-        } else if(LobbyScene != null && lobbyJoinQueue.Count > 0) {
-            // Handle lobby join queue
-            lobbyJoinQueue.ForEach(conn => {
-                SceneDelegate.Instance.AddClientToScene(conn, lobbySceneData);
-            });
-            lobbyJoinQueue.Clear();
         }
 
     }  
@@ -120,11 +116,11 @@ public class GameLobby
         players.Add(conn, data);
         manager.UpdateLobby(id, LobbyUpdateReason.PLAYER_JOIN);
  
-        SendDebugMessage("Adding player " + data.Summary + " to " + (LobbyScene != null ? "scene." : "queue."));
-        if(LobbyScene != null)
-            SceneDelegate.Instance.AddClientToScene(conn, lobbySceneData);
-        else
-            lobbyJoinQueue.Add(conn);
+        BLog.Log($"{MessagePrefix}Adding player {data.Summary} to lobby.", LogChannel.GameLobby, 0);
+        // if(LobbyScene != null)
+        //     SceneDelegate.Instance.AddClientToScene(conn, lobbySceneData);
+        // else
+        //     lobbyJoinQueue.Add(conn);
     }
 
     /// <summary>
@@ -139,12 +135,13 @@ public class GameLobby
 
         SceneElements elements = SceneDelegate.Instance.GetSceneElements(mapSceneData);
         foreach(NetworkConnection client in elements.Clients) {
-            SceneDelegate.Instance.AddClientToScene(client, lobbySceneData);
+            SceneDelegate.Instance.TargetRpcEnsureSceneLoaded(client, new(SceneNames.MENU_LOBBY));
         }
     }
 
     public void MovePlayersToMap() 
     {
+        BLog.Log($"{MessagePrefix}Sending {players.Count} player(s) to map, is server: {InstanceFinder.IsServer} is client: {InstanceFinder.IsClient}", LogChannel.GameLobby, 0);
         foreach(NetworkConnection conn in players.Keys) {
             SceneDelegate.Instance.AddClientToScene(conn, mapSceneData);
         }
@@ -160,9 +157,7 @@ public class GameLobby
             return;
         }
 
-        if(SceneNames.IsLobbyScene(lookupData.Name)) {
-            lobbySceneData = lookupData;
-        } else if(SceneNames.IsMapScene(lookupData.Name)) {
+        if(SceneNames.IsMapScene(lookupData.Name)) {
             mapSceneData = lookupData;
 
             GameplayManager gameplayManager = elements.GameplayManager;
@@ -179,7 +174,7 @@ public class GameLobby
         elements.DeleteOnLastClientRemove = SceneNames.IsMapScene(lookupData.Name);
         SceneDelegate.Instance.SetSceneElements(lookupData, elements);
 
-        SendDebugMessage($"Claimed scene \"{lookupData}\"");
+        BLog.Log($"{MessagePrefix}Claimed scene \"{lookupData}\"", LogChannel.GameLobby, 0);
     }
 
     public void SceneDelegate_SceneWillDeregister(SceneLookupData lookupData) 
@@ -191,10 +186,7 @@ public class GameLobby
 
     public void SceneDelegate_SceneDeregistered(SceneLookupData lookupData) 
     {
-        if(lookupData == lobbySceneData) {
-            lobbySceneData = null;
-            Debug.LogWarning("Lobby was unloaded. Not sure what to do about it honestly but");
-        } else if(lookupData == mapSceneData) {
+        if(lookupData == mapSceneData) {
             mapSceneData = null;
         }
     }
@@ -218,9 +210,17 @@ public class GameLobby
     }
 #endregion
 
+    private void LobbyStateChanged(LobbyState prev, LobbyState current) 
+    {
+        if(current == LobbyState.MAP_SELECTION) {
+            level = null;
+            MovePlayersToLobby();
+        }
+    }
+
     private void RaceManager_RacePhaseChanged(RacePhase prev, RacePhase current) 
     {
-        SendDebugMessage($"RaceManager phase changed to {current}");
+        BLog.Log($"{MessagePrefix}RaceManager phase changed to {current}", LogChannel.GameLobby, 1);
         if(current == RacePhase.FINISHED) {
             state = LobbyState.WAITING_FOR_PLAYERS;
             AwardPoints();
@@ -254,17 +254,18 @@ public class GameLobby
         }
     }
 
+    public void SetLevel(KartLevel level) 
+    {
+        BLog.Log($"{MessagePrefix}Picked level {level} and requesting map scene.", LogChannel.GameLobby, 0);
+
+        SceneLookupData newMapLookupData = new(CoreManager.LevelAtlas.RetrieveData(level).sceneName);
+        SceneDelegate.Instance.LoadSceneAsServer(newMapLookupData);
+    }
+
     public static KartLevel PickKartLevel() 
     {
         Array values = Enum.GetValues(typeof(KartLevel));
         return (KartLevel)values.GetValue(new System.Random().Next(values.Length));
-    }
-
-    private bool sendLobbyDebugMessages = false;
-    public void SendDebugMessage(string message) 
-    {
-        if(sendLobbyDebugMessages)
-            Debug.Log($"({id}) {message}");
     }
 
     public PlayerData? GetPlayerData(NetworkConnection client) 
@@ -286,14 +287,9 @@ public class GameLobby
     } }
 
     public string ID { get { return id; } }
-    public SceneLookupData LobbySceneData { get { return lobbySceneData; } }
+    public string MessagePrefix { get { return $"({ID})"; } }
     public SceneLookupData MapSceneData { get { return mapSceneData; } }
     public LobbyState State { get { return state; } }
-    public Scene? LobbyScene { get { 
-        if(lobbySceneData is null || !SceneDelegate.Instance.IsSceneRegistered(lobbySceneData))
-            return null;
-        return SceneDelegate.Instance.GetSceneElements(lobbySceneData).Scene; 
-    } }
     public Scene? MapScene { get { 
         if(mapSceneData is null || !SceneDelegate.Instance.IsSceneRegistered(mapSceneData))
             return null;
@@ -307,6 +303,15 @@ public class GameLobby
     public int PlayerCount { get { return players.Count; } }
 
     public int OpenSlots { get { return CoreManager.Instance.PlayerLimit - players.Count; } }
+
+    public MenuLobbyController MenuLobbyController { get {
+        MenuLobbyController[] lobbyControllers = GameObject.FindObjectsOfType<MenuLobbyController>();
+        if(lobbyControllers.Length != 1) {
+            Debug.LogError($"Found != 1 MenuLobbyControllers ({lobbyControllers.Length})");
+            return null;
+        }
+        return lobbyControllers[0];
+    } }
 
 }
 

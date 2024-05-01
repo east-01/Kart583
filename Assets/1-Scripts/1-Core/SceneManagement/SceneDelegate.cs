@@ -15,15 +15,17 @@ using UnityEngine.SceneManagement;
 /// https://lucid.app/lucidchart/df418eac-4680-413e-9bbd-19c1bc7376ef/edit?viewport_loc=-2414%2C-625%2C2387%2C1147%2C0_0&invitationId=inv_a757cd21-5e23-440e-8b4d-cd3943fe5ef7
 /// </summary>
 [RequireComponent(typeof(LobbyManager))]
+[RequireComponent(typeof(LobbyCommunicator))]
 public class SceneDelegate : NetworkBehaviour
 {
 
     public static SceneDelegate Instance;
+    public static bool IsReady { get { return Instance != null && Instance.NetworkObject.IsSpawned; } }
     public static LobbyManager LobbyManager { get { return Instance._lobbyManager; } }
+    public static LobbyCommunicator LobbyCommunicator { get { return Instance._lobbyCommunicator; } }
 
     private LobbyManager _lobbyManager;
-    [SerializeField]
-    private GameObject _atlasPrefab;
+    private LobbyCommunicator _lobbyCommunicator;
 
     [SerializeField]
     private Dictionary<SceneLookupData, SceneElements> loadedScenes = new();
@@ -73,6 +75,7 @@ public class SceneDelegate : NetworkBehaviour
         Instance = this;
 
         _lobbyManager = GetComponent<LobbyManager>();
+        _lobbyCommunicator = GetComponent<LobbyCommunicator>();
     }
 
     private void OnEnable() 
@@ -104,7 +107,7 @@ public class SceneDelegate : NetworkBehaviour
         sld.ReplaceScenes = ReplaceOption.All;
 
         base.SceneManager.LoadConnectionScenes(sld);
-        SceneDelegateDebug($"Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}");
+        BLog.Log($"Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}", LogChannel.SceneDelegate, 0);
     }
 
     [Server]
@@ -119,7 +122,7 @@ public class SceneDelegate : NetworkBehaviour
     {
         clientLoadTarget = lookupData;
         UnityEngine.SceneManagement.SceneManager.LoadScene(lookupData.Name, LoadSceneMode.Single);
-        SceneDelegateDebug($"Client calling load scene \"{lookupData.Name}\"");
+        BLog.Log($"Client calling load scene \"{lookupData.Name}\"", LogChannel.SceneDelegate, 0);
     }
 
     [TargetRpc]
@@ -136,7 +139,7 @@ public class SceneDelegate : NetworkBehaviour
 
         SceneUnloadData sud = new(lookupData);
         base.SceneManager.UnloadConnectionScenes(sud);
-        SceneDelegateDebug($"Telling server to unload scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}");
+        BLog.Log($"Telling server to unload scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}", LogChannel.SceneDelegate, 0);
     } 
 #endregion
 
@@ -147,22 +150,22 @@ public class SceneDelegate : NetworkBehaviour
     private void FishSceneManager_SceneLoaded(SceneLoadEndEventArgs args)
     {
         foreach(Scene scene in args.LoadedScenes) {
-            SceneDelegateDebug($"{(base.IsServer ? "Server" : "Client")} loaded scene " + scene.name + ", handle: " + scene.handle);
+            BLog.Log($"{(base.IsServer ? "Server" : "Client")} loaded scene " + scene.name + ", handle: " + scene.handle, LogChannel.SceneDelegate, 0);
             RegisterScene(scene);
         }
 
         // Disable event systems
-        if(base.IsServer && CoreManager.Instance.isMultiplayer) {
+        if(base.IsServer && CoreManager.IsMultiplayer) {
             int disabledEventSystems = 0;
             foreach(EventSystem system in FindObjectsOfType<EventSystem>()) {
                 system.enabled = false;
                 disabledEventSystems++;
             }
-            SceneDelegateDebug($"RegisterScenes disabled {disabledEventSystems} event system(s).");
+            BLog.Log($"RegisterScenes disabled {disabledEventSystems} event system(s).", LogChannel.SceneDelegate, 0);
         }
 
         if(args.SkippedSceneNames.Length > 0)
-            SceneDelegateDebug($"RegisterScenes skipped {args.SkippedSceneNames.Length} scene(s).");
+            BLog.Log($"RegisterScenes skipped {args.SkippedSceneNames.Length} scene(s).", LogChannel.SceneDelegate, 0);
     }
 
     /// <summary>
@@ -179,20 +182,21 @@ public class SceneDelegate : NetworkBehaviour
             return;
         }
 
-        RegisterScene(scene);
+        if(!CoreManager.IsLocal)
+            RegisterScene(scene);
 
         NetworkConnection client = base.LocalConnection;
-        SceneDelegateDebug("LoadedScenes#UnitySceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.");
+        BLog.Log("LoadedScenes#UnitySceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.", LogChannel.SceneDelegate, 0);
         foreach(Scene otherScene in client.Scenes) {
             if(otherScene != scene) {
-                SceneDelegateDebug($"LoadedScenes#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client");
+                BLog.Log($"LoadedScenes#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client", LogChannel.SceneDelegate, 0);
                 base.SceneManager.RemoveConnectionsFromScene(new NetworkConnection[] { client }, otherScene);
             }
         }
 
         ServerRpcClientLoadedScene(base.LocalConnection, clientLoadTarget);
 
-        SceneDelegateDebug($"SceneDelegate#UnitySceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"");
+        BLog.Log($"SceneDelegate#UnitySceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"", LogChannel.SceneDelegate, 0);
     }
 
     /// <summary>
@@ -210,7 +214,7 @@ public class SceneDelegate : NetworkBehaviour
     /// <summary>
     /// Registers the scene in the SceneDelegate and issues a SceneRegisteredEvent when done.
     /// </summary>
-    private void RegisterScene(Scene scene) 
+    public void RegisterScene(Scene scene) 
     {
         SceneLookupData lookupData = new(scene.handle, scene.name);
         SceneElements elements = new() {
@@ -221,7 +225,7 @@ public class SceneDelegate : NetworkBehaviour
 
         loadedScenes.Add(lookupData, elements);
 
-        SceneDelegateDebug($"Registered scene \"{lookupData}\". Calling event.");
+        BLog.Log($"Registered scene \"{lookupData}\". Calling event.", LogChannel.SceneDelegate, 0);
         SceneRegisteredEvent?.Invoke(lookupData);
     }
 
@@ -234,7 +238,7 @@ public class SceneDelegate : NetworkBehaviour
 
         loadedScenes.Remove(lookupData);
 
-        SceneDelegateDebug($"Deregistered scene \"{lookupData}\". Calling event.");
+        BLog.Log($"Deregistered scene \"{lookupData}\". Calling event.");
         SceneDeregisteredEvent?.Invoke(lookupData);
     }
 
@@ -379,13 +383,13 @@ public class SceneDelegate : NetworkBehaviour
     ///   LoadSceneAsClient to load it.
     /// </summary>
     [TargetRpc]
-    private void TargetRpcEnsureSceneLoaded(NetworkConnection client, SceneLookupData serverSceneLookupData) 
+    public void TargetRpcEnsureSceneLoaded(NetworkConnection client, SceneLookupData serverSceneLookupData) 
     {
         clientLoadTarget = null;
         if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != serverSceneLookupData.Name) {
             LoadSceneAsClient(serverSceneLookupData);
         } else {
-            SceneDelegateDebug($"SceneDelegate#TargetRpcEnsureSceneLoaded: Scene \"{serverSceneLookupData.Name}\" is already loaded, skipping to SceneDelegate#ServerRpcClientLoadedScene");
+            BLog.Log($"SceneDelegate#TargetRpcEnsureSceneLoaded: Scene \"{serverSceneLookupData.Name}\" is already loaded, skipping to SceneDelegate#ServerRpcClientLoadedScene", LogChannel.SceneDelegate, 0);
             ServerRpcClientLoadedScene(base.LocalConnection, serverSceneLookupData);
         }
     }
@@ -395,14 +399,13 @@ public class SceneDelegate : NetworkBehaviour
     /// </summary>
     [ServerRpc(RequireOwnership = false)]
     private void ServerRpcClientLoadedScene(NetworkConnection client, SceneLookupData serverSceneLookupData) 
-    {
-        if(!CoreManager.Instance.isMultiplayer)
-            return;
-            
+    {            
         if(!IsSceneRegistered(serverSceneLookupData)) {
             Debug.LogError($"Client loaded scene but server doesn't have corresponding scene loaded. Lookup info: {serverSceneLookupData.Name} handle: {serverSceneLookupData.Handle}");
             return;
         }
+
+        BLog.Log($"Called ServerRPCClientLoadedScene for client {client} with data {serverSceneLookupData}", LogChannel.SceneDelegate, 3);
         Internal_AddClientToScene(client, serverSceneLookupData);
     }
 #endregion
@@ -449,7 +452,7 @@ public class SceneDelegate : NetworkBehaviour
     {
         if(!base.IsServer)
             return;
-        if(!CoreManager.Instance.isMultiplayer)
+        if(!CoreManager.IsMultiplayer)
             return;
 
         // Ensure that the server makes its global scene MenuServer, that way we'll be able
@@ -464,14 +467,6 @@ public class SceneDelegate : NetworkBehaviour
             base.SceneManager.UnloadGlobalScenes(sud);
         }
     }
-
-    private static bool sendSceneDelegateDebug = false;
-    public static void SceneDelegateDebug(string message) {
-        if(sendSceneDelegateDebug)
-            print(message);
-    }
-
-    public LevelAtlas LevelAtlas { get { return _atlasPrefab.GetComponent<LevelAtlas>(); } }
 
 }
 

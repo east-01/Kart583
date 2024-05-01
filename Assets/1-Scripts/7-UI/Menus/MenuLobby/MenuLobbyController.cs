@@ -12,10 +12,11 @@ using UnityEngine;
 public class MenuLobbyController : MenuController
 {
 
+    public static readonly string SUB_MENU_MAP_SELECT = "MapSelect";
+
     private MenuLobbyViewController _viewController;
     private NetworkManager networkManager; // The networkmanager that this menu is connected to.
     private NetworkStateManager networkStateManager;
-    private float lastStartRequestTime;
 
     private void Start() 
     {
@@ -32,17 +33,13 @@ public class MenuLobbyController : MenuController
         networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
 
-        // Ensure we're using the right transport
-        if(GameVersion.IsDevelopment)
-            CoreManager.NetworkStateManager.UseLocalTransport();
-        else
-            CoreManager.NetworkStateManager.UseGlobalTransport();
-
+        OpenSubMenu(SUB_MENU_MAP_SELECT);
     }
 
     private void Update() {
         if(PlayerObjectManager.Instance == null)
             Debug.LogWarning("PlayerObjectManager instance is null!");
+
         // Ensure client has input
         if(InstanceFinder.IsClient) {
             if(PlayerObjectManager.Instance.PlayerObjectCount == 0 && !PlayerObjectManager.Instance.InputPromptActive) {
@@ -52,23 +49,19 @@ public class MenuLobbyController : MenuController
             }
         }
 
-        // Logic that requests to start client every 0.3 seconds
-        if(PlayerObjectManager.Instance.PlayerObjectCount > 0 && 
-           Time.time - lastStartRequestTime > 1 && 
-           networkStateManager.ClientConnectionState == LocalConnectionState.Stopped && 
-           networkStateManager.ServerConnectionState == LocalConnectionState.Stopped) {
-            lastStartRequestTime = Time.time;
-            StartCoroutine(StartClient());
-        }
 
         if(GameVersion.IsDevelopment && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
             SceneDelegate.LobbyManager.RequestForceMapPick();
     }
 
-    private IEnumerator StartClient() 
+    private IEnumerator StartConnection() 
     {
         yield return new WaitForSeconds(0.3f);
-        networkStateManager.StartClient();
+        if(CoreManager.IsMultiplayer) {
+            networkStateManager.StartClient();                
+        } else if(CoreManager.IsLocal) {
+            networkStateManager.StartHost();
+        }
     }
 
     protected new void OnDestroy()

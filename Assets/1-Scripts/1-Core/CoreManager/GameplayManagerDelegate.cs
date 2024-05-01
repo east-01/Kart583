@@ -16,12 +16,12 @@ public class GameplayManagerDelegate : MonoBehaviour
     {
         if(waitingForGameplayManagers.Count == 0)
             return;
-        List<GameplayManagerBehavior> toRemove = new();
-        foreach(GameplayManagerBehavior gmb in waitingForGameplayManagers) {
+        // A copy of the list to iterate through so we can remove elements without throwing errors
+        List<GameplayManagerBehavior> listCopy = new(waitingForGameplayManagers);
+        foreach(GameplayManagerBehavior gmb in listCopy) {
             if(GetGameplayManager(gmb))
-                toRemove.Add(gmb);
+                waitingForGameplayManagers.Remove(gmb);
         }
-        toRemove.ForEach(gmb => waitingForGameplayManagers.Remove(gmb));
     }
 
     /// <summary>
@@ -47,7 +47,12 @@ public class GameplayManagerDelegate : MonoBehaviour
             Debug.LogError("A GameplayManagerBehavior interface is on a script that isn't a Monobehavior!");
             return false;
         }
-        Scene objectsScene = (gameplayManagerBehavior as MonoBehaviour).gameObject.scene;
+         MonoBehaviour monoGMB = gameplayManagerBehavior as MonoBehaviour;
+        if(monoGMB == null) {
+            waitingForGameplayManagers.Remove(gameplayManagerBehavior);
+            return false;
+        }
+        Scene objectsScene = monoGMB.gameObject.scene;
         FishNet.Managing.Scened.SceneLookupData lookupData = new(objectsScene.handle, objectsScene.name);
         if(SceneDelegate.Instance == null)
             return false;
@@ -58,7 +63,9 @@ public class GameplayManagerDelegate : MonoBehaviour
 
         if(toReturn == null)
             return false;
-        
+        // if(toReturn.KartLevelManager == null)
+        //     return false;
+
         gameplayManagerBehavior.GameplayManagerLoaded(toReturn);
         return true;
     }

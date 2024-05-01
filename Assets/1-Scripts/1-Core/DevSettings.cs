@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class DevSettings : MonoBehaviour
 {
-
+    /* Editor fields */
     [SerializeField] private bool masterEnable;
 
     [SerializeField] private bool overridePlayerLimit = false;
@@ -39,6 +39,12 @@ public class DevSettings : MonoBehaviour
     public bool OverrideLapCount { get { return Enable && overrideLapCount; } }
     public bool OverrideBots { get { return Enable && overrideBots; } }
 
+    public bool HasProcessedLoadMode { get { return hasProcessedLoadMode; } }
+
+    /* Private fields */
+    private KartLevel queuedMapLoad;
+    private bool hasProcessedLoadMode = false;
+
     private void Start() 
     {
         if(OverridePlayerLimit && playerLimit <= 0)
@@ -47,7 +53,7 @@ public class DevSettings : MonoBehaviour
         if(OverrideLapCount && lapCount <= 0)
             Debug.LogWarning($"DevSettings: Lap count is being overridden but the new value is <= 0, this is not recommended.");
 
-        PrintDevSettings("#ffff99");
+        PrintDevSettings();
 
         if(HaveStandalonePlayerRunAsServer && !Application.isEditor) {
             NetworkStateManager nsm = InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>();
@@ -77,12 +83,16 @@ public class DevSettings : MonoBehaviour
         } else if(LoadMode == LoadMode.LOAD_MAP_LOCAL) {
             KartLevel mapPick = OverrideMapPick ? map : GameLobby.PickKartLevel();
             if(!OverrideMapPick) 
-                Debug.Log($"<color=green>SimulateLoad: loading into local play map but override map pick is off, picked {mapPick} randomly.</color>");
-            CoreManager.Instance.LoadLocalMap(mapPick);
+                BLog.Log($"SimulateLoad: loading into local play map but override map pick is off, picked {mapPick} randomly.", LogChannel.DevSettings, 0);
+            string sceneName = CoreManager.LevelAtlas.RetrieveData(mapPick).sceneName;
+            // if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != sceneName)
+                CoreManager.TransitionManager.LoadScene(sceneName);
         }
+
+        hasProcessedLoadMode = true;
     }
 
-    public void PrintDevSettings(string color) 
+    public void PrintDevSettings() 
     {
         string headerMessage = $"Dev settings are " + (Enable ? "enabled." : "disabled.");
         if(!GameVersion.IsDevelopment)
@@ -90,7 +100,7 @@ public class DevSettings : MonoBehaviour
         if(!masterEnable)
             headerMessage += " Master enable is turned off";
 
-        Debug.Log($"<color={color}>{headerMessage}</color>");
+        BLog.Log(headerMessage, LogChannel.DevSettings);
         
         if(!Enable) return;
 
@@ -109,7 +119,7 @@ public class DevSettings : MonoBehaviour
         if(OverrideBots)
             devSettings.Add($"Overriding bots. Are bots enabled: {bots}");
 
-        devSettings.ForEach(s => Debug.Log($"<color={color}> - {s}</color>"));
+        devSettings.ForEach(s => BLog.Log($" - {s}", LogChannel.DevSettings));
     }
 
 }

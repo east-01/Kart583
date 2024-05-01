@@ -11,6 +11,7 @@ using UnityEngine;
 [RequireComponent(typeof(DevSettings))]
 [RequireComponent(typeof(GameplayManagerDelegate))]
 [RequireComponent(typeof(TransitionManager))]
+[RequireComponent(typeof(BLog))]
 public class CoreManager : MonoBehaviour
 {
 
@@ -18,6 +19,8 @@ public class CoreManager : MonoBehaviour
     public static DevSettings DevSettings { get { return Instance.devSettings;} }
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
+    public static BLog BLog { get { return Instance.bLog; } }
+
     public static NetworkStateManager NetworkStateManager { get { return InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>(); } }
     public static LevelAtlas LevelAtlas { get { return Instance.atlasesPrefab.GetComponent<LevelAtlas>(); } }
     public static KartAtlas KartAtlas { get { return Instance.atlasesPrefab.GetComponent<KartAtlas>(); } }
@@ -35,6 +38,7 @@ public class CoreManager : MonoBehaviour
     private DevSettings devSettings;
     private GameplayManagerDelegate gameplayManagerDelegate;
     private TransitionManager transitionManager;
+    private BLog bLog;
 
     private bool notifiedOfRelease = false;
 
@@ -56,8 +60,10 @@ public class CoreManager : MonoBehaviour
         devSettings = GetComponent<DevSettings>();
         gameplayManagerDelegate = GetComponent<GameplayManagerDelegate>();
         transitionManager = GetComponent<TransitionManager>();
+        bLog = GetComponent<BLog>();
 
         CheckNetworkManager();
+        CheckSceneDelegate();
         CheckPlayerObjectManager();
         CheckScreenLogger();
     }
@@ -82,14 +88,18 @@ public class CoreManager : MonoBehaviour
             Debug.LogWarning("Scene delegate prefab is null on SceneDelegateSpawner script on object " + gameObject.name);
             return;
         }
-        if(SceneDelegate.Instance != null)
+        if(SceneDelegate.Instance != null) {
+            if(!SceneDelegate.Instance.NetworkObject.IsSpawned && InstanceFinder.IsServer) {
+                InstanceFinder.ServerManager.Spawn(SceneDelegate.Instance.NetworkObject);
+            }
             return;
-        // Check if there's a NetworkManager in place and the server is started
-        if(NetworkManager.Instances.Count <= 0 || InstanceFinder.ServerManager == null || !InstanceFinder.ServerManager.Started || !InstanceFinder.IsServer)
-            return;
+        }
+        // // Check if there's a NetworkManager in place and the server is started
+        // if(NetworkManager.Instances.Count <= 0 || InstanceFinder.ServerManager == null || !InstanceFinder.ServerManager.Started || !InstanceFinder.IsServer)
+        //     return;
 
         GameObject go = Instantiate(sceneDelegatePrefab);
-        InstanceFinder.ServerManager.Spawn(go);
+        // InstanceFinder.ServerManager.Spawn(go);
 
         go.name = "SceneDelegate";
         go.GetComponent<SceneDelegate>().CheckInitialGlobalScene();
@@ -112,24 +122,6 @@ public class CoreManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Load a map for local play, ensures a local server is running and that we're connected to it.
-    /// </summary>
-    public void LoadLocalMap(KartLevel map) 
-    {
-        NetworkStateManager nsm = NetworkStateManager;
-        nsm.UseLocalTransport();
-
-        if(nsm.ServerConnectionState == FishNet.Transporting.LocalConnectionState.Stopped)
-            nsm.StartServer();
-
-        if(nsm.ClientConnectionState == FishNet.Transporting.LocalConnectionState.Stopped)
-            nsm.StartClient();
-
-        SceneDelegate.Instance.LoadGlobalSceneAsServer(new(LevelAtlas.RetrieveData(map).sceneName));
-        // TransitionManager.LoadScene(LevelAtlas.RetrieveData(map).sceneName);
-    }
-
-    /// <summary>
     /// Check if the running instance is a server instance. More reliable than InstanceFinder because 
     ///   it will handle cases where a NetworkManager doesn't exist.
     /// </summary>
@@ -137,6 +129,14 @@ public class CoreManager : MonoBehaviour
         if(NetworkManager.Instances.Count == 0) return false;
         return InstanceFinder.IsServer;
     } }
+    public static bool IsMultiplayer { 
+        get { return Instance.isMultiplayer; } 
+        set { Instance.isMultiplayer = value;}
+    }
+    public static bool IsLocal { 
+        get { return !IsMultiplayer; }
+        set { IsMultiplayer = !value;}
+    }
 
     public int PlayerLimit { get {
         if(DevSettings.OverridePlayerLimit)

@@ -1,4 +1,8 @@
+using System;
 using System.Collections.Generic;
+using FishNet.Connection;
+using FishNet.Managing;
+using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -8,7 +12,6 @@ using UnityEngine;
   * Other classes will refer to this to access game data. */
 [RequireComponent(typeof(RaceManager))]
 [RequireComponent(typeof(KartsIRManager))]
-[RequireComponent(typeof(KartSpawner))]
 [RequireComponent(typeof(ItemManager))]
 public class GameplayManager : NetworkBehaviour
 {
@@ -28,7 +31,6 @@ public class GameplayManager : NetworkBehaviour
 
     private RaceManager _raceManager;
     private KartsIRManager _kartsIRManager;
-    private KartSpawner _kartSpawner;
     private ItemManager _itemManager;
 
     private KartLevelManager kartLevelManager;
@@ -36,6 +38,15 @@ public class GameplayManager : NetworkBehaviour
     [SyncVar]
     private string lobbyID = null;
 
+    /* Late Lobby start process. */
+    private LateLobbySpawnStep spawnStep = LateLobbySpawnStep.NONE;
+    private LateLobbySpawnStep SpawnStep { 
+        get { return spawnStep;} 
+        set { 
+            SpawnStepChanged(spawnStep, value);
+            spawnStep = value; 
+        }
+    }
     void Awake() 
     {
 
@@ -45,8 +56,18 @@ public class GameplayManager : NetworkBehaviour
         // Load everything
         _raceManager = GetComponent<RaceManager>();
         _kartsIRManager = GetComponent<KartsIRManager>();
-        _kartSpawner = GetComponent<KartSpawner>();
         _itemManager = GetComponent<ItemManager>();
+
+        // The NM Instances Count is important for a Game scene that loads and then instantly unloads
+        // i.e. Running TEST_TRACK as the editor scene, then DevSettings instantly loads a TEST_TRACK on top
+        if(!CoreManager.DevSettings.HasProcessedLoadMode)
+            return;
+
+        SceneDelegate.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToSceneEvent;
+        
+        if(!SceneDelegate.LobbyCommunicator.InLobby) {
+            SpawnStep = LateLobbySpawnStep.STARTING_CONNECTION;
+        }
 
         // Initialize KartLevelManager
         KartLevelManager klm = FindObjectOfType<KartLevelManager>();
@@ -73,9 +94,53 @@ public class GameplayManager : NetworkBehaviour
 
     }
 
+    private void Destroy() 
+    {
+        SceneDelegate.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToSceneEvent;
+    }
+
+    private void Update() {
+        if(SpawnStep != LateLobbySpawnStep.NONE) {
+            if(SpawnStep == LateLobbySpawnStep.STARTING_CONNECTION && base.IsHost) {
+                SpawnStep = LateLobbySpawnStep.CREATING_LOBBY;
+            } else if(SpawnStep == LateLobbySpawnStep.CREATING_LOBBY && SceneDelegate.LobbyManager.LobbyCount > 0) {
+                SpawnStep = LateLobbySpawnStep.REGISTERING_MAP;
+            } else if(SpawnStep == LateLobbySpawnStep.REGISTERING_MAP && lobby != null) {
+                SpawnStep = LateLobbySpawnStep.WAITING_FOR_PLAYER;
+            } else if(SpawnStep == LateLobbySpawnStep.WAITING_FOR_PLAYER && PlayerObjectManager.Instance.PlayerObjectCount > 0) {
+                SpawnStep = LateLobbySpawnStep.MOVING_TO_SCENE;
+            }
+        }
+    }
+
+    private void SpawnStepChanged(LateLobbySpawnStep prev, LateLobbySpawnStep current) {
+        BLog.Log($"Spawn step changed to {current}", LogChannel.GameplayManager, 1);
+        if(current == LateLobbySpawnStep.STARTING_CONNECTION) {
+            BLog.Log($"No lobby existed when joining map. AutoSpawning a local one.", LogChannel.DevSettings);
+            CoreManager.IsLocal = true;
+            SceneDelegate.LobbyCommunicator.StartCommunication();
+        } else if(current == LateLobbySpawnStep.CREATING_LOBBY) {
+            SceneDelegate.LobbyManager.CreateLobby();
+        } else if(current == LateLobbySpawnStep.REGISTERING_MAP) {
+            BLog.Log($"Spawn step- Registering scene with {SceneDelegate.LobbyManager.LobbyCount} lobbies", LogChannel.GameplayManager, 1);
+            // This is called because neither of the SceneRegistered events will be able to catch unity's scene load.
+            SceneDelegate.Instance.RegisterScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+        } else if(current == LateLobbySpawnStep.MOVING_TO_SCENE) {
+            GameLobby.AddPlayer(base.LocalConnection, PlayerObjectManager.Instance.PlayerOne.data);
+            GameLobby.MovePlayersToMap();
+        }
+    }
+
+    private void SceneDelegate_ClientAddedToSceneEvent(NetworkConnection client, SceneLookupData sceneLookupData)
+    {
+        BLog.Log("Recieved ClientAddedToSceneEvent scene data: " + sceneLookupData + ", target data: " + GameLobby.MapSceneData, LogChannel.GameplayManager, 0);
+        if(sceneLookupData == GameLobby.MapSceneData) {
+            SpawnStep = LateLobbySpawnStep.NONE;
+        }
+    }
+
     public RaceManager RaceManager { get { return _raceManager; } }
     public KartsIRManager PlayerManager { get { return _kartsIRManager; } }
-    public KartSpawner KartSpawner { get { return _kartSpawner; } }
     public ItemManager ItemManager { get { return _itemManager; } }
 
     public KartLevelManager KartLevelManager { get { return kartLevelManager; } }
@@ -85,10 +150,19 @@ public class GameplayManager : NetworkBehaviour
     public void SetGameLobby(GameLobby gameLobby) {
         if(this.lobby != null)
             Debug.LogWarning($"Overwriting lobby in scene \"{gameObject.scene.name}\"");
+        print($"<color=red>setting game lobby to \"{gameLobby.ID}\"</color>");
         this.lobby = gameLobby;
         this.lobbyID = gameLobby.ID;
     }
 
     public bool HasLobby { get { return lobbyID != null; } }
+
+}
+
+public enum LateLobbySpawnStep {
+    NONE, STARTING_CONNECTION, CREATING_LOBBY, REGISTERING_MAP, WAITING_FOR_PLAYER, MOVING_TO_SCENE
+}
+
+public class AutoLobbySpawner {
 
 }

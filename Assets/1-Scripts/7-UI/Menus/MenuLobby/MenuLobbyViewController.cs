@@ -33,7 +33,6 @@ public class MenuLobbyViewController : MonoBehaviour
     [SerializeField]
     private Transform playerListGroup;
 
-    private LobbyData? _currentData;
     /// <summary>
     /// Set when the GameLobby switches to state WAITING_FOR_PLAYER, indicates when the player wait timer will run out.
     /// </summary>
@@ -42,7 +41,7 @@ public class MenuLobbyViewController : MonoBehaviour
     private void Start() 
     {
         _controller = GetComponent<MenuLobbyController>();       
-        SceneDelegate.SceneDelegateDebug("MenuLobbyViewController#Start: Script started, scene handle is: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().handle); 
+        BLog.Log("MenuLobbyViewController#Start: Script started, scene handle is: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().handle, LogChannel.SceneDelegate, 0); 
 
         UpdateView();
     }
@@ -61,13 +60,12 @@ public class MenuLobbyViewController : MonoBehaviour
             SceneDelegate.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated;    
             UpdateView();
 
-            SceneDelegate.SceneDelegateDebug("MenuLobbyViewController#Update: Attached lobby manager"); 
+            BLog.Log("MenuLobbyViewController#Update: Attached lobby manager", LogChannel.SceneDelegate, 0); 
         }
 
-        if(_currentData == null)
+        if(!SceneDelegate.LobbyCommunicator.LobbyData.HasValue)
             return;
-
-        LobbyData currentData = _currentData.Value;
+        LobbyData currentData = SceneDelegate.LobbyCommunicator.LobbyData.Value;
 
         // Update player timeout text
         if(currentData.state == LobbyState.WAITING_FOR_PLAYERS && playerWaitTimeout != -1) {
@@ -75,6 +73,7 @@ public class MenuLobbyViewController : MonoBehaviour
         }
     }
 
+#region Updating view
     public void UpdateView() 
     {
         if(_controller.ConnectedNetworkManager == null)
@@ -93,20 +92,18 @@ public class MenuLobbyViewController : MonoBehaviour
         disconnectedViewContainer.SetActive(false);
         connectedViewContainer.SetActive(true);
 
-        SceneDelegate.SceneDelegateDebug($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {_currentData.HasValue})"); 
+        BLog.Log($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {SceneDelegate.LobbyCommunicator.LobbyData.HasValue})", LogChannel.SceneDelegate, 0); 
 
         // Menu reset
         lobbyStatusText.text = "-";
         playerListGroup.DestroyChildren();
 
-        if(!_currentData.HasValue) {
-            SceneDelegate.LobbyManager.RequestLobbyUpdate();
+        if(!SceneDelegate.LobbyCommunicator.LobbyData.HasValue)
             return;
-        }
+        LobbyData lobbyData = SceneDelegate.LobbyCommunicator.LobbyData.Value;
 
-        SceneDelegate.SceneDelegateDebug($"MenuLobbyViewController#UpdateView: Player name count {_currentData.Value.players.Count}"); 
+        BLog.Log($"MenuLobbyViewController#UpdateView: Player name count {lobbyData.players.Count}", LogChannel.SceneDelegate, 0);
 
-        LobbyData lobbyData = _currentData.Value;
         List<PlayerData> players = lobbyData.players;
 
         // Status text
@@ -116,6 +113,8 @@ public class MenuLobbyViewController : MonoBehaviour
                 break;
             case LobbyState.MAP_SELECTION:
                 lobbyStatusText.text = $"Picking map";
+
+                _controller.OpenSubMenu(MenuLobbyController.SUB_MENU_MAP_SELECT);
                 break;
             case LobbyState.RACING:
                 lobbyStatusText.text = "At the track";
@@ -152,14 +151,12 @@ public class MenuLobbyViewController : MonoBehaviour
                     disconnectedStatusText.text = "Connected";
                     break;
             }
-            
-
     }
+#endregion
 
     public void LobbyManager_LobbyUpdated(LobbyData newData, LobbyUpdateReason reason) 
     {
-        _currentData = newData;
-        SceneDelegate.SceneDelegateDebug("MenuLobbyViewController#LobbyManager_LobbyUpdated: Recieved update event"); 
+        BLog.Log("MenuLobbyViewController#LobbyManager_LobbyUpdated: Recieved update event", LogChannel.SceneDelegate, 0); 
 
         if(newData.state == LobbyState.WAITING_FOR_PLAYERS)
             playerWaitTimeout = Time.time + (GameLobby.PLAYER_WAIT_TIME-newData.timeInState);

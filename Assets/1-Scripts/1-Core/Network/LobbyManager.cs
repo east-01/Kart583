@@ -9,8 +9,8 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
-/// The LobbyManager will take in player connections and distribute them, using the scene
-///   manager, into games.
+/// The LobbyManager is the SERVER SIDE of the lobby system, it takes in player connections 
+///   and distributes them (using the scene manager) into games.
 /// </summary>
 public class LobbyManager : NetworkBehaviour
 {
@@ -33,56 +33,61 @@ public class LobbyManager : NetworkBehaviour
             Debug.LogWarning("GameLobby's PLAYER_WAIT_TIME is <= 0, this is not recommended.");
     }
 
-    public override void OnStartClient() 
-    {
-        if(!CoreManager.Instance.isMultiplayer)
-            return;
-
-        if(PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.GetPlayerObjects().Count > 0) {
-            ServerRpcJoinLobby(base.LocalConnection, PlayerObjectManager.Instance.GetPlayerObjects()[0].data);
-        } else {
-            waitingForInput = true;
-        }
-    }
-
     private void Update () 
     {
         foreach(GameLobby lobby in lobbies.Values) { lobby.Update(); }
+    }
 
-        if(waitingForInput && PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.GetPlayerObjects().Count > 0) {
-            waitingForInput = false;
-            ServerRpcJoinLobby(base.LocalConnection, PlayerObjectManager.Instance.GetPlayerObjects()[0].data);
-        }
+    /// <summary>
+    /// Creates and adds a lobby to the server.
+    /// </summary>
+    /// <returns></returns>
+    [Server]
+    public GameLobby CreateLobby() 
+    {
+        GameLobby newLobby = new(this, GenerateLobbyID());
+        lobbies.Add(newLobby.ID, newLobby);
+        BLog.Log($"Created lobby \"{newLobby.ID}\"", LogChannel.LobbyManager, 0);
+        return newLobby;
     }
 
 #region Client Movement
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcJoinLobby(NetworkConnection newClient, PlayerData data) 
+    public void JoinLobby(NetworkConnection newClient, PlayerData data) 
     {
+        if(!base.IsServer) {
+            ServerRpcJoinLobby(newClient, data);
+            return;
+        }
         if(connectionLobbyPair.ContainsKey(newClient)) {
             Debug.LogWarning("Already in a lobby");
             return;
         }
 
+        BLog.Log($"Searching for a lobby for client {newClient}:", LogChannel.LobbyManager, 2);
         GameLobby lobbyToJoin = null;
         foreach(string id in lobbies.Keys) {
             GameLobby lobby = lobbies[id];
             // TODO: Add other determining factors like game state
-            if(lobby.OpenSlots > 0/* && lobby.State == LobbyState.WAITING_FOR_PLAYERS*/) {
+            bool joinable = lobby.OpenSlots > 0/* && lobby.State == LobbyState.WAITING_FOR_PLAYERS*/;
+            BLog.Log($"  Found \"{id}\" with {lobby.OpenSlots} open slots in state {lobby.State}. Joinable: {joinable}", LogChannel.LobbyManager, 2);
+            if(joinable) {
                 lobbyToJoin = lobby;
                 break;
             }
         }
 
         // No lobbies to join, create a new one
-        if(lobbyToJoin == null) {
-            lobbyToJoin = new GameLobby(this, GenerateLobbyID());
-            lobbies.Add(lobbyToJoin.ID, lobbyToJoin);
-        }
+        if(lobbyToJoin == null)
+            lobbyToJoin = CreateLobby();
 
         connectionLobbyPair.Add(newClient, lobbyToJoin.ID); // This step must precede SceneDelegate#MoveToLobby which is in GameLobby#AddPlayer
         lobbyToJoin.AddPlayer(newClient, data);
+    }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcJoinLobby(NetworkConnection newClient, PlayerData data) 
+    {
+        JoinLobby(newClient, data);
     }
 
     /// <summary>
@@ -91,9 +96,9 @@ public class LobbyManager : NetworkBehaviour
     [Client]
     public void RequestLobbyMove() 
     {
-        SceneDelegate.SceneDelegateDebug("Requesting lobby move.");
+        BLog.Log("Requesting lobby move.", LogChannel.LobbyManager, 0);
         ServerRpcRequestLobbyMove(base.LocalConnection);
-    }  
+    }
 
     /// <summary>
     /// Request that the server moves the provided client NetworkConnection to the lobby scene
@@ -115,8 +120,8 @@ public class LobbyManager : NetworkBehaviour
             Debug.LogError("Can't move client to lobby, they are not in one.");
             return;
         }
-        SceneDelegate.SceneDelegateDebug($"Client \"{client}\" requested to move to lobby \"{lobby.LobbySceneData}\"");
-        SceneDelegate.Instance.AddClientToScene(client, lobby.LobbySceneData);
+        BLog.Log($"Client \"{client}\" requested to move to lobby", LogChannel.LobbyManager, 0);
+        SceneDelegate.Instance.AddClientToScene(client, new(SceneNames.MENU_LOBBY));
     }
 #endregion
 
@@ -139,6 +144,7 @@ public class LobbyManager : NetworkBehaviour
         LobbyData lobbyData = lobby.Data;
 
         // Invoke event on server
+        print("ISSUING LOBBY UPDATE");
         LobbyUpdated?.Invoke(lobbyData, reason);
 
         // Invoke event for clients to said lobby
@@ -156,6 +162,7 @@ public class LobbyManager : NetworkBehaviour
     [Client]
     public void RequestLobbyUpdate() 
     {
+        print("Requesting lobby update and is client: " + base.IsClient);
         if(GetLobbyID() == null) {
             Debug.LogWarning("Can't request lobby update since current lobby id is null.");
             return;
@@ -170,6 +177,11 @@ public class LobbyManager : NetworkBehaviour
 #endregion
 
 #region Getters
+    public bool HasLobby(String lobbyID) 
+    {
+        return lobbies.ContainsKey(lobbyID);
+    }
+
     /// <summary>
     /// Gets the lobby id for the LocalConnection. Is a shortcut for:
     /// </summary>
@@ -244,12 +256,15 @@ public class LobbyManager : NetworkBehaviour
     [Server]
     private string GenerateLobbyID() 
     {
-		for(int attempt = 0; attempt < KartSpawner.rlBotNames.Length; attempt++) {
-			string selection = KartSpawner.rlBotNames[UnityEngine.Random.Range(0, KartSpawner.rlBotNames.Length)];
+		for(int attempt = 0; attempt < KartsIRManager.rlBotNames.Length; attempt++) {
+			string selection = KartsIRManager.rlBotNames[UnityEngine.Random.Range(0, KartsIRManager.rlBotNames.Length)];
 			if(GetLobby(selection) == null)
 				return selection;
 		}
         Debug.LogWarning("Ran out of new lobby ids!");
 		return "Lobby";
     }
+
+    public int LobbyCount { get { return lobbies.Count; } }
+
 }

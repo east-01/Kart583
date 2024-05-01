@@ -57,13 +57,24 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
         hasFinishedRace = false;
         lapNumber = 0;
 
-        if(kartManager.IsHuman && CoreManager.DevSettings.OverrideRaceProgressAtStart)
-            SetRaceProgress(CoreManager.DevSettings.raceProgress);
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)
     {
         this.gameplayManager = gameplayManager;
+        gameplayManager.RaceManager.RacePhaseChanged += RaceManager_RacePhaseChanged;
+    }
+
+    private void RaceManager_RacePhaseChanged(RacePhase previousPhase, RacePhase currentPhase)
+    {
+        if(currentPhase == RacePhase.RACING) {        
+            if(CoreManager.DevSettings.OverrideRaceProgressAtStart)
+                SetRaceProgress(CoreManager.DevSettings.raceProgress);
+            else {
+                waypointIndex = waypoints.Count-1;
+                lapNumber = 0;
+            }
+        }
     }
 
     void OnTriggerEnter(Collider other) 
@@ -88,11 +99,6 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
         if(gameplayManager == null)
             return;
 
-        if(gameplayManager.RaceManager.RaceTime < 0 && !(kartManager.IsHuman && CoreManager.DevSettings.OverrideRaceProgressAtStart)) {
-            waypointIndex = waypoints.Count-1;
-            lapNumber = 0;
-        }
-
         segmentCompletion = GetSegmentCompletion();
         lapCompletion = GetLapCompletion();
         if(base.IsServer)
@@ -109,16 +115,20 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
     private void SetRaceProgress(float raceProgress) 
     {
+        print($"setting race progress to {raceProgress}");
         raceProgress = Mathf.Clamp01(raceProgress);
         
         hasStartedRace = raceProgress > 0;
         hasFinishedRace = raceProgress == 1;
 
-        lapNumber = (int)raceProgress*gameplayManager.RaceManager.settings.Laps;
-        waypointIndex = (int)raceProgress*waypoints.Count;
+        lapNumber = (int)(raceProgress*(float)gameplayManager.RaceManager.settings.Laps);
+        waypointIndex = (int)(raceProgress*(float)waypoints.Count);
 
-        kartManager.transform.position = GetCurrentWaypoint().position;
-        kartManager.transform.forward = (GetNextWaypoint().position-GetCurrentWaypoint().position).normalized;
+        Vector3 hereToNextVec = GetNextWaypoint().position-GetCurrentWaypoint().position;
+        // Obviously, this raceProgress*hereToNextVec doesn't represent the true point in segment
+        //   completion. But, this idea works good enough for a dev tool.
+        kartManager.transform.position = GetCurrentWaypoint().position + raceProgress*hereToNextVec;
+        kartManager.transform.forward = hereToNextVec.normalized;
     }
 
     private void RaceFinished() 

@@ -70,6 +70,7 @@ public class DevSettingsEditor : Editor
         CreateHeader("Race Settings");
         overrideRaceProgressAtStart.boolValue = EditorGUILayout.Toggle("Override race progress", overrideRaceProgressAtStart.boolValue);
         CreateNote("Instead of putting the player at the start, this will spawn the player at x race progress.");
+        CreateNote("BE CAREFUL: This will automatically disable the starting countdown.");
         if(overrideRaceProgressAtStart.boolValue) {
             EditorGUI.indentLevel++;
             devSettings.raceProgress = EditorGUILayout.Slider("Race progress", devSettings.raceProgress, 0, 1);

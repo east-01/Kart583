@@ -41,7 +41,6 @@ namespace FishNet.Managing.Scened
     /// <summary>
     /// Data container for looking up, loading, or unloading a scene.
     /// </summary>
-    [Serializable]
     public class SceneLookupData : IEquatable<SceneLookupData>
     {
         /// <summary>

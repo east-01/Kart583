@@ -24,7 +24,7 @@ public class MenuPlayerController : MenuController
         pom.GetPlayerInputManager().EnableJoining();
         pom.PlayerObjectJoinedEvent += HandleJoin;
 
-        maxPlayers = CoreManager.Instance.isMultiplayer ? 1 : 4;
+        maxPlayers = CoreManager.IsMultiplayer ? 1 : 4;
 
         // Spawn player menus for ppl already in the player input manager
         if(pom.PlayerObjectCount > 0)
@@ -115,8 +115,9 @@ public class MenuPlayerController : MenuController
     {
         if(!PlayerObjectManager.Instance.GetPlayerObjects().All(po => po.data.ready)) return;
 
-        string targetScene = CoreManager.Instance.isMultiplayer ? SceneNames.MENU_LOBBY : SceneNames.MENU_MAP;
-        CoreManager.TransitionManager.LoadScene(targetScene);
+        SceneDelegate.LobbyCommunicator.StartCommunication();
+        print("DEBUG: Starting communication with lobby and hoping that's how we get to a lobby scene");
+        CoreManager.TransitionManager.LoadScene(SceneNames.MENU_LOBBY);
 
         PlayerObjectManager.Instance.GetPlayerInputManager().DisableJoining();
     }

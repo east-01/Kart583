@@ -660,6 +660,18 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: -67.18436
       objectReference: {fileID: 0}
+    - target: {fileID: 5670902550645129584, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _scenePathHash
+      value: 1175023302
+      objectReference: {fileID: 0}
+    - target: {fileID: 5670902550645129584, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: <SceneId>k__BackingField
+      value: 5046686654610050082
+      objectReference: {fileID: 0}
+    - target: {fileID: 5670902550645129584, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkBehaviours.Array.size
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6583986117286712415, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: _networkObjectCache
       value: 
@@ -718,6 +730,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8577002329458259215, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8812969373706550515, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkObjectCache
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 8812969373706550515, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _componentIndexCache
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

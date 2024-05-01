@@ -87,7 +87,7 @@ public class PlayerPanelController : MonoBehaviour
         if(playerObj.data.name.Length == 0) {
             // TODO: Add on screen keyboard for name select
             if(playerObj.input.currentControlScheme == "Gamepad") {
-                playerObj.data.name = KartSpawner.SelectRandomBotName();
+                playerObj.data.name = KartsIRManager.SelectRandomBotName();
                 UpdatePanel();
                 return;
             }

@@ -18,7 +18,7 @@ public class RaceManager : NetworkBehaviour
     private GameplayManager gameplayManager;
     private KartLevelManager kartLevelManager;
 
-    [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange))] 
+    [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange), SendRate = 0f)] 
     private RacePhase phase; 
     public delegate void RacePhaseChangeHandler(RacePhase previousPhase, RacePhase currentPhase);
     public event RacePhaseChangeHandler RacePhaseChanged;
@@ -44,10 +44,10 @@ public class RaceManager : NetworkBehaviour
             return;
 
         // Initialize phases
-        if(PlayerObjectManager.Instance == null) {
+        /*if(PlayerObjectManager.Instance == null) {
             waitingForPlayerInput = true; // TODO: This is really dumb: we should only be waiting for player input on clients
             Debug.LogWarning("This is really dumb: we should only be waiting for player input on clients");
-        } else if(gameplayManager.GameLobby.PlayerCount == 0) {
+        } else */if(gameplayManager.GameLobby.PlayerCount == 0) {
             phase = RacePhase.LATE_JOIN;
         } else if(kartLevelManager.HasRaceCamera) {
             phase = RacePhase.WAITING_FOR_PLAYERS;
@@ -59,17 +59,17 @@ public class RaceManager : NetworkBehaviour
         // Spawn bots if we're not waiting on a late join
         // If we are waiting for a late join, the bots will be spawn after said player joins
         if(phase != RacePhase.LATE_JOIN) 
-            gameplayManager.KartSpawner.SpawnBots();
+            gameplayManager.PlayerManager.SpawnBots();
 
     }
 
     private void Update() 
     {
-        if(waitingForPlayerInput && PlayerObjectManager.Instance != null) {
-            waitingForPlayerInput = false;
-            // Re-call race phase change since we probably missed something important by not having player input
-            RacePhaseChange(RacePhase.LATE_JOIN, phase, false);
-        }
+        // if(waitingForPlayerInput && PlayerObjectManager.Instance != null) {
+        //     waitingForPlayerInput = false;
+        //     // Re-call race phase change since we probably missed something important by not having player input
+        //     RacePhaseChange(RacePhase.LATE_JOIN, phase, false);
+        // }
 
         if(!waitingForPlayerInput && phase != RacePhase.LATE_JOIN && phase != RacePhase.WAITING_FOR_PLAYERS)
             raceTime += Time.deltaTime;
@@ -121,6 +121,10 @@ public class RaceManager : NetworkBehaviour
         if(waitingForPlayerInput)
             return;
 
+        // Getting double-calls from the syncvar, this just makes sure we block a double call in a host instance.
+        if(base.IsHost && !asServer)
+            return;
+
         // Call phase change event
         RacePhaseChanged?.Invoke(prev, current);
 
@@ -133,7 +137,7 @@ public class RaceManager : NetworkBehaviour
                 break;
             case RacePhase.WAITING_FOR_PLAYERS:
                 if(asServer) {
-                    gameplayManager.KartSpawner.SpawnBots();
+                    gameplayManager.PlayerManager.SpawnBots();
                     placements.Clear();
                 }
                 break;
@@ -161,12 +165,20 @@ public class RaceManager : NetworkBehaviour
         RacePhaseChange(RacePhase.LATE_JOIN, phase, false);
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    private void ServerRpcPassLateJoin() {
+        PassLateJoin();
+    }
+
     /// <summary>
     /// Used by clients after they join
     /// </summary>
-    [ServerRpc(RequireOwnership = false)]
     public void PassLateJoin() 
     {
+        if(!base.IsServer) {
+            ServerRpcPassLateJoin();
+            return;
+        }
         if(phase == RacePhase.LATE_JOIN)
             phase = RacePhase.WAITING_FOR_PLAYERS;
     }
@@ -195,7 +207,7 @@ public class RaceManager : NetworkBehaviour
             placements.Clear();
 
         // Load settings values
-        raceTime = -Math.Abs(settings.startDelay);
+        raceTime = CoreManager.DevSettings.OverrideRaceProgressAtStart ? 0 : -Math.Abs(settings.startDelay);
     }
 
     /// <summary>

@@ -22,7 +22,9 @@ public class MenuMapController : MenuController
 
     public void ClickedMapIcon(KartLevel level) 
     {   
-        CoreManager.Instance.LoadLocalMap(level);
+        LobbyManager lm = SceneDelegate.LobbyManager;
+        GameLobby localLobby = lm.GetLobby(lm.GetLobbyID());
+        localLobby.SetLevel(level);
     }
 
     protected override void SendMenuBack()

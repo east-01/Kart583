@@ -697,6 +697,7 @@ GameObject:
   - component: {fileID: 157163640}
   - component: {fileID: 157163639}
   - component: {fileID: 157163638}
+  - component: {fileID: 157163644}
   m_Layer: 0
   m_Name: TestCube
   m_TagString: Untagged
@@ -716,9 +717,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 157163639}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 157163639}
   _componentConfiguration: 0
   _synchronizeParent: 0
   _packing:
@@ -764,7 +765,9 @@ MonoBehaviour:
   <IsNested>k__BackingField: 0
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
-  _networkBehaviours: []
+  _networkBehaviours:
+  - {fileID: 157163638}
+  - {fileID: 157163644}
   <ParentNetworkObject>k__BackingField: {fileID: 0}
   <ChildNetworkObjects>k__BackingField: []
   SerializedTransformProperties:
@@ -859,6 +862,21 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &157163644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157163637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1942bc1c95808584099731520dc1d9b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 157163639}
+  _networkObjectCache: {fileID: 157163639}
 --- !u!1001 &192400455
 PrefabInstance:
   m_ObjectHideFlags: 0

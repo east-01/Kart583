@@ -13,6 +13,16 @@ public class LevelAtlas : MonoBehaviour
         return Levels[(int)Level];
     }
 
+    public KartLevel SearchEnumBySceneName(string sceneName) 
+    {
+        foreach(KartLevel level in Enum.GetValues(typeof(KartLevel))) {
+            if(RetrieveData(level).sceneName == sceneName)
+                return level;
+        }
+        Debug.LogError($"Failed to find KartLevel from scene name \"{sceneName}\"");
+        return default;
+    }
+
 }
 
 [Serializable]
