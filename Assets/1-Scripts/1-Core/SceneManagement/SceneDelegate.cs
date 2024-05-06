@@ -83,11 +83,14 @@ public class SceneDelegate : NetworkBehaviour
         InstanceFinder.SceneManager.OnLoadEnd += FishSceneManager_SceneLoaded; 
         InstanceFinder.SceneManager.OnUnloadEnd += FishSceneManager_SceneUnloaded;
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += UnitySceneManager_SceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneUnloaded += UnitySceneManager_SceneUnloaded;
 
         StartCoroutine(RefreshLoadedScenesListTask());
     }
 
     private void OnDisable() { 
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= UnitySceneManager_SceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneUnloaded -= UnitySceneManager_SceneUnloaded;
         if(InstanceFinder.SceneManager != null) {
             InstanceFinder.SceneManager.OnLoadEnd -= FishSceneManager_SceneLoaded; 
             InstanceFinder.SceneManager.OnUnloadEnd -= FishSceneManager_SceneUnloaded;
@@ -103,39 +106,43 @@ public class SceneDelegate : NetworkBehaviour
         SceneLoadData sld = new SceneLoadData(lookupData);
         sld.Options.AllowStacking = true;
         sld.Options.AutomaticallyUnload = false;
-        sld.Options.LocalPhysics = LocalPhysicsMode.Physics3D;
+        if(CoreManager.IsMultiplayer)
+            sld.Options.LocalPhysics = LocalPhysicsMode.Physics3D;
         sld.ReplaceScenes = ReplaceOption.All;
+        sld.PreferredActiveScene = lookupData;
 
         base.SceneManager.LoadConnectionScenes(sld);
         BLog.Log($"Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}", LogChannel.SceneDelegate, 0);
     }
 
-    [Server]
-    public void LoadGlobalSceneAsServer(SceneLookupData lookupData) 
+    /// <summary>
+    /// Load a scene for the client using the UnityEngine SceneManager.
+    /// Will only be tracked by the SceneManager if shouldTrack = true
+    /// </summary>
+    /// <param name="shouldTrack">Track the scene in the scene manager</param>
+    public void LoadSceneAsClient(SceneLookupData lookupData, bool shouldTrack) 
     {
-        SceneLoadData sld = new SceneLoadData(lookupData);
-        base.SceneManager.LoadGlobalScenes(sld);
-    }
+        // Call will deregister event for the active scene
+        BLog.Log($"Loading scene \"{lookupData}\" as client, shouldTrack: {shouldTrack}", LogChannel.SceneDelegate, 0);
+        BLog.Log($"LoadSceneAsClient: Is active scene \"{ActiveSceneLookupData}\" registered: {IsSceneRegistered(ActiveSceneLookupData)}", LogChannel.SceneDelegate, 2);
+        if(IsSceneRegistered(ActiveSceneLookupData))
+            SceneWillDeregisterEvent?.Invoke(ActiveSceneLookupData);
 
-    [Client]
-    public void LoadSceneAsClient(SceneLookupData lookupData) 
-    {
-        clientLoadTarget = lookupData;
+        clientLoadTarget = shouldTrack ? lookupData : null;
+
         UnityEngine.SceneManagement.SceneManager.LoadScene(lookupData.Name, LoadSceneMode.Single);
-        BLog.Log($"Client calling load scene \"{lookupData.Name}\"", LogChannel.SceneDelegate, 0);
     }
 
+    /// <summary> See SceneDelegate#LoadSceneAsClient </summary>
     [TargetRpc]
-    public void TargetRpcLoadSceneAsClient(NetworkConnection client, SceneLookupData lookupData) 
-    {
-        LoadSceneAsClient(lookupData);
-    }
+    public void TargetRpcLoadSceneAsClient(NetworkConnection client, SceneLookupData lookupData, bool shouldTrack) { LoadSceneAsClient(lookupData, shouldTrack); }
 
     /* Unloading */
     [Server]
     public void UnloadSceneAsServer(SceneLookupData lookupData) 
     {
-        SceneWillDeregisterEvent?.Invoke(lookupData);
+        if(!base.IsHost)
+            SceneWillDeregisterEvent?.Invoke(lookupData);
 
         SceneUnloadData sud = new(lookupData);
         base.SceneManager.UnloadConnectionScenes(sud);
@@ -177,6 +184,19 @@ public class SceneDelegate : NetworkBehaviour
         if(!base.IsClient)
             return;
 
+        NetworkConnection client = base.LocalConnection;
+        BLog.Log("LoadedScenes#UnitySceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.", LogChannel.SceneDelegate, 0);
+        ServerRpcRemoveClientFromScene(client);
+        // foreach(Scene otherScene in client.Scenes) {
+        //     if(otherScene != scene) {
+        //         BLog.Log($"LoadedScenes#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client", LogChannel.SceneDelegate, 0);
+        //         base.SceneManager.RemoveConnectionsFromScene(new NetworkConnection[] { client }, otherScene);
+        //     }
+        // }
+
+        // If the client load target is null, that means we don't care about this scene load
+        if(clientLoadTarget == null)
+            return;
         if(scene != null && clientLoadTarget is not null && scene.name != clientLoadTarget.Name) {
             Debug.LogWarning("Scene load didn't match load target.");
             return;
@@ -185,18 +205,9 @@ public class SceneDelegate : NetworkBehaviour
         if(!CoreManager.IsLocal)
             RegisterScene(scene);
 
-        NetworkConnection client = base.LocalConnection;
-        BLog.Log("LoadedScenes#UnitySceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.", LogChannel.SceneDelegate, 0);
-        foreach(Scene otherScene in client.Scenes) {
-            if(otherScene != scene) {
-                BLog.Log($"LoadedScenes#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client", LogChannel.SceneDelegate, 0);
-                base.SceneManager.RemoveConnectionsFromScene(new NetworkConnection[] { client }, otherScene);
-            }
-        }
-
-        ServerRpcClientLoadedScene(base.LocalConnection, clientLoadTarget);
-
         BLog.Log($"SceneDelegate#UnitySceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"", LogChannel.SceneDelegate, 0);
+        BLog.Highlight($"Calling serverrpc client loaded scene with loadTarget={clientLoadTarget}");
+        ServerRpcClientLoadedScene(base.LocalConnection, clientLoadTarget);
     }
 
     /// <summary>
@@ -207,6 +218,14 @@ public class SceneDelegate : NetworkBehaviour
         foreach(UnloadedScene scene in args.UnloadedScenesV2) {
             DeregisterScene(new(scene.Handle, scene.Name));
         }
+    }
+
+    private void UnitySceneManager_SceneUnloaded(Scene scene) 
+    {
+        SceneLookupData lookupData = new(scene.handle, scene.name);
+        if(!IsSceneRegistered(lookupData))
+            return;
+        DeregisterScene(lookupData);
     }
 #endregion
 
@@ -238,7 +257,7 @@ public class SceneDelegate : NetworkBehaviour
 
         loadedScenes.Remove(lookupData);
 
-        BLog.Log($"Deregistered scene \"{lookupData}\". Calling event.");
+        BLog.Log($"Deregistered scene \"{lookupData}\". Calling event.", LogChannel.SceneDelegate);
         SceneDeregisteredEvent?.Invoke(lookupData);
     }
 
@@ -270,8 +289,10 @@ public class SceneDelegate : NetworkBehaviour
             Debug.LogError("Can't move client to scene because SceneLookupData is null.");
             return;
         }
+        // If the scene isn't registered with the server, that means the client is moving to a non-server-tracked scene,
+        //   all we should do is remove them from the scene they're in.
         if(!IsSceneRegistered(serverSceneLookupData)) {
-            Debug.LogError($"Tried to move client to scene \"{serverSceneLookupData}\" but the scene isn't loaded.");
+            Debug.LogError($"Can't add client to scene \"{serverSceneLookupData}\" because it isn't registered.");
             return;
         }
 
@@ -323,6 +344,13 @@ public class SceneDelegate : NetworkBehaviour
 
         if(elements.ClientCount == 0 && elements.DeleteOnLastClientRemove)
             UnloadSceneAsServer(currentScene);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcRemoveClientFromScene(NetworkConnection client) 
+    {
+        if(GetClientScene(client) is not null)
+            RemoveClientFromScene(client);
     }
 
     /// <summary>
@@ -386,8 +414,8 @@ public class SceneDelegate : NetworkBehaviour
     public void TargetRpcEnsureSceneLoaded(NetworkConnection client, SceneLookupData serverSceneLookupData) 
     {
         clientLoadTarget = null;
-        if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != serverSceneLookupData.Name) {
-            LoadSceneAsClient(serverSceneLookupData);
+        if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != serverSceneLookupData.Name && !base.IsHost) {
+            LoadSceneAsClient(serverSceneLookupData, true);
         } else {
             BLog.Log($"SceneDelegate#TargetRpcEnsureSceneLoaded: Scene \"{serverSceneLookupData.Name}\" is already loaded, skipping to SceneDelegate#ServerRpcClientLoadedScene", LogChannel.SceneDelegate, 0);
             ServerRpcClientLoadedScene(base.LocalConnection, serverSceneLookupData);
@@ -399,9 +427,17 @@ public class SceneDelegate : NetworkBehaviour
     /// </summary>
     [ServerRpc(RequireOwnership = false)]
     private void ServerRpcClientLoadedScene(NetworkConnection client, SceneLookupData serverSceneLookupData) 
-    {            
+    {      
+        if(serverSceneLookupData == null) {
+            Debug.LogWarning("Client loaded scene call has null serverSceneLookupData.");
+            return;      
+        }
+        // If the scene isn't registered with the server, that means the client is moving to a non-server-tracked scene,
+        //   all we should do is remove them from the scene they're in.
         if(!IsSceneRegistered(serverSceneLookupData)) {
-            Debug.LogError($"Client loaded scene but server doesn't have corresponding scene loaded. Lookup info: {serverSceneLookupData.Name} handle: {serverSceneLookupData.Handle}");
+            SceneLookupData clientScene = GetClientScene(client);
+            if(clientScene is not null)
+                Internal_RemoveClientFromSceneElements(client, clientScene);
             return;
         }
 
@@ -467,6 +503,11 @@ public class SceneDelegate : NetworkBehaviour
             base.SceneManager.UnloadGlobalScenes(sud);
         }
     }
+
+    private SceneLookupData ActiveSceneLookupData { get { 
+        Scene active = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        return new(active.handle, active.name);
+    } }
 
 }
 

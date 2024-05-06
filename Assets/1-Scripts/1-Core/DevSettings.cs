@@ -81,7 +81,7 @@ public class DevSettings : MonoBehaviour
         if(LoadMode == LoadMode.LOAD_LOBBY) {
             CoreManager.TransitionManager.LoadScene(SceneNames.MENU_LOBBY);
         } else if(LoadMode == LoadMode.LOAD_MAP_LOCAL) {
-            KartLevel mapPick = OverrideMapPick ? map : GameLobby.PickKartLevel();
+            KartLevel mapPick = OverrideMapPick ? map : LevelAtlas.PickRandomLevel();
             if(!OverrideMapPick) 
                 BLog.Log($"SimulateLoad: loading into local play map but override map pick is off, picked {mapPick} randomly.", LogChannel.DevSettings, 0);
             string sceneName = CoreManager.LevelAtlas.RetrieveData(mapPick).sceneName;

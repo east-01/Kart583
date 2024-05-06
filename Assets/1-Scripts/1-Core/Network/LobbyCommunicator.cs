@@ -47,7 +47,8 @@ public class LobbyCommunicator : NetworkBehaviour
             StartCommunication(retryUntilConnected);
         }
 
-        if(Time.time - lastLobbyJoinRequestTime > LOBBY_JOIN_REQUEST_TIMEOUT && PlayerObjectManager.Instance.PlayerObjectCount > 0 && !InLobby) {
+        bool timeCondition = Time.time - lastLobbyJoinRequestTime > LOBBY_JOIN_REQUEST_TIMEOUT;
+        if(timeCondition && PlayerObjectManager.Instance.PlayerObjectCount > 0 && !InLobby && base.LocalConnection.IsValid) {
             lastLobbyJoinRequestTime = Time.time;
 
             SceneDelegate.LobbyManager.JoinLobby(base.LocalConnection, PlayerObjectManager.Instance.PlayerOne.data);
@@ -97,9 +98,7 @@ public class LobbyCommunicator : NetworkBehaviour
 
     private void LobbyManager_LobbyUpdated(LobbyData newData, LobbyUpdateReason reason)
     {
-        print("RECIEVED LOBBY UPDATE");
         if(!initialized) {
-            print("successfully initialized lobby");
             initialized = true;
         }
 

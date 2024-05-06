@@ -58,13 +58,11 @@ public class GameplayManager : NetworkBehaviour
         _kartsIRManager = GetComponent<KartsIRManager>();
         _itemManager = GetComponent<ItemManager>();
 
-        // The NM Instances Count is important for a Game scene that loads and then instantly unloads
+        // Checking HasProcessedLoadMode is important for a Game scene that loads and then instantly unloads
         // i.e. Running TEST_TRACK as the editor scene, then DevSettings instantly loads a TEST_TRACK on top
-        if(!CoreManager.DevSettings.HasProcessedLoadMode)
+        if(CoreManager.DevSettings.LoadMode != LoadMode.NONE && !CoreManager.DevSettings.HasProcessedLoadMode)
             return;
 
-        SceneDelegate.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToSceneEvent;
-        
         if(!SceneDelegate.LobbyCommunicator.InLobby) {
             SpawnStep = LateLobbySpawnStep.STARTING_CONNECTION;
         }
@@ -94,12 +92,24 @@ public class GameplayManager : NetworkBehaviour
 
     }
 
-    private void Destroy() 
+    private void OnEnable() 
+    {
+        SceneDelegate.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToSceneEvent;
+        BLog.Highlight("Registered client added to scene event");
+    }
+
+    private void OnDisable() 
     {
         SceneDelegate.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToSceneEvent;
+        BLog.Highlight("Unregistered client add event");
     }
 
     private void Update() {
+        if(RaceManager.Phase == RacePhase.FINISHED && Input.GetKeyDown(KeyCode.Space)) {
+            BLog.Highlight("Debug race complete continue button pressed, this should be done by the results menu MenuController.");
+            GameLobby.MovePlayersToLobby();
+        }
+
         if(SpawnStep != LateLobbySpawnStep.NONE) {
             if(SpawnStep == LateLobbySpawnStep.STARTING_CONNECTION && base.IsHost) {
                 SpawnStep = LateLobbySpawnStep.CREATING_LOBBY;

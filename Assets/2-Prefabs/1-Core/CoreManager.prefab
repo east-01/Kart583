@@ -55,8 +55,8 @@ MonoBehaviour:
   loadMode: 0
   overrideMapPick: 1
   map: 0
-  haveStandalonePlayerRunAsServer: 1
-  manualLobbyPlayerWaitSwitch: 1
+  haveStandalonePlayerRunAsServer: 0
+  manualLobbyPlayerWaitSwitch: 0
   overrideRaceProgressAtStart: 1
   raceProgress: 0.9
   overrideLapCount: 1

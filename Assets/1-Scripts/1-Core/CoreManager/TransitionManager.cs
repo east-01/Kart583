@@ -56,7 +56,10 @@ public class TransitionManager : MonoBehaviour
             rotVector = menuCamera.GetComponent<MenuCameraDrift>().GetRotationVector();
         }
 
-        SceneManager.LoadScene(sceneName);
+        if(SceneDelegate.Instance != null)
+            SceneDelegate.Instance.LoadSceneAsClient(new(sceneName), false);
+        else
+            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
     }
     
     /// <summary>

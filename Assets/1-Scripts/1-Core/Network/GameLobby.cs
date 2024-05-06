@@ -15,7 +15,8 @@ using UnityEngine.SceneManagement;
 public class GameLobby 
 {
 
-    public static readonly float PLAYER_WAIT_TIME = 30;
+    public static readonly float PLAYER_WAIT_TIME = 20;
+    public static readonly float ROUND_END_TIME = 15;
     public static readonly float MAP_PICK_TIME = 3;
     public static readonly KeyCode FORCE_MAP_PICK_KEY = KeyCode.F4;
 
@@ -62,6 +63,7 @@ public class GameLobby
         this.manager = manager;
         this.id = id;
 
+        BLog.Log("Initialized lobby");
         SceneDelegate.Instance.SceneRegisteredEvent += SceneDelegate_SceneRegistered;
         SceneDelegate.Instance.SceneWillDeregisterEvent += SceneDelegate_SceneWillDeregister;
         SceneDelegate.Instance.SceneDeregisteredEvent += SceneDelegate_SceneDeregistered;
@@ -92,19 +94,35 @@ public class GameLobby
                     state = LobbyState.MAP_SELECTION;
                 break;
             case LobbyState.MAP_SELECTION:
+                // BLog.Log($"In map selection, is level null: {level == null}, is map scene null: {MapScene == null}", LogChannel.GameLobby, 5);
                 if(level == null && canAutoSelectLevel && timeInState >= MAP_PICK_TIME) {
                     if(CoreManager.DevSettings.OverrideMapPick)
                         level = CoreManager.DevSettings.map;
                     else 
-                        level = PickKartLevel();
+                        level = LevelAtlas.PickRandomLevel();
 
                     SetLevel(level.Value);
-                } else if(level != null && MapScene != null) {
+                } else if(level != null && MapScene != null/* && gameplayManager != null*/) {
                     MovePlayersToMap();                    
                     state = LobbyState.RACING;
                 }
                 break;
             case LobbyState.RACING:
+                if(gameplayManager.RaceManager.Phase == RacePhase.FINISHED) {
+                    AwardPoints();
+                    state = LobbyState.POST_RACE;
+                }
+                break;
+            case LobbyState.POST_RACE:
+                if(mapSceneData == null || !SceneDelegate.Instance.IsSceneRegistered(mapSceneData)) {
+                    MovePlayersToLobby();
+                    state = LobbyState.WAITING_FOR_PLAYERS;
+                } else if(SceneDelegate.Instance.GetSceneElements(mapSceneData).Clients.Count == 0) {
+                    state = LobbyState.WAITING_FOR_PLAYERS;
+                } else if(CoreManager.IsMultiplayer && timeInState >= ROUND_END_TIME) {
+                    MovePlayersToLobby();
+                    state = LobbyState.WAITING_FOR_PLAYERS;
+                }
                 break;
         }
 
@@ -128,19 +146,22 @@ public class GameLobby
     /// </summary>
     public void MovePlayersToLobby() 
     {
-        if(mapSceneData == null)
-            return;
-        if(!SceneDelegate.Instance.IsSceneRegistered(mapSceneData))
-            return;
-
-        SceneElements elements = SceneDelegate.Instance.GetSceneElements(mapSceneData);
-        foreach(NetworkConnection client in elements.Clients) {
-            SceneDelegate.Instance.TargetRpcEnsureSceneLoaded(client, new(SceneNames.MENU_LOBBY));
+        foreach(NetworkConnection client in players.Keys) {
+            SceneDelegate.Instance.TargetRpcLoadSceneAsClient(client, new(SceneNames.MENU_LOBBY), false);
         }
     }
 
     public void MovePlayersToMap() 
     {
+        if(mapSceneData == null) {
+            Debug.LogError("Can't move players to map, map scene data is null.");
+            return;
+        }
+        if(!SceneDelegate.Instance.IsSceneRegistered(mapSceneData)) {
+            Debug.LogError("Can't move players to map, the scene isn't registered");
+            return;
+        }
+
         BLog.Log($"{MessagePrefix}Sending {players.Count} player(s) to map, is server: {InstanceFinder.IsServer} is client: {InstanceFinder.IsClient}", LogChannel.GameLobby, 0);
         foreach(NetworkConnection conn in players.Keys) {
             SceneDelegate.Instance.AddClientToScene(conn, mapSceneData);
@@ -148,7 +169,65 @@ public class GameLobby
     }
 #endregion
 
-#region Scene Management
+#region Administrative
+    /// <summary>
+    /// End the current round. Currently does multiple admin things:
+    ///   1. Award points
+    ///   2. Recall players to lobby
+    /// The map will automatically delete once all players are removed.
+    /// </summary>
+    public void CompleteRound() 
+    {
+        AwardPoints();
+
+        MovePlayersToLobby();
+    }
+
+    /// <summary>
+    /// Gets the placements dictionary from the RaceManager and adds the points awarded to each PlayerData.
+    /// </summary>
+    public void AwardPoints() 
+    {
+        if(gameplayManager == null) {
+            Debug.LogError("Can't award points, the gameplay manager is null.");
+            return;
+        }
+        if(gameplayManager.RaceManager.Phase != RacePhase.FINISHED) {
+            Debug.LogError("Can't award points, the RaceManager's phase isn't FINISHED");
+            return;
+        }
+
+        SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
+        List<NetworkConnection> playerKeys = new List<NetworkConnection>(players.Keys);
+        foreach(NetworkConnection client in playerKeys) {
+            PlayerData data = players[client];
+            if(!placements.ContainsKey(data.uuid)) {
+                Debug.LogWarning($"Tried to award points to \"{data.Summary}\" but they aren't in the placements dictionary.");
+                continue;
+            }
+            data.points += placements[data.uuid].pointsAwarded;
+            players[client] = data;
+        }
+    }
+#endregion
+
+#region Scene/Level Management
+    /// <summary>
+    /// Set the level. Will load the corresponding scene on the server.
+    /// </summary>
+    public void SetLevel(KartLevel level) 
+    {   
+        if(this.level != null) {
+            Debug.LogError("Can't set level, one already exists");
+            return;
+        }
+        BLog.Log($"{MessagePrefix}Picked level {level} and requesting map scene.", LogChannel.GameLobby, 0);
+        this.level = level;
+
+        SceneLookupData newMapLookupData = new(CoreManager.LevelAtlas.RetrieveData(level).sceneName);
+        SceneDelegate.Instance.LoadSceneAsServer(newMapLookupData);
+    }
+
     public void SceneDelegate_SceneRegistered(SceneLookupData lookupData) 
     {
         SceneElements elements = SceneDelegate.Instance.GetSceneElements(lookupData);
@@ -195,8 +274,6 @@ public class GameLobby
     {
         gameplayManager = gm;
         gameplayManager.SetGameLobby(this);
-
-        gameplayManager.RaceManager.RacePhaseChanged += RaceManager_RacePhaseChanged;
     }
 
     private void DeregisterGameplayManager() 
@@ -205,8 +282,6 @@ public class GameLobby
             Debug.LogError("Can't deregister GameplayManager because it is null.");
             return;
         }
-
-        gameplayManager.RaceManager.RacePhaseChanged -= RaceManager_RacePhaseChanged;
     }
 #endregion
 
@@ -214,58 +289,7 @@ public class GameLobby
     {
         if(current == LobbyState.MAP_SELECTION) {
             level = null;
-            MovePlayersToLobby();
         }
-    }
-
-    private void RaceManager_RacePhaseChanged(RacePhase prev, RacePhase current) 
-    {
-        BLog.Log($"{MessagePrefix}RaceManager phase changed to {current}", LogChannel.GameLobby, 1);
-        if(current == RacePhase.FINISHED) {
-            state = LobbyState.WAITING_FOR_PLAYERS;
-            AwardPoints();
-        }
-    }
-
-    /// <summary>
-    /// Gets the placements dictionary from the RaceManager and adds the points awarded to each PlayerData.
-    /// </summary>
-    public void AwardPoints() 
-    {
-        if(gameplayManager == null) {
-            Debug.LogError("Can't award points, the gameplay manager is null.");
-            return;
-        }
-        if(gameplayManager.RaceManager.Phase != RacePhase.FINISHED) {
-            Debug.LogError("Can't award points, the RaceManager's phase isn't FINISHED");
-            return;
-        }
-
-        SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
-        List<NetworkConnection> playerKeys = new List<NetworkConnection>(players.Keys);
-        foreach(NetworkConnection client in playerKeys) {
-            PlayerData data = players[client];
-            if(!placements.ContainsKey(data.uuid)) {
-                Debug.LogWarning($"Tried to award points to \"{data.Summary}\" but they aren't in the placements dictionary.");
-                continue;
-            }
-            data.points += placements[data.uuid].pointsAwarded;
-            players[client] = data;
-        }
-    }
-
-    public void SetLevel(KartLevel level) 
-    {
-        BLog.Log($"{MessagePrefix}Picked level {level} and requesting map scene.", LogChannel.GameLobby, 0);
-
-        SceneLookupData newMapLookupData = new(CoreManager.LevelAtlas.RetrieveData(level).sceneName);
-        SceneDelegate.Instance.LoadSceneAsServer(newMapLookupData);
-    }
-
-    public static KartLevel PickKartLevel() 
-    {
-        Array values = Enum.GetValues(typeof(KartLevel));
-        return (KartLevel)values.GetValue(new System.Random().Next(values.Length));
     }
 
     public PlayerData? GetPlayerData(NetworkConnection client) 
@@ -329,7 +353,8 @@ public enum LobbyState
 {
     WAITING_FOR_PLAYERS, 
     MAP_SELECTION, 
-    RACING // The lobby is in game
+    RACING, // The lobby is in game
+    POST_RACE
 }
 
 public enum LobbyUpdateReason 

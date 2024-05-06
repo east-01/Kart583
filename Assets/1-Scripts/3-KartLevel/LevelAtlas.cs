@@ -23,6 +23,11 @@ public class LevelAtlas : MonoBehaviour
         return default;
     }
 
+    public static KartLevel PickRandomLevel() 
+    {
+        Array values = Enum.GetValues(typeof(KartLevel));
+        return (KartLevel)values.GetValue(new System.Random().Next(values.Length));
+    }
 }
 
 [Serializable]

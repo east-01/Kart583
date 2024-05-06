@@ -54,6 +54,14 @@ public class KartsIRManager : NetworkBehaviour
 
     void Start() 
 	{
+		BLog.Log("STARTING SPAWN COROUTINE", LogChannel.GameplayManager);
+		StartCoroutine(SpawnPlayersInASecond());
+	}
+
+	public IEnumerator SpawnPlayersInASecond() 
+	{
+		yield return new WaitForSeconds(1);
+		BLog.Log($"Spawning {PlayerObjectManager.Instance.GetPlayerObjects().Count} player(s).", LogChannel.GameplayManager, 1);
 		PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
 	}
 

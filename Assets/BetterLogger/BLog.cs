@@ -29,6 +29,11 @@ public class BLog : MonoBehaviour
         Debug.Log($"<color=#{color}>{message}</color>");
     }
 
+    public static void Highlight(string message) 
+    {
+        Debug.Log($"<color=#FFD700><b>{message}</b></color>");        
+    }
+
     public void ParseChannelData() 
     {
         foreach(LogChannelData lcd in channelDatas) {

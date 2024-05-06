@@ -144,11 +144,12 @@ public class LobbyManager : NetworkBehaviour
         LobbyData lobbyData = lobby.Data;
 
         // Invoke event on server
-        print("ISSUING LOBBY UPDATE");
         LobbyUpdated?.Invoke(lobbyData, reason);
 
         // Invoke event for clients to said lobby
         foreach(NetworkConnection client in lobby.Players.Keys) {
+            if(!Observers.Contains(client))
+                continue;
             TargetRpcLobbyUpdatedEvent(client, lobbyData, reason);
         }
     }

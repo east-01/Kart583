@@ -84,22 +84,27 @@ public class CoreManager : MonoBehaviour
 
     private void CheckSceneDelegate() 
     {
+        // The client can't spawn it's own scene delegate
+        if(InstanceFinder.IsClientOnly)
+            return;
         if(sceneDelegatePrefab == null) {
             Debug.LogWarning("Scene delegate prefab is null on SceneDelegateSpawner script on object " + gameObject.name);
             return;
         }
-        if(SceneDelegate.Instance != null) {
-            if(!SceneDelegate.Instance.NetworkObject.IsSpawned && InstanceFinder.IsServer) {
-                InstanceFinder.ServerManager.Spawn(SceneDelegate.Instance.NetworkObject);
-            }
-            return;
-        }
-        // // Check if there's a NetworkManager in place and the server is started
-        // if(NetworkManager.Instances.Count <= 0 || InstanceFinder.ServerManager == null || !InstanceFinder.ServerManager.Started || !InstanceFinder.IsServer)
+        // BLog.Highlight($"Checking scene delegate: is instance null: {SceneDelegate.Instance == null}");
+        // if(SceneDelegate.Instance != null) {
+        //     // BLog.Highlight($"Checking scene delegate: is spawned: {SceneDelegate.Instance.NetworkObject.IsSpawned}, is this instance a server: {InstanceFinder.IsServer}");
+        //     if(!SceneDelegate.Instance.NetworkObject.IsSpawned && InstanceFinder.IsServer) {
+        //         InstanceFinder.ServerManager.Spawn(SceneDelegate.Instance.NetworkObject);
+        //     }
         //     return;
+        // }
+        // Check if there's a NetworkManager in place and the server is started
+        if(NetworkManager.Instances.Count <= 0 || InstanceFinder.ServerManager == null || !InstanceFinder.ServerManager.Started || !InstanceFinder.IsServer)
+            return;
 
         GameObject go = Instantiate(sceneDelegatePrefab);
-        // InstanceFinder.ServerManager.Spawn(go);
+        InstanceFinder.ServerManager.Spawn(go);
 
         go.name = "SceneDelegate";
         go.GetComponent<SceneDelegate>().CheckInitialGlobalScene();
