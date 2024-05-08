@@ -63,7 +63,7 @@ public class GameplayManager : NetworkBehaviour
         if(CoreManager.DevSettings.LoadMode != LoadMode.NONE && !CoreManager.DevSettings.HasProcessedLoadMode)
             return;
 
-        if(!SceneDelegate.LobbyCommunicator.InLobby) {
+        if(!CoreManager.LobbyCommunicator.InLobby) {
             SpawnStep = LateLobbySpawnStep.STARTING_CONNECTION;
         }
 
@@ -94,13 +94,13 @@ public class GameplayManager : NetworkBehaviour
 
     private void OnEnable() 
     {
-        SceneDelegate.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToSceneEvent;
+        SceneController.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToSceneEvent;
         BLog.Highlight("Registered client added to scene event");
     }
 
     private void OnDisable() 
     {
-        SceneDelegate.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToSceneEvent;
+        SceneController.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToSceneEvent;
         BLog.Highlight("Unregistered client add event");
     }
 
@@ -113,7 +113,7 @@ public class GameplayManager : NetworkBehaviour
         if(SpawnStep != LateLobbySpawnStep.NONE) {
             if(SpawnStep == LateLobbySpawnStep.STARTING_CONNECTION && base.IsHost) {
                 SpawnStep = LateLobbySpawnStep.CREATING_LOBBY;
-            } else if(SpawnStep == LateLobbySpawnStep.CREATING_LOBBY && SceneDelegate.LobbyManager.LobbyCount > 0) {
+            } else if(SpawnStep == LateLobbySpawnStep.CREATING_LOBBY && NetSceneController.LobbyManager.LobbyCount > 0) {
                 SpawnStep = LateLobbySpawnStep.REGISTERING_MAP;
             } else if(SpawnStep == LateLobbySpawnStep.REGISTERING_MAP && lobby != null) {
                 SpawnStep = LateLobbySpawnStep.WAITING_FOR_PLAYER;
@@ -128,13 +128,13 @@ public class GameplayManager : NetworkBehaviour
         if(current == LateLobbySpawnStep.STARTING_CONNECTION) {
             BLog.Log($"No lobby existed when joining map. AutoSpawning a local one.", LogChannel.DevSettings);
             CoreManager.IsLocal = true;
-            SceneDelegate.LobbyCommunicator.StartCommunication();
+            CoreManager.LobbyCommunicator.StartCommunication();
         } else if(current == LateLobbySpawnStep.CREATING_LOBBY) {
-            SceneDelegate.LobbyManager.CreateLobby();
+            NetSceneController.LobbyManager.CreateLobby();
         } else if(current == LateLobbySpawnStep.REGISTERING_MAP) {
-            BLog.Log($"Spawn step- Registering scene with {SceneDelegate.LobbyManager.LobbyCount} lobbies", LogChannel.GameplayManager, 1);
+            BLog.Log($"Spawn step- Registering scene with {NetSceneController.LobbyManager.LobbyCount} lobbies", LogChannel.GameplayManager, 1);
             // This is called because neither of the SceneRegistered events will be able to catch unity's scene load.
-            SceneDelegate.Instance.RegisterScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
+            NetSceneController.Instance.RegisterScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene());
         } else if(current == LateLobbySpawnStep.MOVING_TO_SCENE) {
             GameLobby.AddPlayer(base.LocalConnection, PlayerObjectManager.Instance.PlayerOne.data);
             GameLobby.MovePlayersToMap();

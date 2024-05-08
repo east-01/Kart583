@@ -55,7 +55,8 @@ public class GameLobby
 
     /* Game related */
     private KartLevel? level;
-    private bool canAutoSelectLevel { get { return CoreManager.IsMultiplayer && CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch; } }
+    private bool CanAutoSelectLevel { get { return CoreManager.IsMultiplayer && !CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch; } }
+    public bool forceMapPick = false;
     private GameplayManager gameplayManager;
 
     public GameLobby(LobbyManager manager, string id) 
@@ -64,9 +65,9 @@ public class GameLobby
         this.id = id;
 
         BLog.Log("Initialized lobby");
-        SceneDelegate.Instance.SceneRegisteredEvent += SceneDelegate_SceneRegistered;
-        SceneDelegate.Instance.SceneWillDeregisterEvent += SceneDelegate_SceneWillDeregister;
-        SceneDelegate.Instance.SceneDeregisteredEvent += SceneDelegate_SceneDeregistered;
+        SceneController.Instance.SceneRegisteredEvent += SceneDelegate_SceneRegistered;
+        SceneController.Instance.SceneWillDeregisterEvent += SceneDelegate_SceneWillDeregister;
+        SceneController.Instance.SceneDeregisteredEvent += SceneDelegate_SceneDeregistered;
 
         state = LobbyState.WAITING_FOR_PLAYERS;
         level = null;
@@ -83,10 +84,23 @@ public class GameLobby
         // State management
         timeInState += Time.deltaTime;
 
+        if(Input.GetKeyDown(FORCE_MAP_PICK_KEY))
+            forceMapPick = true;
+
+        CheckState();
+    }  
+
+#region State Management
+    /// <summary>
+    /// Checks the current state and attempts to escalate to the next state.
+    /// Can only escalate state once per frame.
+    /// </summary>
+    public void CheckState() 
+    {
         switch(state) {
             case LobbyState.WAITING_FOR_PLAYERS:
-                bool timePassed = canAutoSelectLevel && timeInState >= PLAYER_WAIT_TIME;
-                bool noAvailableSpace = canAutoSelectLevel && !CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0;
+                bool timePassed = CanAutoSelectLevel && timeInState >= PLAYER_WAIT_TIME;
+                bool noAvailableSpace = CanAutoSelectLevel && !CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0;
                 if(Input.GetKeyDown(FORCE_MAP_PICK_KEY) || 
                    noAvailableSpace || 
                    timePassed || 
@@ -95,13 +109,18 @@ public class GameLobby
                 break;
             case LobbyState.MAP_SELECTION:
                 // BLog.Log($"In map selection, is level null: {level == null}, is map scene null: {MapScene == null}", LogChannel.GameLobby, 5);
-                if(level == null && canAutoSelectLevel && timeInState >= MAP_PICK_TIME) {
+                bool autoSelectValid = CanAutoSelectLevel && timeInState >= MAP_PICK_TIME;
+                // BLog.Highlight($"is level null: {level == null}, is AS valid {autoSelectValid}, is input {Input.GetKeyDown(FORCE_MAP_PICK_KEY)}");
+                BLog.Highlight($"Current level: \"{level}\"");
+                if(level == null && (autoSelectValid || forceMapPick)) {
+                    forceMapPick = false;
+                    KartLevel? selectedLevel = null;
                     if(CoreManager.DevSettings.OverrideMapPick)
-                        level = CoreManager.DevSettings.map;
+                        selectedLevel = CoreManager.DevSettings.map;
                     else 
-                        level = LevelAtlas.PickRandomLevel();
+                        selectedLevel = LevelAtlas.PickRandomLevel();
 
-                    SetLevel(level.Value);
+                    SetLevel(selectedLevel.Value);
                 } else if(level != null && MapScene != null/* && gameplayManager != null*/) {
                     MovePlayersToMap();                    
                     state = LobbyState.RACING;
@@ -114,10 +133,10 @@ public class GameLobby
                 }
                 break;
             case LobbyState.POST_RACE:
-                if(mapSceneData == null || !SceneDelegate.Instance.IsSceneRegistered(mapSceneData)) {
+                if(mapSceneData == null || !NetSceneController.Instance.IsSceneRegistered(mapSceneData)) {
                     MovePlayersToLobby();
                     state = LobbyState.WAITING_FOR_PLAYERS;
-                } else if(SceneDelegate.Instance.GetSceneElements(mapSceneData).Clients.Count == 0) {
+                } else if(NetSceneController.Instance.GetSceneElements(mapSceneData).Clients.Count == 0) {
                     state = LobbyState.WAITING_FOR_PLAYERS;
                 } else if(CoreManager.IsMultiplayer && timeInState >= ROUND_END_TIME) {
                     MovePlayersToLobby();
@@ -125,8 +144,15 @@ public class GameLobby
                 }
                 break;
         }
+    }
 
-    }  
+    private void LobbyStateChanged(LobbyState prev, LobbyState current) 
+    {
+        if(current == LobbyState.MAP_SELECTION) {
+            level = null;
+        }
+    }
+#endregion
 
 #region Player Management
     public void AddPlayer(NetworkConnection conn, PlayerData data) 
@@ -147,7 +173,7 @@ public class GameLobby
     public void MovePlayersToLobby() 
     {
         foreach(NetworkConnection client in players.Keys) {
-            SceneDelegate.Instance.TargetRpcLoadSceneAsClient(client, new(SceneNames.MENU_LOBBY), false);
+            NetSceneController.Instance.TargetRpcLoadScene(client, new(SceneNames.MENU_LOBBY), false);
         }
     }
 
@@ -157,14 +183,14 @@ public class GameLobby
             Debug.LogError("Can't move players to map, map scene data is null.");
             return;
         }
-        if(!SceneDelegate.Instance.IsSceneRegistered(mapSceneData)) {
+        if(!NetSceneController.Instance.IsSceneRegistered(mapSceneData)) {
             Debug.LogError("Can't move players to map, the scene isn't registered");
             return;
         }
 
         BLog.Log($"{MessagePrefix}Sending {players.Count} player(s) to map, is server: {InstanceFinder.IsServer} is client: {InstanceFinder.IsClient}", LogChannel.GameLobby, 0);
         foreach(NetworkConnection conn in players.Keys) {
-            SceneDelegate.Instance.AddClientToScene(conn, mapSceneData);
+            NetSceneController.Instance.AddClientToScene(conn, mapSceneData);
         }
     }
 #endregion
@@ -225,12 +251,12 @@ public class GameLobby
         this.level = level;
 
         SceneLookupData newMapLookupData = new(CoreManager.LevelAtlas.RetrieveData(level).sceneName);
-        SceneDelegate.Instance.LoadSceneAsServer(newMapLookupData);
+        NetSceneController.Instance.LoadSceneAsServer(newMapLookupData);
     }
 
     public void SceneDelegate_SceneRegistered(SceneLookupData lookupData) 
     {
-        SceneElements elements = SceneDelegate.Instance.GetSceneElements(lookupData);
+        SceneElements elements = NetSceneController.Instance.GetSceneElements(lookupData);
         if(elements.HasOwner) {
             Debug.LogError($"Can't claim newly registered scene \"{lookupData}\" because it already has an owner.");
             return;
@@ -251,7 +277,7 @@ public class GameLobby
 
         elements.Owner = this;
         elements.DeleteOnLastClientRemove = SceneNames.IsMapScene(lookupData.Name);
-        SceneDelegate.Instance.SetSceneElements(lookupData, elements);
+        NetSceneController.Instance.SetSceneElements(lookupData, elements);
 
         BLog.Log($"{MessagePrefix}Claimed scene \"{lookupData}\"", LogChannel.GameLobby, 0);
     }
@@ -285,13 +311,6 @@ public class GameLobby
     }
 #endregion
 
-    private void LobbyStateChanged(LobbyState prev, LobbyState current) 
-    {
-        if(current == LobbyState.MAP_SELECTION) {
-            level = null;
-        }
-    }
-
     public PlayerData? GetPlayerData(NetworkConnection client) 
     {
         if(!players.ContainsKey(client))
@@ -315,9 +334,9 @@ public class GameLobby
     public SceneLookupData MapSceneData { get { return mapSceneData; } }
     public LobbyState State { get { return state; } }
     public Scene? MapScene { get { 
-        if(mapSceneData is null || !SceneDelegate.Instance.IsSceneRegistered(mapSceneData))
+        if(mapSceneData is null || !NetSceneController.Instance.IsSceneRegistered(mapSceneData))
             return null;
-        return SceneDelegate.Instance.GetSceneElements(mapSceneData).Scene;
+        return NetSceneController.Instance.GetSceneElements(mapSceneData).Scene;
     } }
 
     public GameplayManager GameplayManager { get { return gameplayManager; } }

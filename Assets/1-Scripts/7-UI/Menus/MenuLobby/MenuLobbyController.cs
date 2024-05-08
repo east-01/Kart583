@@ -49,9 +49,8 @@ public class MenuLobbyController : MenuController
             }
         }
 
-
         if(GameVersion.IsDevelopment && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
-            SceneDelegate.LobbyManager.RequestForceMapPick();
+            NetSceneController.LobbyManager.RequestForceMapPick();
     }
 
     private IEnumerator StartConnection() 

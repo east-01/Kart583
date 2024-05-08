@@ -48,7 +48,7 @@ public class KartsIRManager : NetworkBehaviour
 		kartLevelManager = gameplayManager.KartLevelManager;
 
 		KartSpawnedEvent += KartManager_KartSpawned;
-		SceneDelegate.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToScene;
+		SceneController.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToScene;
 		// PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerObjectJoined;
 	}
 
@@ -68,7 +68,7 @@ public class KartsIRManager : NetworkBehaviour
 	private void OnDestroy() 
 	{
 		KartSpawnedEvent -= KartManager_KartSpawned;
-		SceneDelegate.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToScene;
+		SceneController.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToScene;
 		// PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerObjectJoined;
 	}
 #endregion

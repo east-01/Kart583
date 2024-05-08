@@ -12,15 +12,10 @@ using UnityEngine;
 ///   the GameLobby.
 /// It will interface with the NetworkStateManager to start connections.
 /// </summary>
-public class LobbyCommunicator : NetworkBehaviour
+public class LobbyCommunicator : MonoBehaviour
 {
 
     public static float LOBBY_JOIN_REQUEST_TIMEOUT = 10;
-
-    // Things that need to be done:
-    // 1. x Communication is started when passing through MenuPlayerController & on Dev settings load
-    // 2. x Start/Stop communication Lobby data retainment
-    // 3. GameplayManager should create a lobby if loaded into
 
     private NetworkStateManager networkStateManager;
 
@@ -39,7 +34,9 @@ public class LobbyCommunicator : NetworkBehaviour
 
     private void Update() 
     {
-        if(!SceneDelegate.IsReady)
+        if(!NetSceneController.IsReady)
+            return;
+        if(!CoreManager.HasLocalConnection)
             return;
 
         if(waitingToStartCommunication) {
@@ -48,16 +45,16 @@ public class LobbyCommunicator : NetworkBehaviour
         }
 
         bool timeCondition = Time.time - lastLobbyJoinRequestTime > LOBBY_JOIN_REQUEST_TIMEOUT;
-        if(timeCondition && PlayerObjectManager.Instance.PlayerObjectCount > 0 && !InLobby && base.LocalConnection.IsValid) {
+        if(timeCondition && PlayerObjectManager.Instance.PlayerObjectCount > 0 && !InLobby && CoreManager.LocalConnection.IsValid) {
             lastLobbyJoinRequestTime = Time.time;
 
-            SceneDelegate.LobbyManager.JoinLobby(base.LocalConnection, PlayerObjectManager.Instance.PlayerOne.data);
+            NetSceneController.LobbyManager.JoinLobby(CoreManager.LocalConnection, PlayerObjectManager.Instance.PlayerOne.data);
         }
     }
 
     public void StartCommunication(bool retryUntilConnected = true) 
     {
-        if(SceneDelegate.Instance == null) {
+        if(SceneController.Instance == null) {
             waitingToStartCommunication = true;
             this.retryUntilConnected = retryUntilConnected;
             return;
@@ -73,7 +70,6 @@ public class LobbyCommunicator : NetworkBehaviour
             CoreManager.NetworkStateManager.UseGlobalTransport();
 
         InstanceFinder.ClientManager.OnRemoteConnectionState += ClientManager_OnClientRemoteConnectionState;
-        SceneDelegate.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated;
 
         if(CoreManager.IsLocal)
             CoreManager.NetworkStateManager.StartHost();
@@ -84,10 +80,12 @@ public class LobbyCommunicator : NetworkBehaviour
     public void StopCommunication() 
     {
         InstanceFinder.ClientManager.OnRemoteConnectionState -= ClientManager_OnClientRemoteConnectionState;
-        SceneDelegate.LobbyManager.LobbyUpdated -= LobbyManager_LobbyUpdated;
 
         lobbyData = null;
     }
+
+    public void RegisterLobbyManager() { NetSceneController.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated; BLog.Highlight("Registered lobby manager"); }
+    public void DeregisterLobbyManager() { NetSceneController.LobbyManager.LobbyUpdated -= LobbyManager_LobbyUpdated; BLog.Highlight("Deregistered lobby manager"); }
 
     private void ClientManager_OnClientRemoteConnectionState(RemoteConnectionStateArgs args) 
     {

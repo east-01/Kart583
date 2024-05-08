@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4474566219191650411}
   - component: {fileID: 141262640191590162}
   - component: {fileID: 7823777009711212984}
+  - component: {fileID: 2124557569938141074}
   - component: {fileID: 67028911781127713}
   - component: {fileID: 153415242143646867}
   m_Layer: 0
@@ -76,7 +77,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   networkManagerPrefab: {fileID: 529355123246646427, guid: a6f384e010c39904ab940a20451d1369, type: 3}
-  sceneDelegatePrefab: {fileID: 786467654113088903, guid: 59c0f57aad8c73042ae9d206018c26c0, type: 3}
+  sceneControllerPrefab: {fileID: 786467654113088903, guid: 3301771fb20627e48ac6a4db5853eb27, type: 3}
+  netSceneControllerPrefab: {fileID: 786467654113088903, guid: 59c0f57aad8c73042ae9d206018c26c0, type: 3}
   playerObjectManagerPrefab: {fileID: 1451273396316291034, guid: 1d5be95719efe044689066dd96520717, type: 3}
   screenLoggerPrefab: {fileID: 101706, guid: e0aeafd6ca709b5449035c42f4e3879e, type: 3}
   atlasesPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
@@ -92,6 +94,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 771a4be08c4002c4f98c933beb51f6eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2124557569938141074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 72735794780100705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66c8895476994b14f8f52234f01e30b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &67028911781127713
@@ -123,7 +137,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   channelDatas:
   - channel: 1
-    color: {r: 0.8509804, g: 0.2695938, b: 0, a: 1}
+    color: {r: 1, g: 0, b: 0.6924796, a: 1}
   - channel: 3
     color: {r: 0.5188043, g: 1, b: 0.2679245, a: 1}
   - channel: 2

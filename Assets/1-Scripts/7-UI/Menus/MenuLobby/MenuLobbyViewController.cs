@@ -55,17 +55,17 @@ public class MenuLobbyViewController : MonoBehaviour
     private void Update() 
     {
         // Waiting for SceneDelegate/LobbyManager to spawn
-        if(_lobbyManager == null && SceneDelegate.Instance != null && SceneDelegate.LobbyManager != null) {
-            _lobbyManager = SceneDelegate.LobbyManager;
-            SceneDelegate.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated;    
+        if(_lobbyManager == null && SceneController.Instance != null && NetSceneController.IsReady && NetSceneController.LobbyManager != null) {
+            _lobbyManager = NetSceneController.LobbyManager;
+            NetSceneController.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated;    
             UpdateView();
 
             BLog.Log("MenuLobbyViewController#Update: Attached lobby manager", LogChannel.SceneDelegate, 0); 
         }
 
-        if(!SceneDelegate.LobbyCommunicator.LobbyData.HasValue)
+        if(!CoreManager.LobbyCommunicator.LobbyData.HasValue)
             return;
-        LobbyData currentData = SceneDelegate.LobbyCommunicator.LobbyData.Value;
+        LobbyData currentData = CoreManager.LobbyCommunicator.LobbyData.Value;
 
         // Update player timeout text
         if(currentData.state == LobbyState.WAITING_FOR_PLAYERS && playerWaitTimeout != -1) {
@@ -92,15 +92,15 @@ public class MenuLobbyViewController : MonoBehaviour
         disconnectedViewContainer.SetActive(false);
         connectedViewContainer.SetActive(true);
 
-        BLog.Log($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {SceneDelegate.LobbyCommunicator.LobbyData.HasValue})", LogChannel.SceneDelegate, 0); 
+        BLog.Log($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {CoreManager.LobbyCommunicator.LobbyData.HasValue})", LogChannel.SceneDelegate, 0); 
 
         // Menu reset
         lobbyStatusText.text = "-";
         playerListGroup.DestroyChildren();
 
-        if(!SceneDelegate.LobbyCommunicator.LobbyData.HasValue)
+        if(!CoreManager.LobbyCommunicator.LobbyData.HasValue)
             return;
-        LobbyData lobbyData = SceneDelegate.LobbyCommunicator.LobbyData.Value;
+        LobbyData lobbyData = CoreManager.LobbyCommunicator.LobbyData.Value;
 
         BLog.Log($"MenuLobbyViewController#UpdateView: Player name count {lobbyData.players.Count}", LogChannel.SceneDelegate, 0);
 

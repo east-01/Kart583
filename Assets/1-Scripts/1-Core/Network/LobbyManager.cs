@@ -25,13 +25,14 @@ public class LobbyManager : NetworkBehaviour
     public delegate void LobbyUpdateHandler(LobbyData newData, LobbyUpdateReason reason);
     public event LobbyUpdateHandler LobbyUpdated;
 
-    private bool waitingForInput;
-
     private void Awake() 
     {
         if(GameLobby.PLAYER_WAIT_TIME <= 0)
             Debug.LogWarning("GameLobby's PLAYER_WAIT_TIME is <= 0, this is not recommended.");
     }
+
+    private void OnEnable() { CoreManager.LobbyCommunicator.RegisterLobbyManager(); }
+    private void OnDisable() { CoreManager.LobbyCommunicator.DeregisterLobbyManager(); }
 
     private void Update () 
     {
@@ -121,7 +122,7 @@ public class LobbyManager : NetworkBehaviour
             return;
         }
         BLog.Log($"Client \"{client}\" requested to move to lobby", LogChannel.LobbyManager, 0);
-        SceneDelegate.Instance.AddClientToScene(client, new(SceneNames.MENU_LOBBY));
+        NetSceneController.Instance.AddClientToScene(client, new(SceneNames.MENU_LOBBY));
     }
 #endregion
 
@@ -252,6 +253,7 @@ public class LobbyManager : NetworkBehaviour
         }
 
         lobby.state = LobbyState.MAP_SELECTION;
+        lobby.forceMapPick = true;
     }
 
     [Server]

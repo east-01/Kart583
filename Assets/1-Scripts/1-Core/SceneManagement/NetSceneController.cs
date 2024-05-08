@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Text;
 using System.Collections;
 using System.Collections.Generic;
 using FishNet;
@@ -10,87 +11,46 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// The scene delegate is a global networked object that will handle clients being placed
-///   into scenes. Some of the more confusing code I've written. See flowchart:
-/// https://lucid.app/lucidchart/df418eac-4680-413e-9bbd-19c1bc7376ef/edit?viewport_loc=-2414%2C-625%2C2387%2C1147%2C0_0&invitationId=inv_a757cd21-5e23-440e-8b4d-cd3943fe5ef7
+/// The NetSceneController only exists when connected to the network.
 /// </summary>
 [RequireComponent(typeof(LobbyManager))]
-[RequireComponent(typeof(LobbyCommunicator))]
-public class SceneDelegate : NetworkBehaviour
+public class NetSceneController : NetworkBehaviour
 {
 
-    public static SceneDelegate Instance;
+    public static NetSceneController Instance;
     public static bool IsReady { get { return Instance != null && Instance.NetworkObject.IsSpawned; } }
-    public static LobbyManager LobbyManager { get { return Instance._lobbyManager; } }
-    public static LobbyCommunicator LobbyCommunicator { get { return Instance._lobbyCommunicator; } }
+    public static LobbyManager LobbyManager { get { return Instance.lobbyManager; } }
 
-    private LobbyManager _lobbyManager;
-    private LobbyCommunicator _lobbyCommunicator;
+    private SceneController sc { get { return SceneController.Instance; } }
+
+    private LobbyManager lobbyManager;
 
     [SerializeField]
     private Dictionary<SceneLookupData, SceneElements> loadedScenes = new();
     [SerializeField]
     private List<SceneElements> loadedScenesList = new();
 
-    /// <summary>
-    /// Client side only, the data that we're trying to get the client to load
-    /// </summary>
-    private SceneLookupData clientLoadTarget;
-
-#region Events
-    public delegate void SceneRegisteredHandler(SceneLookupData sceneLookupData); // We don't provide SceneElements here to require users of event to go through SceneDelegate
-    /// <summary>
-    /// Called when a scene is registered with the SceneDelegate
-    /// </summary>
-    public event SceneRegisteredHandler SceneRegisteredEvent;
-
-    public delegate void SceneWillDeregisterHandler(SceneLookupData sceneLookupData); // No SceneElements here, see scene registered handler
-    /// <summary>
-    /// Called when a scene is told to unload on the server but before the unload actually happens.
-    /// In place to allow things in the scene to wrap up properly.
-    /// </summary>
-    public event SceneWillDeregisterHandler SceneWillDeregisterEvent;
-
-    public delegate void SceneDeregisteredHandler(SceneLookupData sceneLookupData); // No SceneElements here, see scene registered handler
-    /// <summary>
-    /// Called when a scene is deregistered with the scene delegate;
-    /// </summary>
-    public event SceneDeregisteredHandler SceneDeregisteredEvent;
-
-    public delegate void ClientAddedToSceneHandler(NetworkConnection client, SceneLookupData sceneLookupData);
-    /// <summary>
-    /// Called when a client is added to the scene.
-    /// For now, only is called on the client that was added.
-    /// </summary>
-    public event ClientAddedToSceneHandler ClientAddedToSceneEvent;
-#endregion
-
 #region Initializers
-    void Awake() 
+    private void Awake() 
     {
-        print("awoken on SceneDelegate");
         if(Instance != null)
-            throw new InvalidOperationException("Tried to create a new SceneDelegate when one already exists.");
+            throw new InvalidOperationException("Tried to create a new NetSceneController when one already exists.");
 
         Instance = this;
 
-        _lobbyManager = GetComponent<LobbyManager>();
-        _lobbyCommunicator = GetComponent<LobbyCommunicator>();
+        lobbyManager = GetComponent<LobbyManager>();
     }
 
     private void OnEnable() 
-    { 
+    {
         InstanceFinder.SceneManager.OnLoadEnd += FishSceneManager_SceneLoaded; 
         InstanceFinder.SceneManager.OnUnloadEnd += FishSceneManager_SceneUnloaded;
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded += UnitySceneManager_SceneLoaded;
-        UnityEngine.SceneManagement.SceneManager.sceneUnloaded += UnitySceneManager_SceneUnloaded;
 
         StartCoroutine(RefreshLoadedScenesListTask());
     }
 
-    private void OnDisable() { 
-        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= UnitySceneManager_SceneLoaded;
-        UnityEngine.SceneManagement.SceneManager.sceneUnloaded -= UnitySceneManager_SceneUnloaded;
+    private void OnDisable() 
+    {
         if(InstanceFinder.SceneManager != null) {
             InstanceFinder.SceneManager.OnLoadEnd -= FishSceneManager_SceneLoaded; 
             InstanceFinder.SceneManager.OnUnloadEnd -= FishSceneManager_SceneUnloaded;
@@ -99,7 +59,6 @@ public class SceneDelegate : NetworkBehaviour
 #endregion
 
 #region Scene Loading/Unloading
-    /* Loading */
     [Server]
     public void LoadSceneAsServer(SceneLookupData lookupData) 
     {
@@ -115,39 +74,20 @@ public class SceneDelegate : NetworkBehaviour
         BLog.Log($"Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}", LogChannel.SceneDelegate, 0);
     }
 
-    /// <summary>
-    /// Load a scene for the client using the UnityEngine SceneManager.
-    /// Will only be tracked by the SceneManager if shouldTrack = true
-    /// </summary>
-    /// <param name="shouldTrack">Track the scene in the scene manager</param>
-    public void LoadSceneAsClient(SceneLookupData lookupData, bool shouldTrack) 
-    {
-        // Call will deregister event for the active scene
-        BLog.Log($"Loading scene \"{lookupData}\" as client, shouldTrack: {shouldTrack}", LogChannel.SceneDelegate, 0);
-        BLog.Log($"LoadSceneAsClient: Is active scene \"{ActiveSceneLookupData}\" registered: {IsSceneRegistered(ActiveSceneLookupData)}", LogChannel.SceneDelegate, 2);
-        if(IsSceneRegistered(ActiveSceneLookupData))
-            SceneWillDeregisterEvent?.Invoke(ActiveSceneLookupData);
-
-        clientLoadTarget = shouldTrack ? lookupData : null;
-
-        UnityEngine.SceneManagement.SceneManager.LoadScene(lookupData.Name, LoadSceneMode.Single);
-    }
-
-    /// <summary> See SceneDelegate#LoadSceneAsClient </summary>
-    [TargetRpc]
-    public void TargetRpcLoadSceneAsClient(NetworkConnection client, SceneLookupData lookupData, bool shouldTrack) { LoadSceneAsClient(lookupData, shouldTrack); }
-
-    /* Unloading */
     [Server]
     public void UnloadSceneAsServer(SceneLookupData lookupData) 
     {
         if(!base.IsHost)
-            SceneWillDeregisterEvent?.Invoke(lookupData);
+            sc.NetSceneController_InvokeSceneWillDeregisterEvent(lookupData);
 
         SceneUnloadData sud = new(lookupData);
         base.SceneManager.UnloadConnectionScenes(sud);
         BLog.Log($"Telling server to unload scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}", LogChannel.SceneDelegate, 0);
     } 
+
+    /// <summary> See SceneDelegate#LoadScene </summary>
+    [TargetRpc]
+    public void TargetRpcLoadScene(NetworkConnection client, SceneLookupData lookupData, bool shouldTrack) { sc.LoadScene(lookupData, shouldTrack); }
 #endregion
 
 #region Event Handlers
@@ -176,41 +116,6 @@ public class SceneDelegate : NetworkBehaviour
     }
 
     /// <summary>
-    /// The client side scene manager load event
-    /// </summary>
-    private void UnitySceneManager_SceneLoaded(Scene scene, LoadSceneMode loadSceneMode) 
-    {
-        // We don't care about the servers UnityEngine SceneManager. That's for RegisterScenes.
-        if(!base.IsClient)
-            return;
-
-        NetworkConnection client = base.LocalConnection;
-        BLog.Log("LoadedScenes#UnitySceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.", LogChannel.SceneDelegate, 0);
-        ServerRpcRemoveClientFromScene(client);
-        // foreach(Scene otherScene in client.Scenes) {
-        //     if(otherScene != scene) {
-        //         BLog.Log($"LoadedScenes#SceneManager_SceneLoaded: Clearing other scene {otherScene.name}/{otherScene.handle} from client", LogChannel.SceneDelegate, 0);
-        //         base.SceneManager.RemoveConnectionsFromScene(new NetworkConnection[] { client }, otherScene);
-        //     }
-        // }
-
-        // If the client load target is null, that means we don't care about this scene load
-        if(clientLoadTarget == null)
-            return;
-        if(scene != null && clientLoadTarget is not null && scene.name != clientLoadTarget.Name) {
-            Debug.LogWarning("Scene load didn't match load target.");
-            return;
-        }
-
-        if(!CoreManager.IsLocal)
-            RegisterScene(scene);
-
-        BLog.Log($"SceneDelegate#UnitySceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"", LogChannel.SceneDelegate, 0);
-        BLog.Highlight($"Calling serverrpc client loaded scene with loadTarget={clientLoadTarget}");
-        ServerRpcClientLoadedScene(base.LocalConnection, clientLoadTarget);
-    }
-
-    /// <summary>
     /// Server side scene unload event.
     /// </summary>
     private void FishSceneManager_SceneUnloaded(SceneUnloadEndEventArgs args) 
@@ -218,14 +123,6 @@ public class SceneDelegate : NetworkBehaviour
         foreach(UnloadedScene scene in args.UnloadedScenesV2) {
             DeregisterScene(new(scene.Handle, scene.Name));
         }
-    }
-
-    private void UnitySceneManager_SceneUnloaded(Scene scene) 
-    {
-        SceneLookupData lookupData = new(scene.handle, scene.name);
-        if(!IsSceneRegistered(lookupData))
-            return;
-        DeregisterScene(lookupData);
     }
 #endregion
 
@@ -245,10 +142,10 @@ public class SceneDelegate : NetworkBehaviour
         loadedScenes.Add(lookupData, elements);
 
         BLog.Log($"Registered scene \"{lookupData}\". Calling event.", LogChannel.SceneDelegate, 0);
-        SceneRegisteredEvent?.Invoke(lookupData);
+        sc.NetSceneController_InvokeSceneRegisteredEvent(lookupData);
     }
 
-    private void DeregisterScene(SceneLookupData lookupData) 
+    public void DeregisterScene(SceneLookupData lookupData) 
     {
         if(!IsSceneRegistered(lookupData)) {
             Debug.LogWarning($"Failed to dereigster scene \"{lookupData}\". It is not registered.");
@@ -258,7 +155,7 @@ public class SceneDelegate : NetworkBehaviour
         loadedScenes.Remove(lookupData);
 
         BLog.Log($"Deregistered scene \"{lookupData}\". Calling event.", LogChannel.SceneDelegate);
-        SceneDeregisteredEvent?.Invoke(lookupData);
+        sc.NetSceneController_InvokeSceneDeregisteredEvent(lookupData);
     }
 
     IEnumerator RefreshLoadedScenesListTask() 
@@ -359,7 +256,7 @@ public class SceneDelegate : NetworkBehaviour
     [TargetRpc]
     private void TargetRpcClientAddedToScene(NetworkConnection client, SceneLookupData lookup) 
     {
-        ClientAddedToSceneEvent?.Invoke(client, lookup);
+        sc.NetSceneController_InvokeClientAddedToSceneEvent(client, lookup);
     }
 
     /// <summary>
@@ -413,9 +310,9 @@ public class SceneDelegate : NetworkBehaviour
     [TargetRpc]
     public void TargetRpcEnsureSceneLoaded(NetworkConnection client, SceneLookupData serverSceneLookupData) 
     {
-        clientLoadTarget = null;
+        sc.clientLoadTarget = null;
         if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != serverSceneLookupData.Name && !base.IsHost) {
-            LoadSceneAsClient(serverSceneLookupData, true);
+            sc.LoadScene(serverSceneLookupData, true);
         } else {
             BLog.Log($"SceneDelegate#TargetRpcEnsureSceneLoaded: Scene \"{serverSceneLookupData.Name}\" is already loaded, skipping to SceneDelegate#ServerRpcClientLoadedScene", LogChannel.SceneDelegate, 0);
             ServerRpcClientLoadedScene(base.LocalConnection, serverSceneLookupData);
@@ -426,7 +323,7 @@ public class SceneDelegate : NetworkBehaviour
     /// Signal to the server that the client has loaded the specified scene.
     /// </summary>
     [ServerRpc(RequireOwnership = false)]
-    private void ServerRpcClientLoadedScene(NetworkConnection client, SceneLookupData serverSceneLookupData) 
+    public void ServerRpcClientLoadedScene(NetworkConnection client, SceneLookupData serverSceneLookupData) 
     {      
         if(serverSceneLookupData == null) {
             Debug.LogWarning("Client loaded scene call has null serverSceneLookupData.");
@@ -504,93 +401,16 @@ public class SceneDelegate : NetworkBehaviour
         }
     }
 
-    private SceneLookupData ActiveSceneLookupData { get { 
-        Scene active = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-        return new(active.handle, active.name);
-    } }
-
-}
-
-/// <summary>
-/// To be paired with SceneLookupData to hold relevant scene elements in the SceneDelegate
-/// </summary>
-[Serializable]
-public struct SceneElements {
-    [SerializeField]
-    private SceneLookupData lookupData;
-
-    private Scene scene;
     /// <summary>
-    /// The scene reference
+    /// This really should only be used by CoreManager
     /// </summary>
-    public Scene Scene {
-        readonly get { return scene; } 
-        set { 
-            if(scene.IsValid()) {
-                Debug.LogError("Can't overwrite existing scene.");
-                return;
-            }
-            scene = value;
-            lookupData = new(value.handle, value.name);
+    public static NetworkConnection GetLocalConnection() 
+    {
+        if(!IsReady) {
+            Debug.LogError("Can't get local connection because the instance isn't ready.");
+            return null;
         }
+        return Instance.LocalConnection;
     }
-
-    [SerializeField]
-    private GameLobby owner;
-    /// <summary>
-    /// Only usable on the server side. Can be null if no lobby claims.
-    /// </summary>
-    public GameLobby Owner {
-        readonly get { return owner; }
-        set {
-            if(owner != null) {
-                Debug.LogError("Can't set owner since one already exists.");
-                return;
-            }
-            owner = value;
-        }
-    }
-    public bool HasOwner { get { return owner != null; } }
-
-    [SerializeField]
-    private GameplayManager gameplayManager;
-    /// <summary>
-    /// The GameplayManager held in this scene. Can be null if a lobby scene.
-    /// </summary>
-    public GameplayManager GameplayManager {
-        get {
-            if(gameplayManager == null) {
-                gameplayManager = GameplayManagerDelegate.LocateGameplayManager(scene);
-            }
-            return gameplayManager;
-        }
-    }
-
-    [SerializeField]
-    private List<NetworkConnection> clients;
-    /// <summary>
-    /// A list of clients in the scene
-    /// </summary>
-    public List<NetworkConnection> Clients {
-        get {
-            clients ??= new();
-            return clients;
-        }
-    }
-    [SerializeField]
-    private int clientCount; // Exposed for serialization in editor
-    /// <summary>
-    /// The amount of clients in the scene
-    /// </summary>
-    public int ClientCount { get { 
-        clientCount = Clients.Count;
-        return clientCount; 
-    } }
-
-    /// <summary>
-    /// When true, the SceneDelegate will delete the scene when the last player is removed from
-    ///   the scene.
-    /// </summary>
-    public bool DeleteOnLastClientRemove;
 
 }

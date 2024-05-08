@@ -640,6 +640,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: CoreManager
       objectReference: {fileID: 0}
+    - target: {fileID: 439909993712173079, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _scenePathHash
+      value: 1175023302
+      objectReference: {fileID: 0}
+    - target: {fileID: 439909993712173079, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: <SceneId>k__BackingField
+      value: 5046686655015672954
+      objectReference: {fileID: 0}
+    - target: {fileID: 439909993712173079, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkBehaviours.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 460924028297482636, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _scenePathHash
+      value: 1175023302
+      objectReference: {fileID: 0}
+    - target: {fileID: 460924028297482636, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: <SceneId>k__BackingField
+      value: 5046686655834519638
+      objectReference: {fileID: 0}
     - target: {fileID: 3271591870060729175, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: _networkObjectCache
       value: 
@@ -679,6 +699,10 @@ PrefabInstance:
     - target: {fileID: 6583986117286712415, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: _componentIndexCache
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8239354778175758646, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: _networkObjectCache
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8368344245623766134, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_IsActive

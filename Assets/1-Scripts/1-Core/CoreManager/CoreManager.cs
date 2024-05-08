@@ -1,6 +1,7 @@
 using System;
 using AClockworkBerry;
 using FishNet;
+using FishNet.Connection;
 using FishNet.Managing;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -9,6 +10,7 @@ using UnityEngine;
 /// The CoreManager should be placed in all scenes. It will spawn other essential managers.
 /// </summary>
 [RequireComponent(typeof(DevSettings))]
+[RequireComponent(typeof(LobbyCommunicator))]
 [RequireComponent(typeof(GameplayManagerDelegate))]
 [RequireComponent(typeof(TransitionManager))]
 [RequireComponent(typeof(BLog))]
@@ -17,6 +19,7 @@ public class CoreManager : MonoBehaviour
 
     public static CoreManager Instance;
     public static DevSettings DevSettings { get { return Instance.devSettings;} }
+    public static LobbyCommunicator LobbyCommunicator { get { return Instance.lobbyCommunicator; } }
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
     public static BLog BLog { get { return Instance.bLog; } }
@@ -26,8 +29,12 @@ public class CoreManager : MonoBehaviour
     public static KartAtlas KartAtlas { get { return Instance.atlasesPrefab.GetComponent<KartAtlas>(); } }
     public static ItemAtlas ItemAtlas { get { return Instance.atlasesPrefab.GetComponent<ItemAtlas>(); } }
 
+    public static NetworkConnection LocalConnection { get { return NetSceneController.IsReady ? NetSceneController.GetLocalConnection() : null; } }
+    public static bool HasLocalConnection { get { return NetSceneController.IsReady; } }
+
     [Header("Prefabs"), SerializeField] private GameObject networkManagerPrefab;
-    [SerializeField] private GameObject sceneDelegatePrefab;
+    [SerializeField] private GameObject sceneControllerPrefab;
+    [SerializeField] private GameObject netSceneControllerPrefab;
     [SerializeField] private GameObject playerObjectManagerPrefab;
     [SerializeField] private GameObject screenLoggerPrefab;
     [SerializeField] private GameObject atlasesPrefab;
@@ -36,6 +43,7 @@ public class CoreManager : MonoBehaviour
     [SerializeField] private int playerLimit = 8;
 
     private DevSettings devSettings;
+    private LobbyCommunicator lobbyCommunicator;
     private GameplayManagerDelegate gameplayManagerDelegate;
     private TransitionManager transitionManager;
     private BLog bLog;
@@ -58,12 +66,14 @@ public class CoreManager : MonoBehaviour
         }
 
         devSettings = GetComponent<DevSettings>();
+        lobbyCommunicator = GetComponent<LobbyCommunicator>();
         gameplayManagerDelegate = GetComponent<GameplayManagerDelegate>();
         transitionManager = GetComponent<TransitionManager>();
         bLog = GetComponent<BLog>();
 
         CheckNetworkManager();
-        CheckSceneDelegate();
+        CheckSceneController();
+        CheckNetSceneController();
         CheckPlayerObjectManager();
         CheckScreenLogger();
     }
@@ -71,7 +81,7 @@ public class CoreManager : MonoBehaviour
     private void Update() 
     {
         CheckNetworkManager();
-        CheckSceneDelegate();
+        CheckNetSceneController();
     }
 
     private void CheckNetworkManager() 
@@ -82,32 +92,35 @@ public class CoreManager : MonoBehaviour
         Instantiate(networkManagerPrefab);
     }
 
-    private void CheckSceneDelegate() 
+    private void CheckSceneController() 
     {
-        // The client can't spawn it's own scene delegate
-        if(InstanceFinder.IsClientOnly)
-            return;
-        if(sceneDelegatePrefab == null) {
-            Debug.LogWarning("Scene delegate prefab is null on SceneDelegateSpawner script on object " + gameObject.name);
+        if(sceneControllerPrefab == null) {
+            Debug.LogWarning("Scene controller prefab is null on SceneDelegateSpawner script on object " + gameObject.name);
             return;
         }
-        // BLog.Highlight($"Checking scene delegate: is instance null: {SceneDelegate.Instance == null}");
-        // if(SceneDelegate.Instance != null) {
-        //     // BLog.Highlight($"Checking scene delegate: is spawned: {SceneDelegate.Instance.NetworkObject.IsSpawned}, is this instance a server: {InstanceFinder.IsServer}");
-        //     if(!SceneDelegate.Instance.NetworkObject.IsSpawned && InstanceFinder.IsServer) {
-        //         InstanceFinder.ServerManager.Spawn(SceneDelegate.Instance.NetworkObject);
-        //     }
-        //     return;
-        // }
+        if(SceneController.Instance != null)
+            return;
+
+        GameObject go = Instantiate(sceneControllerPrefab);
+        go.name = "SceneController";
+    }
+
+    private void CheckNetSceneController() 
+    {
+        if(sceneControllerPrefab == null) {
+            Debug.LogWarning("Network scene controller prefab is null on SceneDelegateSpawner script on object " + gameObject.name);
+            return;
+        }
+        if(NetSceneController.Instance != null)
+            return;
         // Check if there's a NetworkManager in place and the server is started
         if(NetworkManager.Instances.Count <= 0 || InstanceFinder.ServerManager == null || !InstanceFinder.ServerManager.Started || !InstanceFinder.IsServer)
             return;
 
-        GameObject go = Instantiate(sceneDelegatePrefab);
+        GameObject go = Instantiate(netSceneControllerPrefab);
         InstanceFinder.ServerManager.Spawn(go);
 
-        go.name = "SceneDelegate";
-        go.GetComponent<SceneDelegate>().CheckInitialGlobalScene();
+        go.GetComponent<NetSceneController>().CheckInitialGlobalScene();
     }
 
     private void CheckPlayerObjectManager() 
