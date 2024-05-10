@@ -125,6 +125,8 @@ public class RaceManager : NetworkBehaviour
         if(base.IsHost && !asServer)
             return;
 
+        BLog.Log($"Race phase changed to {current}", LogChannel.GameplayManager);
+
         // Call phase change event
         RacePhaseChanged?.Invoke(prev, current);
 
@@ -142,7 +144,8 @@ public class RaceManager : NetworkBehaviour
                 }
                 break;
             case RacePhase.COUNTDOWN:
-                PrepareRace();
+                if(asServer)
+                    PrepareRace();
                 break;
             case RacePhase.RACING:
                 break;
@@ -184,8 +187,11 @@ public class RaceManager : NetworkBehaviour
     }
 
     /** Prepare's the player objects and splitscreen manager for the race */
+    [ObserversRpc]
     public void PrepareRace() 
     {
+        BLog.Log("Preparing race", LogChannel.GameplayManager, 3);
+
         // Enable player cameras and splitscreen, ensure we're on Gameplay control map
         PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => {
             po.input.enabled = true;

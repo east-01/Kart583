@@ -143,6 +143,8 @@ public class GameplayManager : NetworkBehaviour
 
     private void SceneDelegate_ClientAddedToSceneEvent(NetworkConnection client, SceneLookupData sceneLookupData)
     {
+        if(!base.IsHost)
+            return;
         BLog.Log("Recieved ClientAddedToSceneEvent scene data: " + sceneLookupData + ", target data: " + GameLobby.MapSceneData, LogChannel.GameplayManager, 0);
         if(sceneLookupData == GameLobby.MapSceneData) {
             SpawnStep = LateLobbySpawnStep.NONE;
@@ -160,7 +162,7 @@ public class GameplayManager : NetworkBehaviour
     public void SetGameLobby(GameLobby gameLobby) {
         if(this.lobby != null)
             Debug.LogWarning($"Overwriting lobby in scene \"{gameObject.scene.name}\"");
-        print($"<color=red>setting game lobby to \"{gameLobby.ID}\"</color>");
+        BLog.Log($"GameplayManager set game lobby to \"{gameLobby.ID}\"", LogChannel.GameplayManager, 0);
         this.lobby = gameLobby;
         this.lobbyID = gameLobby.ID;
     }

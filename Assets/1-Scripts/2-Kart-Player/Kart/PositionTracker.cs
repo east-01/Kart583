@@ -6,6 +6,7 @@ using FishNet.Object;
 using UnityEngine.EventSystems;
 using FishNet.Connection;
 using FishNet.Object.Synchronizing;
+using TMPro;
 
 /** Keeps track of a Kart's position on a track */
 public class PositionTracker : KartBehavior, IComparable<PositionTracker>, GameplayManagerBehavior
@@ -67,6 +68,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
     private void RaceManager_RacePhaseChanged(RacePhase previousPhase, RacePhase currentPhase)
     {
+        BLog.Log($"PositionTracker recieved race phase change to {currentPhase}", LogChannel.KartManager, 2);
         if(currentPhase == RacePhase.RACING) {        
             if(CoreManager.DevSettings.OverrideRaceProgressAtStart)
                 SetRaceProgress(CoreManager.DevSettings.raceProgress);

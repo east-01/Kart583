@@ -146,6 +146,8 @@ MonoBehaviour:
     color: {r: 0.8679245, g: 0.77293026, b: 0, a: 1}
   - channel: 5
     color: {r: 1, g: 1, b: 0.6, a: 1}
+  - channel: 6
+    color: {r: 0, g: 1, b: 0.614763, a: 1}
   verbosity: 5
 --- !u!1 &7980930209459765430
 GameObject:

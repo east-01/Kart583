@@ -108,13 +108,10 @@ public class GameLobby
                     state = LobbyState.MAP_SELECTION;
                 break;
             case LobbyState.MAP_SELECTION:
-                // BLog.Log($"In map selection, is level null: {level == null}, is map scene null: {MapScene == null}", LogChannel.GameLobby, 5);
                 bool autoSelectValid = CanAutoSelectLevel && timeInState >= MAP_PICK_TIME;
-                // BLog.Highlight($"is level null: {level == null}, is AS valid {autoSelectValid}, is input {Input.GetKeyDown(FORCE_MAP_PICK_KEY)}");
-                BLog.Highlight($"Current level: \"{level}\"");
                 if(level == null && (autoSelectValid || forceMapPick)) {
                     forceMapPick = false;
-                    KartLevel? selectedLevel = null;
+                    KartLevel? selectedLevel;
                     if(CoreManager.DevSettings.OverrideMapPick)
                         selectedLevel = CoreManager.DevSettings.map;
                     else 

@@ -51,5 +51,5 @@ public struct LogChannelData {
 
 [Serializable]
 public enum LogChannel {
-    Default, SceneDelegate, GameLobby, GameplayManager, LobbyManager, DevSettings
+    Default, SceneDelegate, GameLobby, GameplayManager, LobbyManager, DevSettings, KartManager
 }

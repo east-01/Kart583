@@ -115,10 +115,11 @@ public class SceneController : MonoBehaviour
     /// </summary>
     private void UnitySceneManager_SceneLoaded(Scene scene, LoadSceneMode loadSceneMode) 
     {
-        // If we don't have a connection, local scene loads do not matter
-        if(!CoreManager.HasLocalConnection)
+        // We don't care about the server side of this event
+        if(InstanceFinder.IsServerOnly)
             return;
         if(!NetSceneController.IsReady)
+            return;
 
         BLog.Log("LoadedScenes#UnitySceneManager_SceneLoaded: Validated client loaded, scene. Disconnecting them from their other scenes.", LogChannel.SceneDelegate, 0);
         nsc.ServerRpcRemoveClientFromScene(CoreManager.LocalConnection);
