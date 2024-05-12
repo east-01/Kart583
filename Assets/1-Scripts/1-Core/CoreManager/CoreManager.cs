@@ -22,7 +22,6 @@ public class CoreManager : MonoBehaviour
     public static LobbyCommunicator LobbyCommunicator { get { return Instance.lobbyCommunicator; } }
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
-    public static BLog BLog { get { return Instance.bLog; } }
 
     public static NetworkStateManager NetworkStateManager { get { return InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>(); } }
     public static LevelAtlas LevelAtlas { get { return Instance.atlasesPrefab.GetComponent<LevelAtlas>(); } }

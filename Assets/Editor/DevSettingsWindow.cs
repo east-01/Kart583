@@ -34,7 +34,6 @@ public class DevSettingsWindow : EditorWindow
         editor.OnInspectorGUI();
 
         EditorGUILayout.EndScrollView();
-
     }
 
     private void OnDisable() 
