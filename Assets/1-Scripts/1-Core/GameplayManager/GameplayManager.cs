@@ -95,13 +95,11 @@ public class GameplayManager : NetworkBehaviour
     private void OnEnable() 
     {
         SceneController.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToSceneEvent;
-        BLog.Highlight("Registered client added to scene event");
     }
 
     private void OnDisable() 
     {
         SceneController.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToSceneEvent;
-        BLog.Highlight("Unregistered client add event");
     }
 
     private void Update() {

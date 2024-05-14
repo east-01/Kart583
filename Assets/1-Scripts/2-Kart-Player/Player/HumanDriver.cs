@@ -14,14 +14,13 @@ public class HumanDriver : KartBehavior, GameplayManagerBehavior
 
     private PlayerInput input;
 
-    void Update() 
+    new protected void Awake() 
     {
-        if(posTracker.RaceCompletion >= 1) {
-            kartManager.UseBotDriver();
-        }
+        base.Awake();
+        CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }
 
-    void OnDisable() 
+    private void OnDisable() 
     {
         input.onActionTriggered -= ActionTriggered;
     }
@@ -30,6 +29,13 @@ public class HumanDriver : KartBehavior, GameplayManagerBehavior
     {
         this.gameplayManager = gameplayManager;
         this.kartLevelManager = gameplayManager.KartLevelManager;
+    }
+
+    private void Update() 
+    {
+        if(posTracker.RaceCompletion >= 1 && kartManager.IsHuman) {
+            kartManager.UseBotDriver();
+        }
     }
 
     public void ConnectPlayerInput(PlayerInput input) 
@@ -62,6 +68,10 @@ public class HumanDriver : KartBehavior, GameplayManagerBehavior
                 kartItemManager.PerformItemInput(context.performed);
                 break;
             case "Pause":
+                BLog.Highlight($"klm: \"{kartLevelManager}\"");
+                BLog.Highlight($"rc: \"{kartLevelManager.RaceCamera}\"");
+                BLog.Highlight($"igscm: \"{kartLevelManager.RaceCamera.igScreenMenuController}\"");
+                BLog.Highlight($"submenu: \"{kartLevelManager.RaceCamera.igScreenMenuController.GetSubMenu(IGScreenMenuController.PAUSE_MENU_ID)}\"");
                 MenuController pauseMenu = kartLevelManager.RaceCamera.igScreenMenuController.GetSubMenu(IGScreenMenuController.PAUSE_MENU_ID);
                 if(pauseMenu.IsOpen)
                     pauseMenu.Close();

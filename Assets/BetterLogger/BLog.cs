@@ -1,43 +1,43 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class BLog : MonoBehaviour
 {
 
+    public static readonly string FILE_PATH = "./BetterLoggerSettings.json";
     public static int MAX_VERBOSITY = 5;
 
-    public static BLog Instance;
-
-    // The data & verbosity will be loaded by the DevSettings window
-    private Dictionary<LogChannel, LogChannelData> data = new();
-    private int verbosity = 0;
-
-    private void Awake() 
-    {
-        if(Instance != null) {
-            Debug.LogError("Can't wake up a new BetterLogger instnace. One already exists.");
-            return;
+    private static BetterLoggerSettings settings;
+    public static BetterLoggerSettings Settings { 
+        get {
+            if(settings == null)
+                LoadSettings();
+            if(settings == null)
+                Debug.LogError("Failed to load BetterLoggerSettings");
+            return settings;
         }
-
-        Instance = this;
+        set { settings = value; } 
     }
 
     public static void Log(string message, LogChannel channel = LogChannel.Default, int verbosity = 0) 
     {            
-        if(Instance == null) {
-            Debug.LogError("Can't BLog, no instance exists");
-            return;
-        }
         if(verbosity < 0 || verbosity > MAX_VERBOSITY) {
             Debug.LogError($"Can't BLog. Provided verbosity is out of range. Provided {verbosity}, range [0, {MAX_VERBOSITY}]");
         }
         // If this messages verbosity is greater than the limit, don't print
-        if(verbosity > Instance.verbosity)
+        if(verbosity > Settings.verbosity)
             return;
         string color = "#c9c9c9";
-        if(Instance.data.ContainsKey(channel))
-            color = Instance.data[channel].color.ToString();
+        if(Settings.channelDatas.ContainsKey(channel)) {
+            LogChannelData channelData = Settings.channelDatas[channel];
+            if(!channelData.enable)
+                return;
+            color = channelData.color.ToHexString();
+        }
 
         Debug.Log($"<color=#{color}>{message}</color>");
     }
@@ -47,24 +47,38 @@ public class BLog : MonoBehaviour
         Debug.Log($"<color=#FFD700><b>{message}</b></color>");        
     }
 
-    public int GetVerbosity() { return verbosity;}
-    public void SetVerbosity(int verbosity) { this.verbosity = verbosity; }
+    public static void SaveSettings() 
+    {
+        string json = JsonConvert.SerializeObject(settings, Formatting.Indented, new JsonSerializerSettings{PreserveReferencesHandling = PreserveReferencesHandling.Objects});
+        File.WriteAllText(FILE_PATH, json);
+    }
 
-    public bool HasData(LogChannel channel) { return data.ContainsKey(channel); } 
-    public LogChannelData GetData(LogChannel channel) { return data[channel]; }
-    public void SetData(LogChannel channel, LogChannelData newData) { data[channel] = newData; }
-
+    public static void LoadSettings() 
+    {
+        if(File.Exists(FILE_PATH))
+            settings = JsonConvert.DeserializeObject<BetterLoggerSettings>(File.ReadAllText(FILE_PATH));
+        else
+            settings = new() {
+                verbosity = 0,
+                channelDatas = new()
+            };
+    }
 }
 
 [Serializable]
-public struct LogChannelData {
-    public LogChannel channel;
+public enum LogChannel 
+{
+    Default, SceneDelegate, GameLobby, GameplayManager, LobbyManager, DevSettings, KartManager
+}
+
+[Serializable]
+public struct LogChannelData 
+{
     public bool enable;
-    public Color color;
+    [JsonConverter(typeof(ColorHandler))] public Color color;
 
     public static LogChannelData DefaultData { get {
         return new() {
-            channel = LogChannel.Default,
             enable = true,
             color = Color.white
         };
@@ -72,6 +86,39 @@ public struct LogChannelData {
 }
 
 [Serializable]
-public enum LogChannel {
-    Default, SceneDelegate, GameLobby, GameplayManager, LobbyManager, DevSettings, KartManager
+public class BetterLoggerSettings 
+{
+    public int verbosity;
+    public Dictionary<LogChannel, LogChannelData> channelDatas;
+}
+
+// Swiped from https://medium.com/@altaf.navalur/serialize-deserialize-color-objects-in-unity-1731e580af94
+public class ColorHandler : JsonConverter
+{
+    public ColorHandler() {}
+
+    public override bool CanConvert(Type objectType)
+    {
+        return true;
+    }
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        try
+        {
+            UnityEngine.ColorUtility.TryParseHtmlString("#" + reader.Value, out Color loadedColor);
+            return loadedColor;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to parse color {objectType} : {ex.Message}");
+            return null;
+        }
+    }
+
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        string val = UnityEngine.ColorUtility.ToHtmlStringRGB((Color)value);
+        writer.WriteValue(val);
+    }
 }

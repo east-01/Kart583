@@ -53,7 +53,7 @@ MonoBehaviour:
   masterEnable: 1
   overridePlayerLimit: 1
   playerLimit: 1
-  loadMode: 0
+  loadMode: 2
   overrideMapPick: 1
   map: 0
   haveStandalonePlayerRunAsServer: 0
@@ -135,20 +135,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 034443e31657e674ca38d3ced156cdba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  channelDatas:
-  - channel: 1
-    color: {r: 1, g: 0, b: 0.6924796, a: 1}
-  - channel: 3
-    color: {r: 0.5188043, g: 1, b: 0.2679245, a: 1}
-  - channel: 2
-    color: {r: 0.9150943, g: 0.5203897, b: 0, a: 1}
-  - channel: 4
-    color: {r: 0.8679245, g: 0.77293026, b: 0, a: 1}
-  - channel: 5
-    color: {r: 1, g: 1, b: 0.6, a: 1}
-  - channel: 6
-    color: {r: 0, g: 1, b: 0.614763, a: 1}
-  verbosity: 5
 --- !u!1 &7980930209459765430
 GameObject:
   m_ObjectHideFlags: 0

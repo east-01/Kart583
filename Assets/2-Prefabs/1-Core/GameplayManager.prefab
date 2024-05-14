@@ -132,7 +132,7 @@ MonoBehaviour:
   _componentIndexCache: 2
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}
-  kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
+  kartPrefab: {fileID: 5130578726108140990, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
   playerObjectInGamePrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
   kartObjects: []
   playerPositions: []

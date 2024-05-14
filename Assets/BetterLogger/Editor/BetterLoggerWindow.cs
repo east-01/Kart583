@@ -1,44 +1,33 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
-
+using Newtonsoft.Json;
 
 public class BetterLoggerWindow : EditorWindow
 {
 
-    private BLog betterLogInstance;
-    private Vector2 scrollPos;
-
-    private Dictionary<LogChannel, LogChannelData> data = new();
-
-    private void Awake() 
-    {
-        LoadData();
-    }
+    private static Vector2 scrollPos;
 
     [MenuItem("Window/Better Logger")]
     public static void ShowWindow() 
     {
         GetWindow<BetterLoggerWindow>("Better Logger");
-        LoadData();
     }
 
     private void OnGUI() 
     {
-        betterLogInstance = EditorGUILayout.ObjectField("Better logger script:", betterLogInstance, typeof(BLog), false) as BLog;
-
-        if(betterLogInstance == null) {
-            GUILayout.Label("No BLog script selected.");
-            return;
-        }
+        Dictionary<LogChannel, LogChannelData> data = BLog.Settings.channelDatas;
+        int verbosity = BLog.Settings.verbosity;
 
         GUILayout.Space(5);
 
         bool save = false;
-        bool initialVerbosity = betterLogInstance.GetVerbosity();
-        betterLogInstance.SetVerbosity(EditorGUILayout.IntSlider("Verbosity:", betterLogInstance.GetVerbosity(), 0, BLog.MAX_VERBOSITY));
-        if(betterLogInstance.GetVerbosity() != initialVerbosity)
+        int initialVerbosity = verbosity;
+        verbosity = EditorGUILayout.IntSlider("Verbosity:", verbosity, 0, BLog.MAX_VERBOSITY);
+        if(verbosity != initialVerbosity)
             save = true;
 
         GUILayout.Space(5);
@@ -56,37 +45,35 @@ public class BetterLoggerWindow : EditorWindow
 
             GUILayout.Label(FormatEnum(channel.ToString()), new GUILayoutOption[] {GUILayout.Width(125)});
 
-            LogChannelData data = betterLogInstance.HasData(channel) ? betterLogInstance.GetData(channel) : LogChannelData.DefaultData;
+            LogChannelData channelData = data.ContainsKey(channel) ? data[channel] : LogChannelData.DefaultData;
 
-            bool initialEnable = data.enable;
-            data.enable = EditorGUILayout.Toggle(data.enable);
-            if(data.enable != initialEnable)
+            bool initialEnable = channelData.enable;
+            channelData.enable = EditorGUILayout.Toggle(channelData.enable);
+            if(channelData.enable != initialEnable)
                 save = true;
 
-            Color initialColor = data.color;
-            data.color = EditorGUILayout.ColorField(data.color, new GUILayoutOption[] {GUILayout.Width(100)});
-            if(data.color != initialColor)
+            Color initialColor = channelData.color;
+            channelData.color = EditorGUILayout.ColorField(channelData.color, new GUILayoutOption[] {GUILayout.Width(100)});
+            if(channelData.color != initialColor)
                 save = true;
 
-            betterLogInstance.SetData(channel, data);
+            data[channel] = channelData;
 
             EditorGUILayout.EndHorizontal();            
         }
 
         EditorGUILayout.EndScrollView();
 
-        if(save)
-            SaveData();
-    }
 
-    private void SaveData() 
-    {
-        string json = JSonUtility.ToJson(betterLogInstance);
-    }
-
-    private void LoadData() 
-    {
-        Debug.Log("Loading data");
+        if(save) {
+            BetterLoggerSettings newSettings = new() {
+                channelDatas = data,
+                verbosity = verbosity
+            };
+            
+            BLog.Settings = newSettings;
+            BLog.SaveSettings();
+        }
     }
 
     public static string FormatEnum(string enumString)
@@ -96,28 +83,27 @@ public class BetterLoggerWindow : EditorWindow
         return formattedString;
     }    
 
-    private void CreateHeader(string text) 
+    private static void CreateHeader(string text) 
     {
         GUILayout.Label($"<b><color=white>{text}</color></b>", HeaderStyle);
     }
 
-    private void CreateNote(string text) 
+    private static void CreateNote(string text) 
     {
         GUILayout.Label($"<i><color=#a7abb0>{text}</color></i>", NoteStyle);
     }
 
-    public GUIStyle HeaderStyle { get {
+    public static GUIStyle HeaderStyle { get {
         return new() {
             richText = true,
             margin = new RectOffset(3, 0, 0, 0)
         };
     } }
 
-    public GUIStyle NoteStyle { get {
+    public static GUIStyle NoteStyle { get {
         return new() {
             richText = true,
             margin = new RectOffset(5, 0, 0, 0)
         };
     } }
-
 }
