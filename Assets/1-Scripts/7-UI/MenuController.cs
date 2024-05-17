@@ -158,6 +158,7 @@ public abstract class MenuController : MonoBehaviour
             return;
         }
 
+        BLog.Log($"Menu \"{this}\" opening submenu \"{id}\" with focus \"{focus}\"", LogChannel.MenuController);
         subMenu.Open(focus);
     }
 #endregion

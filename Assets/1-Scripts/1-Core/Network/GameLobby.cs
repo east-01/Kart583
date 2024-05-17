@@ -5,7 +5,6 @@ using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
-using UnityEngine.InputSystem.Interactions;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -64,7 +63,7 @@ public class GameLobby
         this.manager = manager;
         this.id = id;
 
-        BLog.Log("Initialized lobby");
+        BLog.Log($"Initialized lobby \"{id}\"", LogChannel.GameLobby, 0);
         SceneController.Instance.SceneRegisteredEvent += SceneDelegate_SceneRegistered;
         SceneController.Instance.SceneWillDeregisterEvent += SceneDelegate_SceneWillDeregister;
         SceneController.Instance.SceneDeregisteredEvent += SceneDelegate_SceneDeregistered;
@@ -76,6 +75,24 @@ public class GameLobby
         if(CoreManager.IsLocal && SceneNames.IsMapScene(sceneName)) {
             state = LobbyState.RACING;
             level = CoreManager.LevelAtlas.SearchEnumBySceneName(sceneName);
+        }
+    }
+
+    public void Delete() 
+    {
+        BLog.Log($"Deleting lobby \"{id}\"", LogChannel.GameLobby, 0);
+
+        SceneController.Instance.SceneRegisteredEvent -= SceneDelegate_SceneRegistered;
+        SceneController.Instance.SceneWillDeregisterEvent -= SceneDelegate_SceneWillDeregister;
+        SceneController.Instance.SceneDeregisteredEvent -= SceneDelegate_SceneDeregistered;
+
+        if(PlayerCount > 0) {
+            // TODO: Add disconnect message
+            MovePlayersToLobby();
+        }
+
+        if(MapScene != null) {
+            NetSceneController.Instance.UnloadSceneAsServer(mapSceneData);
         }
     }
 
@@ -97,6 +114,7 @@ public class GameLobby
     /// </summary>
     public void CheckState() 
     {
+
         switch(state) {
             case LobbyState.WAITING_FOR_PLAYERS:
                 bool timePassed = CanAutoSelectLevel && timeInState >= PLAYER_WAIT_TIME;
@@ -109,6 +127,7 @@ public class GameLobby
                 break;
             case LobbyState.MAP_SELECTION:
                 bool autoSelectValid = CanAutoSelectLevel && timeInState >= MAP_PICK_TIME;
+                BLog.Highlight($"In map selection state level. Level=\"{level}\" MapScene=\"{MapScene}\"");
                 if(level == null && (autoSelectValid || forceMapPick)) {
                     forceMapPick = false;
                     KartLevel? selectedLevel;
@@ -124,6 +143,9 @@ public class GameLobby
                 }
                 break;
             case LobbyState.RACING:
+                if(gameplayManager == null)
+                    return;
+
                 if(gameplayManager.RaceManager.Phase == RacePhase.FINISHED) {
                     AwardPoints();
                     state = LobbyState.POST_RACE;
@@ -146,7 +168,8 @@ public class GameLobby
     private void LobbyStateChanged(LobbyState prev, LobbyState current) 
     {
         if(current == LobbyState.MAP_SELECTION) {
-            level = null;
+            if(level != null)
+                Debug.LogWarning($"Entering map selection while the level isn't null, still on level \"{level}\"");
         }
     }
 #endregion
@@ -154,14 +177,25 @@ public class GameLobby
 #region Player Management
     public void AddPlayer(NetworkConnection conn, PlayerData data) 
     {
+        NetSceneController.LobbyManager.SetClientsLobby(conn, ID);
         players.Add(conn, data);
         manager.UpdateLobby(id, LobbyUpdateReason.PLAYER_JOIN);
- 
-        BLog.Log($"{MessagePrefix}Adding player {data.Summary} to lobby.", LogChannel.GameLobby, 0);
-        // if(LobbyScene != null)
-        //     SceneDelegate.Instance.AddClientToScene(conn, lobbySceneData);
-        // else
-        //     lobbyJoinQueue.Add(conn);
+        BLog.Log($"{MessagePrefix}Added player {data.Summary} to lobby \"{id}\"", LogChannel.GameLobby, 0);
+    }
+
+    public void RemovePlayer(NetworkConnection conn) 
+    {
+        if(!players.ContainsKey(conn)) {
+            Debug.LogError($"Can't remove connection \"{conn}\" from lobby \"{ID}\", they're not in it.");
+            return;
+        }
+        BLog.Log($"{MessagePrefix}Player {players[conn].Summary} to lobby \"{id}\"", LogChannel.GameLobby, 0);
+        NetSceneController.LobbyManager.RemoveClientsLobby(conn);
+        players.Remove(conn);
+        manager.UpdateLobby(id, LobbyUpdateReason.PLAYER_LEAVE);
+        if(PlayerCount == 0) {
+            NetSceneController.LobbyManager.DeleteLobby(ID);
+        }
     }
 
     /// <summary>
@@ -301,6 +335,8 @@ public class GameLobby
 
     private void DeregisterGameplayManager() 
     {
+        level = null;
+
         if(gameplayManager == null) {
             Debug.LogError("Can't deregister GameplayManager because it is null.");
             return;
@@ -327,7 +363,7 @@ public class GameLobby
     } }
 
     public string ID { get { return id; } }
-    public string MessagePrefix { get { return $"({ID})"; } }
+    public string MessagePrefix { get { return $"({ID}) "; } }
     public SceneLookupData MapSceneData { get { return mapSceneData; } }
     public LobbyState State { get { return state; } }
     public Scene? MapScene { get { 
@@ -377,5 +413,6 @@ public enum LobbyUpdateReason
 {
     NONE,
     STATE_CHANGE,
-    PLAYER_JOIN
+    PLAYER_JOIN,
+    PLAYER_LEAVE
 }

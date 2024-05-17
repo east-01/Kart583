@@ -79,13 +79,23 @@ public class LobbyCommunicator : MonoBehaviour
 
     public void StopCommunication() 
     {
+        if(CoreManager.HasLocalConnection)
+            NetSceneController.LobbyManager.LeaveLobby(CoreManager.LocalConnection);
+        else
+            Debug.LogWarning("Stopping communication without a local connection. This shouldn't happen.");
+
         InstanceFinder.ClientManager.OnRemoteConnectionState -= ClientManager_OnClientRemoteConnectionState;
+
+        if(CoreManager.IsLocal)
+            CoreManager.NetworkStateManager.StopHost();
+        else
+            CoreManager.NetworkStateManager.StopClient();
 
         lobbyData = null;
     }
 
-    public void RegisterLobbyManager() { NetSceneController.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated; BLog.Highlight("Registered lobby manager"); }
-    public void DeregisterLobbyManager() { NetSceneController.LobbyManager.LobbyUpdated -= LobbyManager_LobbyUpdated; BLog.Highlight("Deregistered lobby manager"); }
+    public void RegisterLobbyManager() { NetSceneController.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated; }
+    public void DeregisterLobbyManager() { NetSceneController.LobbyManager.LobbyUpdated -= LobbyManager_LobbyUpdated; }
 
     private void ClientManager_OnClientRemoteConnectionState(RemoteConnectionStateArgs args) 
     {

@@ -1,11 +1,11 @@
 {
   "$id": "1",
-  "verbosity": 2,
+  "verbosity": 5,
   "channelDatas": {
     "$id": "2",
     "SceneDelegate": {
       "$id": "3",
-      "enable": true,
+      "enable": false,
       "color": "FF009F"
     },
     "GameLobby": {
@@ -32,6 +32,11 @@
       "$id": "8",
       "enable": true,
       "color": "64EAFF"
+    },
+    "MenuController": {
+      "$id": "9",
+      "enable": true,
+      "color": "C2A0FF"
     }
   }
 }

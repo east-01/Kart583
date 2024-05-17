@@ -103,11 +103,6 @@ public class GameplayManager : NetworkBehaviour
     }
 
     private void Update() {
-        if(RaceManager.Phase == RacePhase.FINISHED && Input.GetKeyDown(KeyCode.Space)) {
-            BLog.Highlight("Debug race complete continue button pressed, this should be done by the results menu MenuController.");
-            GameLobby.MovePlayersToLobby();
-        }
-
         if(SpawnStep != LateLobbySpawnStep.NONE) {
             if(SpawnStep == LateLobbySpawnStep.STARTING_CONNECTION && base.IsHost) {
                 SpawnStep = LateLobbySpawnStep.CREATING_LOBBY;

@@ -883,6 +883,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: OptionsMenuButton
       objectReference: {fileID: 0}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 6697900567963345722}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OptionsPressed
+      objectReference: {fileID: 0}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: PauseMenuController, Assembly-CSharp
+      objectReference: {fileID: 0}
     - target: {fileID: 1863819912852085227, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -988,6 +1000,18 @@ PrefabInstance:
     - target: {fileID: 1863819912852085224, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
       propertyPath: m_Name
       value: ResumeMenuButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 6697900567963345722}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ResumePressed
+      objectReference: {fileID: 0}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: PauseMenuController, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 1863819912852085227, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
       propertyPath: m_Pivot.x
@@ -1256,6 +1280,18 @@ PrefabInstance:
     - target: {fileID: 1863819912852085224, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
       propertyPath: m_Name
       value: QuitMenuButton
+      objectReference: {fileID: 0}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 6697900567963345722}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: QuitPressed
+      objectReference: {fileID: 0}
+    - target: {fileID: 1863819912852085226, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: PauseMenuController, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 1863819912852085227, guid: eb003dbf393b6204d8c1a18a158167dd, type: 3}
       propertyPath: m_Pivot.x

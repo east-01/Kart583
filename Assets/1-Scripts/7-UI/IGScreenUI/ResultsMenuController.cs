@@ -51,7 +51,6 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
 			if(gameplayManager.HasLobby) {
 				NetSceneController.LobbyManager.RequestLobbyMove();
-				print("REQUESTED LOBBY MOVE");
 			} else {
 				CoreManager.TransitionManager.LoadScene(SceneNames.MENU_MAP);
 			}

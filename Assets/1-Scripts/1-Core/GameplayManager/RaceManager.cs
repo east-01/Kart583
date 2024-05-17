@@ -150,11 +150,9 @@ public class RaceManager : NetworkBehaviour
             case RacePhase.RACING:
                 break;
             case RacePhase.FINISHED:
-                if(!asServer) {
-                    IGScreenMenuController sm = kartLevelManager.ScreenManager;
-                    sm.OpenSubMenu(IGScreenMenuController.RESULTS_MENU_ID);
-                    sm.ResultsMenuController.waitingForPlacements = true;
-                }
+                IGScreenMenuController sm = kartLevelManager.ScreenManager;
+                sm.OpenSubMenu(IGScreenMenuController.RESULTS_MENU_ID);
+                sm.ResultsMenuController.waitingForPlacements = true;
                 break;
         }
 

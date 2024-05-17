@@ -68,15 +68,7 @@ public class HumanDriver : KartBehavior, GameplayManagerBehavior
                 kartItemManager.PerformItemInput(context.performed);
                 break;
             case "Pause":
-                BLog.Highlight($"klm: \"{kartLevelManager}\"");
-                BLog.Highlight($"rc: \"{kartLevelManager.RaceCamera}\"");
-                BLog.Highlight($"igscm: \"{kartLevelManager.RaceCamera.igScreenMenuController}\"");
-                BLog.Highlight($"submenu: \"{kartLevelManager.RaceCamera.igScreenMenuController.GetSubMenu(IGScreenMenuController.PAUSE_MENU_ID)}\"");
-                MenuController pauseMenu = kartLevelManager.RaceCamera.igScreenMenuController.GetSubMenu(IGScreenMenuController.PAUSE_MENU_ID);
-                if(pauseMenu.IsOpen)
-                    pauseMenu.Close();
-                else
-                    pauseMenu.Open(OwnerPlayerObject);
+                kartLevelManager.RaceCamera.igScreenMenuController.SetPauseOpen(true);
                 break;
             default:
                 break;

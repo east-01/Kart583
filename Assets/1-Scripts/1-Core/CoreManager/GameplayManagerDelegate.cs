@@ -56,15 +56,15 @@ public class GameplayManagerDelegate : MonoBehaviour
         FishNet.Managing.Scened.SceneLookupData lookupData = new(objectsScene.handle, objectsScene.name);
         if(SceneController.Instance == null)
             return false;
-        if(!NetSceneController.Instance.IsSceneRegistered(lookupData)) 
+        if(NetSceneController.Instance == null)
             return false;
-
+        if(NetSceneController.IsReady && !NetSceneController.Instance.IsSceneRegistered(lookupData)) 
+            return false;
+            
         GameplayManager toReturn = NetSceneController.Instance.GetSceneElements(lookupData).GameplayManager;
 
         if(toReturn == null)
             return false;
-        // if(toReturn.KartLevelManager == null)
-        //     return false;
 
         gameplayManagerBehavior.GameplayManagerLoaded(toReturn);
         return true;

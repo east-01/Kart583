@@ -1,11 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using FishNet.Connection;
-using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -52,6 +48,41 @@ public class LobbyManager : NetworkBehaviour
         return newLobby;
     }
 
+    [Server]
+    public void DeleteLobby(string lobbyID) 
+    {
+        if(!lobbies.ContainsKey(lobbyID)) {
+            Debug.LogError($"Can't delete lobby \"{lobbyID}\" it doesn't exist.");
+            return;
+        }
+        GameLobby lobby = lobbies[lobbyID];
+        if(lobby.PlayerCount > 0) {
+            Debug.LogError("Can't delete lobby, it's not empty.");
+            return;
+        }
+        lobbies.Remove(lobbyID);
+        lobby.Delete();
+        BLog.Log($"Lobby \"{lobbyID}\" deleted.", LogChannel.LobbyManager, 0);
+    }
+
+    public void SetClientsLobby(NetworkConnection client, string lobbyID) 
+    {
+        if(connectionLobbyPair.ContainsKey(client)) {
+            Debug.LogError($"Can't set client \"{client}\" to new lobby, they are already in lobby \"{lobbyID}\"");
+            return;
+        }
+        connectionLobbyPair.Add(client, lobbyID);
+    }
+    
+    public void RemoveClientsLobby(NetworkConnection client) 
+    {
+        if(!connectionLobbyPair.ContainsKey(client)) {
+            Debug.LogError($"Can't remove client \"{client}\" lobby, they are not in one.");
+            return;
+        }
+        connectionLobbyPair.Remove(client);
+    }
+
 #region Client Movement
     public void JoinLobby(NetworkConnection newClient, PlayerData data) 
     {
@@ -81,15 +112,29 @@ public class LobbyManager : NetworkBehaviour
         if(lobbyToJoin == null)
             lobbyToJoin = CreateLobby();
 
-        connectionLobbyPair.Add(newClient, lobbyToJoin.ID); // This step must precede SceneDelegate#MoveToLobby which is in GameLobby#AddPlayer
         lobbyToJoin.AddPlayer(newClient, data);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcJoinLobby(NetworkConnection newClient, PlayerData data) 
+    public void ServerRpcJoinLobby(NetworkConnection newClient, PlayerData data) { JoinLobby(newClient, data); }
+
+    public void LeaveLobby(NetworkConnection client) 
     {
-        JoinLobby(newClient, data);
+        if(!base.IsServer) {
+            ServerRpcLeaveLobby(client);
+            return;
+        }
+        if(!connectionLobbyPair.ContainsKey(client)) {
+            Debug.LogError($"Client \"{client}\" can't leave lobby, they're not in one.");
+            return;
+        }
+
+        GameLobby lobbyToLeave = GetLobby(client);
+        lobbyToLeave.RemovePlayer(client);
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcLeaveLobby(NetworkConnection newClient) { LeaveLobby(newClient); }
 
     /// <summary>
     /// Request that the server moves the provided client NetworkConnection to the lobby scene
@@ -122,7 +167,7 @@ public class LobbyManager : NetworkBehaviour
             return;
         }
         BLog.Log($"Client \"{client}\" requested to move to lobby", LogChannel.LobbyManager, 0);
-        NetSceneController.Instance.AddClientToScene(client, new(SceneNames.MENU_LOBBY));
+        SceneController.Instance.LoadScene(new(SceneNames.MENU_LOBBY), false);
     }
 #endregion
 
@@ -179,7 +224,7 @@ public class LobbyManager : NetworkBehaviour
 #endregion
 
 #region Getters
-    public bool HasLobby(String lobbyID) 
+    public bool HasLobby(string lobbyID) 
     {
         return lobbies.ContainsKey(lobbyID);
     }

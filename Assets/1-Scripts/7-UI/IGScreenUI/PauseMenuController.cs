@@ -4,15 +4,25 @@ using UnityEngine;
 
 public class PauseMenuController : MenuController
 {
-    // Start is called before the first frame update
-    void Start()
+    private void Update() 
     {
-        
+
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ResumePressed() 
     {
-        
+        SendMenuBack();
     }
+
+    public void OptionsPressed() 
+    {
+        print("TODO: Options menu");
+    }
+
+    public void QuitPressed() 
+    {
+        CoreManager.LobbyCommunicator.StopCommunication();
+        SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
+    }
+
 }
