@@ -54,8 +54,8 @@ public class MenuPlayerController : MenuController
         // Spawn player panel
         GameObject playerPanel = Instantiate(playerPanelPrefab, playerPanelContainer.transform);
         PlayerPanelController playerPanelController = playerPanel.GetComponent<PlayerPanelController>();
-        playerPanelController.SetPlayerObject(this, obj);
-        playerPanelController.UpdateVisuals();
+        // playerPanelController.SetFocus(obj);
+        playerPanelController.Open(obj);
 
         // Connect ui input
         obj.input.uiInputModule = playerPanel.GetComponentInChildren<InputSystemUIInputModule>();
@@ -76,7 +76,7 @@ public class MenuPlayerController : MenuController
             if(ppc == null)
                 continue;
 
-            if(ppc.PlayerObject.PlayerIndex == obj.PlayerIndex) {
+            if(ppc.FocusedPlayer.PlayerIndex == obj.PlayerIndex) {
                 Destroy(child);
 
                 if(removePlayerInput)

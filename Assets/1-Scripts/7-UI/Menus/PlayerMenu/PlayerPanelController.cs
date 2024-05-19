@@ -7,171 +7,92 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /** The PlayerPanelController is responsible for a single PlayerObject */
-public class PlayerPanelController : MonoBehaviour
+public class PlayerPanelController : MenuController
 {
-    [SerializeField] float phaseChangeCooldown = 1f;
+    public static readonly string NAME_SELECT_MENU_ID = "NameSelect";
+    public static readonly string COLOR_SELECT_MENU_ID = "ColorSelect"; 
+    public static readonly string KART_SELECT_MENU_ID = "KartSelect";
+    public static readonly string READY_MENU_ID = "ReadyMenu";
 
-    [SerializeField] TMP_Text titleText;
-    [SerializeField] List<GameObject> toolTips;
-    
-    [SerializeField] GameObject nameSelect;
-    [SerializeField] TMP_InputField nameInputField;
-    [SerializeField] GameObject colorSelect;
-    [SerializeField] Button colorFirstSelection;
-    [SerializeField] GameObject kartSelect;
-    [SerializeField] Button readyButton;
-    [SerializeField] GameObject readyText;
+    [SerializeField] private TMP_Text titleText;
 
-    private MenuPlayerController menuPlayerController;
-    private PlayerObject playerObj;
+    [SerializeField] private PlayerBuildPhase phase;
+    private readonly Dictionary<PlayerBuildPhase, string> phaseSubMenu = new() {
+        { PlayerBuildPhase.COLOR_SELECT, COLOR_SELECT_MENU_ID },
+        { PlayerBuildPhase.NAME_SELECT, NAME_SELECT_MENU_ID },
+        { PlayerBuildPhase.VEHICLE_SELECT, KART_SELECT_MENU_ID },
+        { PlayerBuildPhase.WAITING_FOR_READY, READY_MENU_ID },
+        { PlayerBuildPhase.READY, READY_MENU_ID }
+    };
 
-    private PlayerControls controlsReference;
-
-    private PlayerBuildPhase phase;
-    private float lastPhaseChangeTime;
     private Color origPanelColor; // Stored so we can revert to it if the player revert's their color selection
 
-    private void Awake() 
+    protected new void Awake() 
     {
-        // DO NOT ENABLE, WE USE THE PLAYERINPUT COMPONENT HERE
-        // This is so we can have consistent name references in ActionTriggered
-        controlsReference = new PlayerControls();
+        base.Awake();
 
         origPanelColor = GetComponent<Image>().color;
-
-        // Initial build phase set when player object is set.
-    }
-
-    private void OnDisable() 
-    {
-        playerObj.input.onActionTriggered -= ActionTriggered; // Event registered in SetPlayerObject
-    }
-
-    public void ActionTriggered(InputAction.CallbackContext context) {
-        if(context.performed && context.action.name == controlsReference.UI.Cancel.name) {
-            // We have to reverse what is done in UpdateBuildPhase() to see what needs to be taken off first.
-            // This will be the opposite order as specified in UpdateBuildPhase()
-            if(playerObj.data.ready) {
-                playerObj.data.ready = false;
-            } else if(playerObj.data.kartType != KartType.NONE) {
-                playerObj.data.kartType = KartType.NONE;
-            } else if(playerObj.data.hexColor != null) {
-                playerObj.data.hexColor = null;
-            } else if(playerObj.data.name.Length > 0) {
-                playerObj.data.name = "";
-            } else if(playerObj.data.name == "") {
-                nameInputField.DeactivateInputField();
-                menuPlayerController.RemovePanel(playerObj, playerObj.PlayerIndex != 0);
-                return;
-            }
-            UpdatePanel();
-        }
-
-        if(phase == PlayerBuildPhase.VEHICLE_SELECT) {
-            kartSelect.GetComponent<KartSelectController>().HandleInputAction(context);
-        }
     }
 
     /** Shortcut for UpdateBuildPhase() & UpdateVisuals(). UpdateBuildPhase is called first. */
     public void UpdatePanel() { UpdateBuildPhase(); UpdateVisuals(); }
 
     /** Update the current selection so it reflects what stage we're at in player construction. 
-        The order is: Color -> Kart -> Ready */
+        The order is: Name -> Color -> Kart -> Ready */
     public void UpdateBuildPhase() 
     {
-        // Disable everything so we can enable only what we want
-        List<GameObject> everything = new() {nameSelect, colorSelect, kartSelect, readyButton.gameObject, readyText};
-        everything.ForEach(go => go.SetActive(false));
+        PlayerBuildPhase prePhase = phase;
+        PlayerObject currentFocus = GetSubMenu(phaseSubMenu[phase]).FocusedPlayer;
+        if(currentFocus == null)
+            currentFocus = FocusedPlayer;
 
-        // Enable correct thing based on what data we have
-        if(playerObj.data.name.Length == 0) {
-            // TODO: Add on screen keyboard for name select
-            if(playerObj.input.currentControlScheme == "Gamepad") {
-                playerObj.data.name = KartsIRManager.SelectRandomBotName();
-                UpdatePanel();
-                return;
-            }
+        // Check player data and enable the corresponding phase
+        if(focusedPlayer.data.name.Length == 0) {
             phase = PlayerBuildPhase.NAME_SELECT;
-            nameSelect.SetActive(true); 
-            nameInputField.ActivateInputField();
-        } else if(playerObj.data.hexColor == null) {
+        } else if(focusedPlayer.data.hexColor == null) {
             phase = PlayerBuildPhase.COLOR_SELECT;
-            colorSelect.SetActive(true);
-            colorFirstSelection.Select();
-        } else if(playerObj.data.kartType == KartType.NONE) {
+        } else if(focusedPlayer.data.kartType == KartType.NONE) {
             phase = PlayerBuildPhase.VEHICLE_SELECT;
-            kartSelect.SetActive(true);
-        } else if(!playerObj.data.ready) {
+        } else if(!focusedPlayer.data.ready) {
             phase = PlayerBuildPhase.WAITING_FOR_READY;
-            readyButton.gameObject.SetActive(true);
-            readyButton.Select();
         } else {
             phase = PlayerBuildPhase.READY;
-            readyText.SetActive(true);
         }
+        OpenSubMenu(phaseSubMenu[phase], currentFocus);
+    }
 
-        lastPhaseChangeTime = Time.time;
+    public void RegressBuildPhase() 
+    {
+        if(focusedPlayer.data.ready) {
+            focusedPlayer.data.ready = false;
+        } else if(focusedPlayer.data.kartType != KartType.NONE) {
+            focusedPlayer.data.kartType = KartType.NONE;
+        } else if(focusedPlayer.data.hexColor != null) {
+            focusedPlayer.data.hexColor = null;
+        } else if(focusedPlayer.data.name.Length > 0) {
+            focusedPlayer.data.name = "";
+        } else if(focusedPlayer.data.name == "") {
+            MenuPlayerController mpc = FindObjectOfType<MenuPlayerController>();
+            mpc.RemovePanel(focusedPlayer, focusedPlayer.PlayerIndex != 0);
+            return;
+        }
+        UpdatePanel();
     }
 
     /** Update the visuals to reflect what the player has selected in playerObj#data */
     public void UpdateVisuals() 
     {
-        titleText.text = playerObj.data.name;
-        GetComponent<Image>().color = playerObj.data.hexColor != null ? HexToColor(playerObj.data.hexColor) : origPanelColor;
+        titleText.text = focusedPlayer.data.name;
+        GetComponent<Image>().color = focusedPlayer.data.hexColor != null ? HexToColor(focusedPlayer.data.hexColor) : origPanelColor;
     }
 
-    public void SetPlayerObject(MenuPlayerController menuPlayerController, PlayerObject obj) 
+    public new void Open(PlayerObject focusedPlayer = null) 
     { 
-        this.menuPlayerController = menuPlayerController;
-
-        playerObj = obj; 
-        playerObj.input.onActionTriggered += ActionTriggered;  
-
-        toolTips.ForEach(tt => tt.GetComponent<ToolTip>().SetObservedInput(obj.input));
-
+        base.Open(focusedPlayer);
         // Set player to unready in case it's set as ready
-        playerObj.data.ready = false;
+        this.focusedPlayer.data.ready = false;
 
-        UpdateBuildPhase();
-    }
-
-    public void SubmitText() 
-    {
-        if(Time.time <= lastPhaseChangeTime + phaseChangeCooldown) return;        
-
-        playerObj.data.name = nameInputField.text;
         UpdatePanel();
-    }
-
-    /** This method is called by each color select button, fields set in editor. */
-    public void SetColor(string hexColor) 
-    {
-        if(Time.time <= lastPhaseChangeTime + phaseChangeCooldown) return;
-
-        playerObj.data.hexColor = hexColor;
-        UpdatePanel();
-    }
-
-    /** This method is called by the KartSelectController */
-    public void SetKartName(KartType kartName) {
-        if(Time.time <= lastPhaseChangeTime + phaseChangeCooldown) return;
-
-        playerObj.data.kartType = kartName;
-        UpdatePanel();
-    }
-
-    /** This method is called by the ready button */
-    public void SetReady() 
-    {
-        if(Time.time <= lastPhaseChangeTime + phaseChangeCooldown) return;
-
-        if(playerObj.PlayerIndex == 0)
-            playerObj.data.SaveToPlayerPrefs(PlayerData.PLAYER_1_DATA);
-
-        playerObj.data.ready = true;
-        UpdatePanel();
-
-        GetComponentInParent<MenuPlayerController>().CheckReady();
     }
 
     public Color HexToColor(string hex)
@@ -191,8 +112,19 @@ public class PlayerPanelController : MonoBehaviour
         return new Color32(r, g, b, 255);
     }
 
-    public PlayerObject PlayerObject { get { return playerObj; } }
+    public PlayerBuildPhase PlayerBuildPhase => phase;
 
+}
+
+public class PlayerPanelControllerSubMenu : MenuController 
+{
+    public PlayerPanelController PlayerPanelController { get { return parentMenu as PlayerPanelController; } }
+
+    protected override void SendMenuBack()
+    {
+        PlayerPanelController.RegressBuildPhase();
+        Close();
+    }
 }
 
 public enum PlayerBuildPhase 

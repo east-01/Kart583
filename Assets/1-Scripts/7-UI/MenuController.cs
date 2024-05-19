@@ -18,6 +18,10 @@ public abstract class MenuController : MonoBehaviour
     /// </summary>
     [SerializeField]
     private bool autoFocusOnPlayerOne;
+    [SerializeField]
+    private bool hidesParent = true;
+    [SerializeField]
+    private bool hidesSiblings = true;
 
     [SerializeField]
     protected List<SubMenuData> subMenus;
@@ -26,7 +30,7 @@ public abstract class MenuController : MonoBehaviour
 
     protected PlayerObject focusedPlayer;
     private string focusedPlayerInitialActionMap; // Stores the action map of the focused player so we can revert them to it once they become unfocused.
-    private MenuController parentMenu;
+    protected MenuController parentMenu;
     protected bool allowInputEvents = true;
     private bool menuControllerLoadedProperly = false;
 
@@ -107,6 +111,7 @@ public abstract class MenuController : MonoBehaviour
     {
         if(!allowInputEvents)
             return;
+        BLog.Log($"MenuController \"{this}\" recieved input event \"{context.action.name}\"", LogChannel.MenuController, 5);
         if(context.performed && context.action.name == controlsReference.UI.Cancel.name)
             SendMenuBack();
 
@@ -114,7 +119,9 @@ public abstract class MenuController : MonoBehaviour
     }
 
     /// <summary>
-    /// An optional method to recieve PlayerInput events after PlayerInput_ActionTriggered gets them.
+    /// More Input Action events called from the MenuController class so that children can recieve them.
+    /// i.e. If you have a PlayerSelect MenuController and you want to recieve input action events, you'll
+    ///   override this method to get those events instead of subscribing to the playerInput directly.
     /// </summary>
     protected virtual void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) {}
 
@@ -127,13 +134,28 @@ public abstract class MenuController : MonoBehaviour
             SetFocus(focus);
         else if(!autoFocusOnPlayerOne)
             RemoveFocus();
+
+        BLog.Log($"MenuController \"{this}\" opened with focus \"{focus}\"", LogChannel.MenuController, 2);
+        Opened();
     }
+
+    /// <summary>
+    /// Callback for when this MenuController was opened after the focus is set.
+    /// </summary>
+    protected virtual void Opened() {}
 
     public void Close() 
     {
+        Closed();
+        BLog.Log($"MenuController \"{this}\" closed", LogChannel.MenuController, 2);
         RemoveFocus();
         gameObject.SetActive(false);
     }
+
+    /// <summary>
+    /// Callback for when this MenuController was closed, BEFORE we lose focus and it is disabled.
+    /// </summary>
+    protected virtual void Closed() {}
 #endregion
 
 #region Navigation
@@ -156,6 +178,14 @@ public abstract class MenuController : MonoBehaviour
         if(subMenu == null) {
             Debug.LogError($"MenuController \"{this}\" failed to open SubMenu id \"{id}\"");
             return;
+        }
+
+        if(subMenu.hidesSiblings) {
+            subMenus.ForEach(smd => {
+                MenuController sm = GetSubMenu(smd.id);
+                if(sm.IsOpen)
+                    sm.Close();
+            });
         }
 
         BLog.Log($"Menu \"{this}\" opening submenu \"{id}\" with focus \"{focus}\"", LogChannel.MenuController);
@@ -239,6 +269,7 @@ public abstract class MenuController : MonoBehaviour
     }
 
     public bool IsOpen { get { return gameObject.activeSelf; } }
+    public PlayerObject FocusedPlayer => focusedPlayer; 
 
 }
 

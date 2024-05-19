@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /** A subcontroller to the player panel controller, manages the layout of karts to select
       and updates the stat panels */
-public class KartSelectController : MonoBehaviour
+public class KartSelectController : PlayerPanelControllerSubMenu
 {
 
     [Header("Settings"), SerializeField] float scrollCooldown;
@@ -19,40 +19,35 @@ public class KartSelectController : MonoBehaviour
     [SerializeField] StatRow handlingStats;
 
     /* Runtime fields */
-    private PlayerPanelController parentPanel;
-    private PlayerControls controlsReference;
-
     private KartType currentName;
     private KartSettings highestStats;
-    private float lastScrollTime; // Tracks the last time we recieved a navigate input
 
-    void OnEnable() 
+    protected override void Opened() 
     {
-        parentPanel = GetComponentInParent<PlayerPanelController>();
-        if(parentPanel == null)
-            throw new InvalidOperationException("Failed to find parent panel.");
-
-        controlsReference = new PlayerControls();
-
+        base.Opened();
         highestStats = CoreManager.KartAtlas.HighestStats;
 
-        if(parentPanel.PlayerObject.data.kartType != KartType.NONE)
-            currentName = parentPanel.PlayerObject.data.kartType;
+        if(focusedPlayer.data.kartType != KartType.NONE)
+            currentName = focusedPlayer.data.kartType;
         else
             currentName = (KartType)1;
 
         UpdateVisuals();
     }
 
-    public void HandleInputAction(InputAction.CallbackContext context) 
+    protected override void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) 
     {
-        if(context.action.name == controlsReference.UI.Navigate.name && Time.time > (lastScrollTime + scrollCooldown)) {
+        if(context.performed && context.action.name == controlsReference.UI.Navigate.name) {
             currentName = KartNameArithmetic(currentName, (int)Mathf.Sign(context.ReadValue<Vector2>().x));
-            lastScrollTime = Time.time;
             UpdateVisuals();
         } else if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
-            parentPanel.SetKartName(currentName);
+            SetKartName(currentName);
         }
+    }
+
+    public void SetKartName(KartType kartName) {
+        focusedPlayer.data.kartType = kartName;
+        PlayerPanelController.UpdatePanel();
     }
 
     void UpdateVisuals() 

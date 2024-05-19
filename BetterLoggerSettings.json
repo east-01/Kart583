@@ -1,6 +1,6 @@
 {
   "$id": "1",
-  "verbosity": 5,
+  "verbosity": 4,
   "channelDatas": {
     "$id": "2",
     "SceneDelegate": {
