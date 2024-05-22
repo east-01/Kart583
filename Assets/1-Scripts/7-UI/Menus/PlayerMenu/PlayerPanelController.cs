@@ -118,11 +118,20 @@ public class PlayerPanelController : MenuController
 
 public class PlayerPanelControllerSubMenu : MenuController 
 {
+    private UIElementSounds uiElementSounds;
+
     public PlayerPanelController PlayerPanelController { get { return parentMenu as PlayerPanelController; } }
+
+    protected new void Awake() 
+    {
+        base.Awake();
+        uiElementSounds = GetComponentInParent<UIElementSounds>();
+    }
 
     protected override void SendMenuBack()
     {
         PlayerPanelController.RegressBuildPhase();
+        uiElementSounds.PlayBackSound();
         Close();
     }
 }

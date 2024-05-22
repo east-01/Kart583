@@ -3,7 +3,15 @@ using UnityEngine.UI;
 
 public class MenuTitleController : MenuController
 {
+    [SerializeField] private AudioClip menuAmbiance;
+
     public TitleShipFlight titleShip;
+
+    protected new void Awake() 
+    {
+        base.Awake();
+        CoreManager.AudioManager.PlaySound(menuAmbiance, 1f, true);
+    }
 
     public void ClickedStart(bool isMultiplayer) 
     {

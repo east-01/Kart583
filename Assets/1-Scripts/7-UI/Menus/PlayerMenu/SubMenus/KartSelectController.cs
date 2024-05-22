@@ -21,6 +21,13 @@ public class KartSelectController : PlayerPanelControllerSubMenu
     /* Runtime fields */
     private KartType currentName;
     private KartSettings highestStats;
+    private UIElementSounds uiElementSounds;
+
+    protected new void Awake() 
+    {
+        base.Awake();
+        uiElementSounds = GetComponentInParent<UIElementSounds>();
+    }
 
     protected override void Opened() 
     {
@@ -39,8 +46,10 @@ public class KartSelectController : PlayerPanelControllerSubMenu
     {
         if(context.performed && context.action.name == controlsReference.UI.Navigate.name) {
             currentName = KartNameArithmetic(currentName, (int)Mathf.Sign(context.ReadValue<Vector2>().x));
+            uiElementSounds.PlaySelectSound();
             UpdateVisuals();
         } else if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
+            uiElementSounds.PlayButtonSound();
             SetKartName(currentName);
         }
     }

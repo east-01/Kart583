@@ -85,7 +85,8 @@ public abstract class MenuController : MonoBehaviour
         if(focusedPlayer == null)
             return;
 
-        focusedPlayer.input.SwitchCurrentActionMap(focusedPlayerInitialActionMap);
+        if(focusedPlayer.input.enabled)
+            focusedPlayer.input.SwitchCurrentActionMap(focusedPlayerInitialActionMap);
 
         focusedPlayer.input.onActionTriggered -= PlayerInput_ActionTriggered;
         focusedPlayer = null;

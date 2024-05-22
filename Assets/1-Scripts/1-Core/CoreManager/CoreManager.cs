@@ -10,8 +10,9 @@ using UnityEngine;
 /// The CoreManager should be placed in all scenes. It will spawn other essential managers.
 /// </summary>
 [RequireComponent(typeof(DevSettings))]
-[RequireComponent(typeof(LobbyCommunicator))]
+[RequireComponent(typeof(AudioManager))]
 [RequireComponent(typeof(GameplayManagerDelegate))]
+[RequireComponent(typeof(LobbyCommunicator))]
 [RequireComponent(typeof(TransitionManager))]
 [RequireComponent(typeof(BLog))]
 public class CoreManager : MonoBehaviour
@@ -19,8 +20,9 @@ public class CoreManager : MonoBehaviour
 
     public static CoreManager Instance;
     public static DevSettings DevSettings { get { return Instance.devSettings;} }
-    public static LobbyCommunicator LobbyCommunicator { get { return Instance.lobbyCommunicator; } }
+    public static AudioManager AudioManager { get { return Instance.audioManager; } }
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
+    public static LobbyCommunicator LobbyCommunicator { get { return Instance.lobbyCommunicator; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
 
     public static NetworkStateManager NetworkStateManager { get { return InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>(); } }
@@ -42,8 +44,9 @@ public class CoreManager : MonoBehaviour
     [SerializeField] private int playerLimit = 8;
 
     private DevSettings devSettings;
-    private LobbyCommunicator lobbyCommunicator;
+    private AudioManager audioManager;
     private GameplayManagerDelegate gameplayManagerDelegate;
+    private LobbyCommunicator lobbyCommunicator;
     private TransitionManager transitionManager;
     private BLog bLog;
 
@@ -65,8 +68,9 @@ public class CoreManager : MonoBehaviour
         }
 
         devSettings = GetComponent<DevSettings>();
-        lobbyCommunicator = GetComponent<LobbyCommunicator>();
+        audioManager = GetComponent<AudioManager>();
         gameplayManagerDelegate = GetComponent<GameplayManagerDelegate>();
+        lobbyCommunicator = GetComponent<LobbyCommunicator>();
         transitionManager = GetComponent<TransitionManager>();
         bLog = GetComponent<BLog>();
 

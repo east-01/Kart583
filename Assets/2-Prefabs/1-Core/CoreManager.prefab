@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8577002329458259215}
   - component: {fileID: 4474566219191650411}
   - component: {fileID: 141262640191590162}
+  - component: {fileID: 6051532883314688687}
+  - component: {fileID: 2031835693583436131}
   - component: {fileID: 7823777009711212984}
   - component: {fileID: 2124557569938141074}
   - component: {fileID: 67028911781127713}
@@ -84,6 +86,29 @@ MonoBehaviour:
   atlasesPrefab: {fileID: 5686835481644822823, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
   isMultiplayer: 0
   playerLimit: 8
+--- !u!114 &6051532883314688687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 72735794780100705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5828bc2e08f25b47878ddebb6a71bf0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oneShotAudioManagerPrefab: {fileID: 4260079702838130229, guid: d850c9506c1b52b4fa76703f6b95bb97, type: 3}
+  isOneShot: 0
+  trackingTarget: {fileID: 0}
+--- !u!81 &2031835693583436131
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 72735794780100705}
+  m_Enabled: 1
 --- !u!114 &7823777009711212984
 MonoBehaviour:
   m_ObjectHideFlags: 0

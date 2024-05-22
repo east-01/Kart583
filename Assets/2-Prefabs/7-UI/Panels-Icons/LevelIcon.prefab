@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 5770243878980012254}
   - component: {fileID: 5466725920186776766}
   - component: {fileID: 3627007330527277439}
+  - component: {fileID: 7763573969034565513}
+  - component: {fileID: 109877854353114474}
   m_Layer: 5
   m_Name: LevelIcon
   m_TagString: Untagged
@@ -150,6 +152,66 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &7763573969034565513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5466725920186776760}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Delegates:
+  - eventID: 2
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 109877854353114474}
+          m_TargetAssemblyTypeName: UIElementSounds, Assembly-CSharp
+          m_MethodName: PlayButtonSound
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - eventID: 0
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 109877854353114474}
+          m_TargetAssemblyTypeName: UIElementSounds, Assembly-CSharp
+          m_MethodName: PlaySelectSound
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+--- !u!114 &109877854353114474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5466725920186776760}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 505a7523728401849a7ba84a2454cd75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buttonClickClip: {fileID: 8300000, guid: 7da37fd686cb8ec4093fa37ac875d861, type: 3}
+  buttonSelectClip: {fileID: 8300000, guid: b0fb21e96144afa4cb78961a49ae99c8, type: 3}
+  backSoundClip: {fileID: 8300000, guid: 0c22165a1f69fec4792db23cbcb55f8f, type: 3}
 --- !u!1 &5466725920779693411
 GameObject:
   m_ObjectHideFlags: 0
