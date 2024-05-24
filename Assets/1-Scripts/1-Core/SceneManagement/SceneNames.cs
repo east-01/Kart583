@@ -21,4 +21,9 @@ public class SceneNames
     {
         return sceneName == MAP_TEST_TRACK || sceneName == MAP_ATUIN;
     }
+
+    public static bool IsMenuScene(string sceneName) 
+    {
+        return sceneName.StartsWith("Menu");
+    }
 }

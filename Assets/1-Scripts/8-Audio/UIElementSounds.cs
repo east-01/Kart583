@@ -4,11 +4,7 @@ using UnityEngine;
 
 public class UIElementSounds : MonoBehaviour
 {
-    [SerializeField] private AudioClip buttonClickClip;
-    [SerializeField] private AudioClip buttonSelectClip;
-    [SerializeField] private AudioClip backSoundClip;
-
-    public void PlayButtonSound() { CoreManager.AudioManager.PlaySound(buttonClickClip, 1f); }
-    public void PlaySelectSound() { CoreManager.AudioManager.PlaySound(buttonSelectClip, 1f); }
-    public void PlayBackSound() { CoreManager.AudioManager.PlaySound(backSoundClip, 1f); }
+    public void PlayButtonSound() { CoreManager.AudioManager.PlaySound(AudioFile.UI_PRESS, 1f); }
+    public void PlaySelectSound() { CoreManager.AudioManager.PlaySound(AudioFile.UI_INTERACT, 0.5f); }
+    public void PlayBackSound() { CoreManager.AudioManager.PlaySound(AudioFile.UI_NAV_BACK, 1f); }
 }

@@ -74,6 +74,21 @@ public class RaceManager : NetworkBehaviour
         if(!waitingForPlayerInput && phase != RacePhase.LATE_JOIN && phase != RacePhase.WAITING_FOR_PLAYERS)
             raceTime += Time.deltaTime;
 
+        // Client side actions
+        switch(phase) {
+            case RacePhase.COUNTDOWN:
+            int currSecond = Mathf.FloorToInt(raceTime);
+            int prevSecond = Mathf.FloorToInt(raceTime - Time.deltaTime);
+            if(currSecond != prevSecond) {
+                if(currSecond >= -3 && currSecond <= -1) {
+                    CoreManager.AudioManager.PlaySound(AudioFile.FX_COUNTDOWN, 1f);
+                } else if(currSecond == 0) {
+                    CoreManager.AudioManager.PlaySound(AudioFile.FX_COUNTDOWN_START, 1f);
+                }
+            }
+            break;
+        }
+
         if(!base.IsServer)
             return;
 
@@ -204,7 +219,8 @@ public class RaceManager : NetworkBehaviour
         PlayerObjectManager.Instance.GetPlayerInputManager().splitScreen = true;
 
         // Disable main camera audio listener so we get player 0's camera audio
-        kartLevelManager.RaceCamera.GetComponent<AudioListener>().enabled = false;
+        CoreManager.Instance.GetComponent<AudioListener>().enabled = false;
+        // kartLevelManager.RaceCamera.GetComponent<AudioListener>().enabled = false;
 
         // Data management
         if(base.IsServer)

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using IngameDebugConsole;
 using UnityEngine;
+using UnityEngine.Audio;
 
 /// <summary>
 /// There will be 4 kinds of AudioManagers:
@@ -40,32 +41,37 @@ public class AudioManager : MonoBehaviour
     /// <summary>
     /// Plays a sound on this object.
     /// </summary>
-    public void PlaySound(AudioClip audioClip, float volume, bool loop = false) 
+    public AudioSource PlaySound(AudioFile audioFile, float volume, bool loop = false) 
     {
         AudioSource src = GetSource();
         if(src == null) {
             Debug.LogError($"Can't play sound, failed to get AudioSource on object \"{name}\"");
-            return;
+            return null;
         }
         src.loop = loop;
-        src.clip = audioClip;
+        src.clip = CoreManager.AudioClip(audioFile);
         src.volume = volume;
+        if(CoreManager.AudioAtlas.AudioMixerGroups.ContainsKey(audioFile))
+            src.outputAudioMixerGroup = CoreManager.AudioAtlas.AudioMixerGroups[audioFile];
+ 
         src.Play();
 
         if(isOneShot) {
             float clipLength = src.clip.length;
             Destroy(gameObject, clipLength);
         }
+
+        return src;
     }
 
     /// <summary>
     /// Play a one shot sound effect, supply a Transform for position and then enable followTarget if you want
     ///   the one shot audio manager to follow its target positiom.
     /// </summary>
-    public void PlayOneShotSound(AudioClip audioClip, float volume, Transform target, bool followTarget = false, bool loop = false) 
+    public void PlayOneShotSound(AudioFile audioFile, float volume, Transform target, bool followTarget = false, bool loop = false) 
     {
         AudioManager am = Instantiate(oneShotAudioManagerPrefab, target.position, Quaternion.identity).GetComponent<AudioManager>();
-        am.PlaySound(audioClip, volume, loop);
+        am.PlaySound(audioFile, volume, loop);
         if(followTarget) {
             am.trackingTarget = target;
         }
@@ -74,31 +80,34 @@ public class AudioManager : MonoBehaviour
     /// <summary>
     /// Behaves exactly the same as PlaySound with the exception that it picks a random audio clip to play.
     /// </summary>
-    public void PlayRandomSound(AudioClip[] audioClips, float volume, bool loop = false) 
+    public AudioSource PlayRandomSound(AudioFile[] audioFiles, float volume, bool loop = false) 
     {
-        if(audioClips.Length == 0) {
-            Debug.LogError("Can't play random sound, audioClips length is 0.");
-            return;
+        if(audioFiles.Length == 0) {
+            Debug.LogError("Can't play random sound, audioFiles length is 0.");
+            return null;
         }
-        PlaySound(audioClips[UnityEngine.Random.Range(0, audioClips.Length)], volume, loop);
+        return PlaySound(audioFiles[UnityEngine.Random.Range(0, audioFiles.Length)], volume, loop);
     }
 
     /// <summary>
     /// Behaves exactly the same as PlayOneShotSound with the exception that it picks a random audio clip to play.
     /// </summary>
-    public void PlayRandomOneShotSound(AudioClip[] audioClips, float volume, Transform target, bool followTarget = false, bool loop = false) 
+    public void PlayRandomOneShotSound(AudioFile[] audioFiles, float volume, Transform target, bool followTarget = false, bool loop = false) 
     {
-        if(audioClips.Length == 0) {
-            Debug.LogError("Can't play random one shot sound, audioClips length is 0.");
+        if(audioFiles.Length == 0) {
+            Debug.LogError("Can't play random one shot sound, audioFiles length is 0.");
             return;
         }
-        PlayOneShotSound(audioClips[UnityEngine.Random.Range(0, audioClips.Length)], volume, target, followTarget, loop);
+        PlayOneShotSound(audioFiles[UnityEngine.Random.Range(0, audioFiles.Length)], volume, target, followTarget, loop);
     }
 #endregion
 
 #region Source Management
     public AudioSource GetSource() 
     {
+        if(sources == null)
+            sources = new();
+
         // Find an already existing one that isn't playing
         foreach(AudioSource src in sources) {
             if(!src.isPlaying)

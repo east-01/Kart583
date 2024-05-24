@@ -53,6 +53,18 @@ public class ItemBoxAnimator : MonoBehaviour
 
 			Show(false);
 			
+			CoreManager.AudioManager.PlayRandomOneShotSound(new AudioFile[] {
+				AudioFile.FX_ITEM_ZAP_1,
+				AudioFile.FX_ITEM_ZAP_2,
+				AudioFile.FX_ITEM_ZAP_3
+			}, 1f, transform);
+
+			CoreManager.AudioManager.PlayRandomOneShotSound(new AudioFile[] {
+				AudioFile.FX_ITEM_GLASS_1,
+				AudioFile.FX_ITEM_GLASS_2,
+				AudioFile.FX_ITEM_GLASS_3
+			}, 0.2f, transform);
+
 			if(!awardedItem) cooldownTime /= 2f; // Halve the cooldown time if we didn't award an item.
 		}
 	}

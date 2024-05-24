@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6795377866323719207}
   - component: {fileID: 5244667296191878687}
   - component: {fileID: 5244667296191878685}
+  - component: {fileID: 703688615115046045}
   - component: {fileID: 704151461757926555}
   m_Layer: 0
   m_Name: GameplayManager
@@ -67,7 +68,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _defaultDespawnType: 0
   NetworkObserver: {fileID: 0}
-  <PrefabId>k__BackingField: 7
+  <PrefabId>k__BackingField: 3
   <SpawnableCollectionId>k__BackingField: 0
   _scenePathHash: 0
   <SceneId>k__BackingField: 0
@@ -136,6 +137,18 @@ MonoBehaviour:
   playerObjectInGamePrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
   kartObjects: []
   playerPositions: []
+--- !u!114 &703688615115046045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5244667296191878682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 78eb3863d0f1e464e9f14c77dad7989f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &704151461757926555
 MonoBehaviour:
   m_ObjectHideFlags: 0

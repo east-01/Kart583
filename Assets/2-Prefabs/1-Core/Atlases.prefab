@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1427336598315271612}
   - component: {fileID: 577092068717363600}
   - component: {fileID: 4888532564422759782}
+  - component: {fileID: 2218995662452777491}
   m_Layer: 0
   m_Name: Atlases
   m_TagString: Untagged
@@ -130,3 +131,38 @@ MonoBehaviour:
       maxBoostSpeed: 50
       acceleration: 10
       turnSpeed: 1.1
+--- !u!114 &2218995662452777491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5686835481644822823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae81b35b3f583a54386aaa2ebdad0928, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clips:
+  - {fileID: 0}
+  - {fileID: 8300000, guid: 7da37fd686cb8ec4093fa37ac875d861, type: 3}
+  - {fileID: 8300000, guid: b0fb21e96144afa4cb78961a49ae99c8, type: 3}
+  - {fileID: 8300000, guid: 0c22165a1f69fec4792db23cbcb55f8f, type: 3}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 8300000, guid: 68f7165ffe010514ea21243131dea2fd, type: 3}
+  - {fileID: 8300000, guid: 33e0a2f505007cc428a6a0862aca0034, type: 3}
+  - {fileID: 8300000, guid: 7c37302bd262c0c4ea381261ca686a7f, type: 3}
+  - {fileID: 8300000, guid: fa65fe78bb4c9b14a8829c8b4ba3da29, type: 3}
+  - {fileID: 0}
+  - {fileID: 8300000, guid: aa8c560f1fa78524792de4fb9009d3c3, type: 3}
+  - {fileID: 8300000, guid: f6c3965827a591d4882eae925dc0d28a, type: 3}
+  - {fileID: 8300000, guid: f784e72d280402b4386e6e1ff0e42155, type: 3}
+  - {fileID: 8300000, guid: cf3e12028aafda4428401c1716f27b3e, type: 3}
+  - {fileID: 8300000, guid: 5479a3d466bd81545ab8a90876fb0227, type: 3}
+  - {fileID: 8300000, guid: 4badb404a4fd20245b40e5bb30db357c, type: 3}
+  - {fileID: 8300000, guid: 8c6ab5010ed7a51458d45143e0b28d26, type: 3}
+  - {fileID: 8300000, guid: 8c0fee982c21bce46bd60e0d696181aa, type: 3}
+  - {fileID: 8300000, guid: 3360fcb51e6593d48b498445f370716e, type: 3}
+  - {fileID: 0}

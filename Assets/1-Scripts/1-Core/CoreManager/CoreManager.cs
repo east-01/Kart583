@@ -29,6 +29,8 @@ public class CoreManager : MonoBehaviour
     public static LevelAtlas LevelAtlas { get { return Instance.atlasesPrefab.GetComponent<LevelAtlas>(); } }
     public static KartAtlas KartAtlas { get { return Instance.atlasesPrefab.GetComponent<KartAtlas>(); } }
     public static ItemAtlas ItemAtlas { get { return Instance.atlasesPrefab.GetComponent<ItemAtlas>(); } }
+    public static AudioAtlas AudioAtlas { get { return Instance.atlasesPrefab.GetComponent<AudioAtlas>(); } }
+    public static AudioClip AudioClip(AudioFile file) { return Instance.atlasesPrefab.GetComponent<AudioAtlas>().clips[(int)file]; }
 
     public static NetworkConnection LocalConnection { get { return NetSceneController.IsReady ? NetSceneController.GetLocalConnection() : null; } }
     public static bool HasLocalConnection { get { return NetSceneController.IsReady; } }

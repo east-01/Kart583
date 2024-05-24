@@ -2042,6 +2042,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 703688615115046045, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
+      propertyPath: musicFile
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 703688615115046045, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
+      propertyPath: ambianceFile
+      value: 10
+      objectReference: {fileID: 0}
     - target: {fileID: 5244667296191878682, guid: 9441b6ee65e301f41a3e6823331c94e7, type: 3}
       propertyPath: m_Name
       value: GameplayManager
@@ -5969,14 +5977,6 @@ PrefabInstance:
     - target: {fileID: 72735794780100705, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_Name
       value: CoreManager
-      objectReference: {fileID: 0}
-    - target: {fileID: 4474566219191650411, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
-      propertyPath: raceProgress
-      value: 0.9
-      objectReference: {fileID: 0}
-    - target: {fileID: 4474566219191650411, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
-      propertyPath: overrideRaceProgressAtStart
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8577002329458259215, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_RootOrder

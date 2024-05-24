@@ -35,6 +35,12 @@ public class SceneController : MonoBehaviour
     /// </summary>
     public event SceneRegisteredHandler SceneRegisteredEvent;
 
+    public delegate void SceneWillUnloadHandler(string unloadingScene, string loadingScene);
+    /// <summary>
+    /// Called before the UnitySceneManager loads a new Scene.
+    /// </summary>
+    public event SceneWillUnloadHandler SceneWillUnloadEvent;
+
     public delegate void SceneWillDeregisterHandler(SceneLookupData sceneLookupData); // No SceneElements here, see scene registered handler
     /// <summary>
     /// Called when a scene is told to unload on the server but before the unload actually happens.
@@ -105,6 +111,7 @@ public class SceneController : MonoBehaviour
 
         clientLoadTarget = shouldTrack ? lookupData : null;
 
+        SceneWillUnloadEvent?.Invoke(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name, lookupData.Name);
         UnityEngine.SceneManagement.SceneManager.LoadScene(lookupData.Name, LoadSceneMode.Single);
     }
 #endregion
