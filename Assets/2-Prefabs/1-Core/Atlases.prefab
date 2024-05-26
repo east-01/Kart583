@@ -143,6 +143,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae81b35b3f583a54386aaa2ebdad0928, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  prefixAudioMixerGroups:
+  - group: UI
+    audioMixerGroup: {fileID: -8548119963356102531, guid: a7e6490e42d63f64c86fcd300eff3763, type: 2}
+  - group: KART
+    audioMixerGroup: {fileID: -8548119963356102531, guid: a7e6490e42d63f64c86fcd300eff3763, type: 2}
+  - group: FX
+    audioMixerGroup: {fileID: -8548119963356102531, guid: a7e6490e42d63f64c86fcd300eff3763, type: 2}
+  - group: ENV
+    audioMixerGroup: {fileID: 8564008493618122391, guid: a7e6490e42d63f64c86fcd300eff3763, type: 2}
+  - group: MUSIC
+    audioMixerGroup: {fileID: -8400589772517274124, guid: a7e6490e42d63f64c86fcd300eff3763, type: 2}
   clips:
   - {fileID: 0}
   - {fileID: 8300000, guid: 7da37fd686cb8ec4093fa37ac875d861, type: 3}

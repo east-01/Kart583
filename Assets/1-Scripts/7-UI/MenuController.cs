@@ -31,12 +31,17 @@ public abstract class MenuController : MonoBehaviour
     protected PlayerObject focusedPlayer;
     private string focusedPlayerInitialActionMap; // Stores the action map of the focused player so we can revert them to it once they become unfocused.
     protected MenuController parentMenu;
+    protected CanvasGroup canvasGroup;
     protected bool allowInputEvents = true;
     private bool menuControllerLoadedProperly = false;
 
     protected void Awake() 
     {
         controlsReference = new();
+
+        if(!TryGetComponent(out canvasGroup))
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        BLog.Highlight($"Canvas group is \"{canvasGroup}\"");
 
         InitializeSubMenus();
 
@@ -63,6 +68,13 @@ public abstract class MenuController : MonoBehaviour
             RemoveFocus();
     }
 
+    protected void LateUpdate() 
+    {
+        if(!menuControllerLoadedProperly)
+            Debug.LogError($"MenuController script \"{this}\" on \"{gameObject.name}\" wasn't loaded properly. Make sure you call base.Awake() if you're overriding it.");
+    }
+
+#region Focus
     public void SetFocus(PlayerObject playerObj) 
     {
         if(focusedPlayer != null)
@@ -92,13 +104,9 @@ public abstract class MenuController : MonoBehaviour
         focusedPlayer = null;
         focusedPlayerInitialActionMap = null;
     }
+#endregion
 
-    protected void LateUpdate() 
-    {
-        if(!menuControllerLoadedProperly)
-            Debug.LogError($"MenuController script \"{this}\" on \"{gameObject.name}\" wasn't loaded properly. Make sure you call base.Awake() if you're overriding it.");
-    }
-
+#region Events
     private void PlayerObjectManager_PlayerJoined(PlayerObject obj) 
     {
         if(obj.PlayerIndex == 0 && autoFocusOnPlayerOne)
@@ -125,16 +133,22 @@ public abstract class MenuController : MonoBehaviour
     ///   override this method to get those events instead of subscribing to the playerInput directly.
     /// </summary>
     protected virtual void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) {}
+#endregion
 
 #region Open and Close
     public void Open(PlayerObject focus = null) 
     {
-        gameObject.SetActive(true);
+        // gameObject.SetActive(true);
+        canvasGroup.alpha = 1.0f;
+        canvasGroup.interactable = true;
 
         if(focus != null)
             SetFocus(focus);
         else if(!autoFocusOnPlayerOne)
             RemoveFocus();
+
+        if(hidesParent && parentMenu != null)
+            parentMenu.Close();
 
         BLog.Log($"MenuController \"{this}\" opened with focus \"{focus}\"", LogChannel.MenuController, 2);
         Opened();
@@ -150,7 +164,9 @@ public abstract class MenuController : MonoBehaviour
         Closed();
         BLog.Log($"MenuController \"{this}\" closed", LogChannel.MenuController, 2);
         RemoveFocus();
-        gameObject.SetActive(false);
+        // gameObject.SetActive(false);
+        canvasGroup.alpha = 0f;
+        canvasGroup.interactable = false;
     }
 
     /// <summary>
@@ -177,7 +193,7 @@ public abstract class MenuController : MonoBehaviour
     {
         MenuController subMenu = GetSubMenu(id);
         if(subMenu == null) {
-            Debug.LogError($"MenuController \"{this}\" failed to open SubMenu id \"{id}\"");
+            Debug.LogError($"MenuController \"{this}\" failed to open SubMenu id \"{id}\" (subMenu is null).");
             return;
         }
 
@@ -229,14 +245,7 @@ public abstract class MenuController : MonoBehaviour
         }
     }
 
-    public void SetParentMenuController(MenuController parent) 
-    {
-        if(parentMenu != null) {
-            Debug.LogError($"Can't set parent menu for sub-menu \"{this}\" since it already has parent \"{parentMenu}\"");
-            return;
-        }
-        this.parentMenu = parent;
-    }
+    public void SetParentMenuController(MenuController parent) { this.parentMenu = parent; }
 
     protected SubMenuData? GetSubMenuData(string id) 
     {
@@ -262,14 +271,9 @@ public abstract class MenuController : MonoBehaviour
         return focusedPlayer.input.currentControlScheme != "KeyboardMouse";
     } }
 
-    public bool enableDebug = true;
-    public void MenuDebug(string message) 
-    {
-        if(!enableDebug) return;
-        Debug.Log($"[{this}] {message}");
-    }
-
-    public bool IsOpen { get { return gameObject.activeSelf; } }
+    public bool IsOpen { get { 
+        return canvasGroup.interactable && canvasGroup.alpha == 1; 
+    } }
     public PlayerObject FocusedPlayer => focusedPlayer; 
 
 }

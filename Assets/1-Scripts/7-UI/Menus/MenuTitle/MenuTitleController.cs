@@ -14,8 +14,8 @@ public class MenuTitleController : MenuController
 
     public void ClickedOptions() 
     {
-        print("TODO: Create options menu");
-        // SceneManager.LoadScene("OptionsMenu");
+        CoreManager.OptionsMenuController.SetParentMenuController(this);
+        CoreManager.OptionsMenuController.Open();
     }
 
     public void ClickedQuit() 

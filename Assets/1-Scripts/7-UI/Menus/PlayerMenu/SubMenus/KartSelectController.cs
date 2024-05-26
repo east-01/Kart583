@@ -21,13 +21,6 @@ public class KartSelectController : PlayerPanelControllerSubMenu
     /* Runtime fields */
     private KartType currentName;
     private KartSettings highestStats;
-    private UIElementSounds uiElementSounds;
-
-    protected new void Awake() 
-    {
-        base.Awake();
-        uiElementSounds = GetComponentInParent<UIElementSounds>();
-    }
 
     protected override void Opened() 
     {

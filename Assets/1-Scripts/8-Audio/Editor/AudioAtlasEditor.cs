@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using FishNet.Component.Prediction;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -16,6 +17,10 @@ public class AudioAtlasEditor : Editor
     {
         AudioAtlas targ = (AudioAtlas) target;
         
+        if(targ.clips == null) {
+            targ.clips = new AudioClip[Enum.GetValues(typeof(AudioFile)).Length];
+        }
+
         // Handle new enum values being added
         if(targ.clips.Length != Enum.GetValues(typeof(AudioFile)).Length) {
             AudioClip[] newClips = new AudioClip[Enum.GetValues(typeof(AudioFile)).Length];
@@ -26,7 +31,7 @@ public class AudioAtlasEditor : Editor
         }
 
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
-        foldOut = EditorGUILayout.Foldout(foldOut, "Audio Files");
+        foldOut = EditorGUILayout.Foldout(foldOut, "Audio Files (Click to expand)", true);
 
         if (foldOut) {
             innerScrollPos = EditorGUILayout.BeginScrollView(innerScrollPos);
@@ -42,28 +47,34 @@ public class AudioAtlasEditor : Editor
             EditorGUILayout.EndScrollView();
         }
 
-        GUILayout.Label("Audio mixer groups:");
         if (targ.prefixAudioMixerGroups == null) {
+            BLog.Highlight("created audio mixer group");
             targ.prefixAudioMixerGroups = new List<PrefixAudioMixerGroup>();
         }
-        
+
+        GUILayout.Label($"Audio mixer groups ({targ.prefixAudioMixerGroups.Count}):");
+
+        // Audio mixer group rows
         for (int i = 0; i < targ.prefixAudioMixerGroups.Count; i++) {
             EditorGUILayout.BeginHorizontal();
+
             PrefixAudioMixerGroup pamg = targ.prefixAudioMixerGroups[i];
             pamg.group = EditorGUILayout.TextField("Group", pamg.group);
             pamg.audioMixerGroup = (AudioMixerGroup) EditorGUILayout.ObjectField("Audio Mixer Group", pamg.audioMixerGroup, typeof(AudioMixerGroup), false);
+            
             targ.prefixAudioMixerGroups[i] = pamg;
             EditorGUILayout.EndHorizontal();
         }
 
-        if (GUILayout.Button("Add Audio Mixer Group")) {
+        // Add/remove buttons
+        if (GUILayout.Button("Add Audio Mixer Group"))
             targ.prefixAudioMixerGroups.Add(new());
-        }
 
-        if (targ.prefixAudioMixerGroups.Count > 0 && GUILayout.Button("Remove Last Audio Mixer Group")) {
+        if (targ.prefixAudioMixerGroups.Count > 0 && GUILayout.Button("Remove Last Audio Mixer Group"))
             targ.prefixAudioMixerGroups.RemoveAt(targ.prefixAudioMixerGroups.Count - 1);
-        }
+
         EditorGUILayout.EndScrollView();
+
 
         if (GUI.changed)
             EditorUtility.SetDirty(targ);

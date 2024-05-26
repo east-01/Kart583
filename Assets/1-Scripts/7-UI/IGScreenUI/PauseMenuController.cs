@@ -16,7 +16,8 @@ public class PauseMenuController : MenuController
 
     public void OptionsPressed() 
     {
-        print("TODO: Options menu");
+        CoreManager.OptionsMenuController.SetParentMenuController(this);
+        CoreManager.OptionsMenuController.Open();
     }
 
     public void QuitPressed() 

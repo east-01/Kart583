@@ -7,7 +7,6 @@ using UnityEngine.Audio;
 
 public class AudioAtlas : MonoBehaviour
 {
-
     private static string[] formattedEnums;
     public static string[] FormattedEnums { get {
         if(formattedEnums == null || formattedEnums.Length == 0) {
@@ -48,6 +47,9 @@ public class AudioAtlas : MonoBehaviour
         if(audioMixerGroups == null) {
             audioMixerGroups = new();
             foreach(AudioFile file in Enum.GetValues(typeof(AudioFile))) {
+                if(file == AudioFile.NONE || file == AudioFile.PLACEHOLDER)
+                    continue;
+                    
                 string group = file.ToString().Split('_')[0];
                 AudioMixerGroup correspondingAMG = null;
                 foreach(PrefixAudioMixerGroup pamg in prefixAudioMixerGroups) {
@@ -70,11 +72,11 @@ public class AudioAtlas : MonoBehaviour
     /// Using the audio files prefix (i.e. UI_PRESS group is UI), we will attach that files group to
     ///   a corresponding AudioMixerGroup.
     /// </summary>
+    // public List<PrefixAudioMixerGroup> prefixAudioMixerGroups;
     public List<PrefixAudioMixerGroup> prefixAudioMixerGroups;
 
     [Header("NOTE: AudioClips are sorted based off of the AudioFile enum")]
-    public AudioClip[] clips = new AudioClip[Enum.GetValues(typeof(AudioFile)).Length]; 
-
+    public AudioClip[] clips;
 }
 
 public enum AudioFile {
@@ -99,7 +101,7 @@ public enum AudioFile {
     FX_ITEM_ZAP_1, FX_ITEM_ZAP_2, FX_ITEM_ZAP_3, FX_ITEM_GLASS_1, FX_ITEM_GLASS_2, FX_ITEM_GLASS_3, FX_ITEM_LIGHTNING_BOLT, PLACEHOLDER
 }
 
-[SerializeField]
+[Serializable]
 public struct PrefixAudioMixerGroup {
     public string group;
     public AudioMixerGroup audioMixerGroup;

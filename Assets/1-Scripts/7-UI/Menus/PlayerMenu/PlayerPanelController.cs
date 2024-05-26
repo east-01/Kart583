@@ -118,7 +118,7 @@ public class PlayerPanelController : MenuController
 
 public class PlayerPanelControllerSubMenu : MenuController 
 {
-    private UIElementSounds uiElementSounds;
+    protected UIElementSounds uiElementSounds;
 
     public PlayerPanelController PlayerPanelController { get { return parentMenu as PlayerPanelController; } }
 

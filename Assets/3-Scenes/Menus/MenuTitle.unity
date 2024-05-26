@@ -698,6 +698,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CoreManager
       objectReference: {fileID: 0}
+    - target: {fileID: 141262640191590162, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: optionsMenuController
+      value: 
+      objectReference: {fileID: 1948405508}
     - target: {fileID: 572703718120868166, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -1128,7 +1132,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   firstSelect: {fileID: 1306794275}
-  autoFocusOnPlayerOne: 0
+  autoFocusOnPlayerOne: 1
   hidesParent: 1
   hidesSiblings: 1
   subMenus: []
@@ -1394,6 +1398,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 505a7523728401849a7ba84a2454cd75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1948405508 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 27712131319819773, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+  m_PrefabInstance: {fileID: 1124362560}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 089b97fc53b3db04d849c7194dd5abe1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1994395405

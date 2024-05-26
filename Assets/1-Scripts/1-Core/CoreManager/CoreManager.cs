@@ -18,6 +18,7 @@ using UnityEngine;
 public class CoreManager : MonoBehaviour
 {
 
+    /* On-component references */
     public static CoreManager Instance;
     public static DevSettings DevSettings { get { return Instance.devSettings;} }
     public static AudioManager AudioManager { get { return Instance.audioManager; } }
@@ -25,13 +26,18 @@ public class CoreManager : MonoBehaviour
     public static LobbyCommunicator LobbyCommunicator { get { return Instance.lobbyCommunicator; } }
     public static TransitionManager TransitionManager { get { return Instance.transitionManager; } }
 
-    public static NetworkStateManager NetworkStateManager { get { return InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>(); } }
+    /* Child component references */
+    public static OptionsMenuController OptionsMenuController => Instance.optionsMenuController;
+
+    /* Atlas prefab access*/
     public static LevelAtlas LevelAtlas { get { return Instance.atlasesPrefab.GetComponent<LevelAtlas>(); } }
     public static KartAtlas KartAtlas { get { return Instance.atlasesPrefab.GetComponent<KartAtlas>(); } }
     public static ItemAtlas ItemAtlas { get { return Instance.atlasesPrefab.GetComponent<ItemAtlas>(); } }
     public static AudioAtlas AudioAtlas { get { return Instance.atlasesPrefab.GetComponent<AudioAtlas>(); } }
     public static AudioClip AudioClip(AudioFile file) { return Instance.atlasesPrefab.GetComponent<AudioAtlas>().clips[(int)file]; }
 
+    /* Utility references */
+    public static NetworkStateManager NetworkStateManager { get { return InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>(); } }
     public static NetworkConnection LocalConnection { get { return NetSceneController.IsReady ? NetSceneController.GetLocalConnection() : null; } }
     public static bool HasLocalConnection { get { return NetSceneController.IsReady; } }
 
@@ -51,6 +57,8 @@ public class CoreManager : MonoBehaviour
     private LobbyCommunicator lobbyCommunicator;
     private TransitionManager transitionManager;
     private BLog bLog;
+
+    [SerializeField] private OptionsMenuController optionsMenuController;
 
     private bool notifiedOfRelease = false;
 
