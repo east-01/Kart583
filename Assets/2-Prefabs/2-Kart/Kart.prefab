@@ -485,6 +485,7 @@ GameObject:
   - component: {fileID: 351521495102920665}
   - component: {fileID: 1348276822467886517}
   - component: {fileID: 783342837203693960}
+  - component: {fileID: 318379147591700670}
   - component: {fileID: 3383173762062893252}
   - component: {fileID: 383425190380613429}
   m_Layer: 0
@@ -780,9 +781,31 @@ MonoBehaviour:
   _componentIndexCache: 5
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
-  atlasesPrefab: {fileID: 4888532564422759782, guid: 5df42c082f787cf4cbed8370c63b2a27, type: 3}
   bumpParticlePrefab: {fileID: 5024009746357069194, guid: ec3f674830402cc45bce805cf6493db7, type: 3}
   nameplate: {fileID: 4608761901941505407}
+--- !u!114 &318379147591700670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bea8acda0d35ca4192a287e2e50fd0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 6
+  _addedNetworkObject: {fileID: 3383173762062893252}
+  _networkObjectCache: {fileID: 3383173762062893252}
+  simulatedRPM: 0
+  kartAudioMixerGroup: {fileID: -8548119963356102531, guid: a7e6490e42d63f64c86fcd300eff3763, type: 2}
+  idle: {fileID: 8300000, guid: d314286e2395d2d4a82f4269b5fc7774, type: 3}
+  lowRPM: {fileID: 8300000, guid: 09db7cac012296e4592d2523d1710184, type: 3}
+  highRPM: {fileID: 8300000, guid: 7c20358eaafa9b142be3c10fa31b7bd5, type: 3}
+  drift: {fileID: 8300000, guid: 5108f3513402eba48a1e8bb6a0c652f1, type: 3}
+  boostStart: {fileID: 8300000, guid: 5765658c386d41b4d9867a0b5c6edacd, type: 3}
+  boostLoop: {fileID: 8300000, guid: b499b905844c19a408db902f23132547, type: 3}
 --- !u!114 &3383173762062893252
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -805,6 +828,7 @@ MonoBehaviour:
   - {fileID: 351521495102920665}
   - {fileID: 1348276822467886517}
   - {fileID: 783342837203693960}
+  - {fileID: 318379147591700670}
   - {fileID: 383425190380613429}
   - {fileID: 9101915779885251598}
   - {fileID: 7733809655012709343}
@@ -838,7 +862,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 6
+  _componentIndexCache: 7
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   _componentConfiguration: 0
@@ -918,7 +942,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5bc62db68b2ac42a6c4ca6e6c4b9b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 7
+  _componentIndexCache: 8
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
 --- !u!114 &7733809655012709343
@@ -933,7 +957,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e201ae3e84db5704297821df3ce6d9d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 8
+  _componentIndexCache: 9
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   waypointPositions: []
@@ -955,7 +979,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d0455521fcd0814785f8e259692b7d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 9
+  _componentIndexCache: 10
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   dotProductToTurn:
@@ -1170,7 +1194,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4efa80f650ebff74bb29f2fc5e3bb727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 10
+  _componentIndexCache: 11
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   itemReleaseTimes: {x: 1, y: 10}

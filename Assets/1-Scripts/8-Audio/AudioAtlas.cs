@@ -47,7 +47,7 @@ public class AudioAtlas : MonoBehaviour
         if(audioMixerGroups == null) {
             audioMixerGroups = new();
             foreach(AudioFile file in Enum.GetValues(typeof(AudioFile))) {
-                if(file == AudioFile.NONE || file == AudioFile.PLACEHOLDER)
+                if(file == AudioFile.NONE)
                     continue;
                     
                 string group = file.ToString().Split('_')[0];
@@ -94,11 +94,12 @@ public enum AudioFile {
     */
     NONE,
     UI_PRESS, UI_INTERACT, UI_NAV_BACK,
-    KART_IDLE, KART_THROTTLE, KART_DRIFT,
+    UI_ITEM_SCROLL_NORMAL, UI_ITEM_SCROLL_FINISH, KART_DAMAGED,
     FX_COUNTDOWN, FX_COUNTDOWN_START,
     ENV_MENU_AMBIANCE, ENV_TEST_TRACK_AMBIANCE, ENV_ATUIN_SHIPYARD_AMBIANCE,
     MUSIC_TEST_TRACK, MUSIC_ATUIN_SHIPYARD,
-    FX_ITEM_ZAP_1, FX_ITEM_ZAP_2, FX_ITEM_ZAP_3, FX_ITEM_GLASS_1, FX_ITEM_GLASS_2, FX_ITEM_GLASS_3, FX_ITEM_LIGHTNING_BOLT, PLACEHOLDER
+    FX_ITEM_ZAP_1, FX_ITEM_ZAP_2, FX_ITEM_ZAP_3, FX_ITEM_GLASS_1, FX_ITEM_GLASS_2, FX_ITEM_GLASS_3, FX_ITEM_LIGHTNING_BOLT, FX_ITEM_OIL_SPILL, FX_ITEM_BOOST_CANISTER, FX_ITEM_TELEPORTER,
+    FX_LAP_COMPLETE_NORMAL, FX_LAP_COMPLETE_LAST_LAP, FX_RACE_COMPLETE
 }
 
 [Serializable]

@@ -2018,14 +2018,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3990ca79c634a1e4fb2b3da3077d76ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  openCloseType: 0
   firstSelect: {fileID: 0}
   autoFocusOnPlayerOne: 1
+  hidesParent: 0
+  hidesSiblings: 1
   subMenus: []
   tooltips:
   - {fileID: 961378115}
   - {fileID: 1854106615}
   - {fileID: 1689529946}
-  enableDebug: 1
 --- !u!1001 &1854106613
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2425,13 +2427,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75ee3296a0707ac4986bae90a18bed1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  openCloseType: 0
   firstSelect: {fileID: 0}
   autoFocusOnPlayerOne: 1
+  hidesParent: 1
+  hidesSiblings: 1
   subMenus:
   - id: MapSelect
     menuController: {fileID: 1776123859}
   tooltips: []
-  enableDebug: 1
 --- !u!114 &2010510417
 MonoBehaviour:
   m_ObjectHideFlags: 0

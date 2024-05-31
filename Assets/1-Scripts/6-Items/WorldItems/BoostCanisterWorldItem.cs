@@ -10,6 +10,8 @@ public class BoostCanisterWorldItem : WorldItem
         kc.boostDecayTime = 0;
         kc.boostAmount = kc.settings.maxBoost;
 
+        CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_BOOST_CANISTER, 1f, transform);
+
         Destroy(gameObject);
     }
 

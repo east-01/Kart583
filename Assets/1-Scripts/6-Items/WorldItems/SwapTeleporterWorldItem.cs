@@ -52,10 +52,12 @@ public class SwapTeleporterWorldItem : WorldItem
         target.transform.SetPositionAndRotation(tempPosition, tempRotation);
         targetPT.waypointIndex = tempWaypoint;
 
+        CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_TELEPORTER, 1f, transform);
+
         Destroy(gameObject);
     }
 
     // We shouldn't have to handle these since the item immediately gets destroyed on spawn
-    protected override void Internal_ItemDestroyed() { throw new System.NotImplementedException(); }
-    protected override void Internal_ItemHit(string hitPlayerUUID) { throw new System.NotImplementedException(); }
+    protected override void Internal_ItemDestroyed() { }
+    protected override void Internal_ItemHit(string hitPlayerUUID) { }
 }

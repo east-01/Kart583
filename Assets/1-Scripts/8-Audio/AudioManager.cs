@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using GameKit.Utilities;
 using IngameDebugConsole;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -23,6 +25,7 @@ public class AudioManager : MonoBehaviour
 
     /// <summary>
     /// Destroy the game object the AudioManager is on one it finishes playing sound.
+    /// NOTE: This field is set in the inspector on the OneShotAudioManagerPrefab
     /// </summary>
     [Header("Settings"), SerializeField] private bool isOneShot;
 
@@ -35,6 +38,18 @@ public class AudioManager : MonoBehaviour
     private void Awake() 
     {
         sources = new(GetComponents<AudioSource>());
+    }
+
+    private void Update() 
+    {
+        if(trackingTarget != null) 
+            transform.position = trackingTarget.position;
+        
+        if(isOneShot && sources.Count > 0) {
+            AudioSource oneShotSource = sources[0];
+            if(!oneShotSource.loop && !oneShotSource.isPlaying)
+                Destroy(gameObject);
+        }
     }
 
 #region Sound Playing
@@ -56,7 +71,7 @@ public class AudioManager : MonoBehaviour
  
         src.Play();
 
-        if(isOneShot) {
+        if(isOneShot && !loop) {
             float clipLength = src.clip.length;
             Destroy(gameObject, clipLength);
         }
@@ -68,13 +83,14 @@ public class AudioManager : MonoBehaviour
     /// Play a one shot sound effect, supply a Transform for position and then enable followTarget if you want
     ///   the one shot audio manager to follow its target positiom.
     /// </summary>
-    public void PlayOneShotSound(AudioFile audioFile, float volume, Transform target, bool followTarget = false, bool loop = false) 
+    public AudioSource PlayOneShotSound(AudioFile audioFile, float volume, Transform target, bool followTarget = false, bool loop = false) 
     {
         AudioManager am = Instantiate(oneShotAudioManagerPrefab, target.position, Quaternion.identity).GetComponent<AudioManager>();
-        am.PlaySound(audioFile, volume, loop);
         if(followTarget) {
             am.trackingTarget = target;
         }
+
+        return am.PlaySound(audioFile, volume, loop);
     }
 
     /// <summary>
@@ -92,13 +108,13 @@ public class AudioManager : MonoBehaviour
     /// <summary>
     /// Behaves exactly the same as PlayOneShotSound with the exception that it picks a random audio clip to play.
     /// </summary>
-    public void PlayRandomOneShotSound(AudioFile[] audioFiles, float volume, Transform target, bool followTarget = false, bool loop = false) 
+    public AudioSource PlayRandomOneShotSound(AudioFile[] audioFiles, float volume, Transform target, bool followTarget = false, bool loop = false) 
     {
         if(audioFiles.Length == 0) {
             Debug.LogError("Can't play random one shot sound, audioFiles length is 0.");
-            return;
+            return null;
         }
-        PlayOneShotSound(audioFiles[UnityEngine.Random.Range(0, audioFiles.Length)], volume, target, followTarget, loop);
+        return PlayOneShotSound(audioFiles[UnityEngine.Random.Range(0, audioFiles.Length)], volume, target, followTarget, loop);
     }
 #endregion
 

@@ -21,6 +21,7 @@ public class KartBehavior : NetworkBehaviour
     protected KartItemManager kartItemManager;
     protected PositionTracker posTracker;
     protected KartVisualsManager kartVisualsManager;
+    protected KartAudioManager kartAudioManager;
 
     // Brain
     protected BotDriver botDriver;
@@ -42,6 +43,7 @@ public class KartBehavior : NetworkBehaviour
         kartItemManager = kartManager.GetComponent<KartItemManager>();
         posTracker = kartManager.GetComponent<PositionTracker>();
         kartVisualsManager = kartManager.GetComponent<KartVisualsManager>();
+        kartAudioManager = kartManager.GetComponent<KartAudioManager>();
 
         // Objects on children of manager
         botDriver = kartManager.GetComponentInChildren<BotDriver>();

@@ -12,7 +12,7 @@ public class OilWorldItem : WorldItem
         transform.position = OwnerKartManager.gameObject.transform.position - kc.KartForward.normalized*3f - kc.up*0.3f;
 
         // TODO: Play activation animation and sound
-
+        CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_OIL_SPILL, 1f, transform);
     }
 
     protected override void Internal_ItemDestroyed()
@@ -29,6 +29,9 @@ public class OilWorldItem : WorldItem
         }
         
         hitKM.GetKartController().damageCooldown = 2f;
+
+        CoreManager.AudioManager.PlayOneShotSound(AudioFile.KART_DAMAGED, 1f, transform);
+        CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_OIL_SPILL, 1f, transform);
 
         Internal_ItemDestroyed();
     }

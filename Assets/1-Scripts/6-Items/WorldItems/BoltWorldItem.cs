@@ -10,6 +10,7 @@ public class BoltWorldItem : WorldItem
     public Vector3 dir;
     public List<ParticleSystem> systems;
     public float collCooldown;
+    private AudioSource audioSource;
 
     private void FixedUpdate() {
         if(collCooldown > 0) {
@@ -67,11 +68,14 @@ public class BoltWorldItem : WorldItem
         // TODO: Play activation animation and sound
         systems.ForEach(pe => pe.Play());
 
+        audioSource = CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_LIGHTNING_BOLT, 1f, transform, true, true);
     }
 
     protected override void Internal_ItemDestroyed()
     {
         systems.ForEach(pe => pe.Stop());
+        if(audioSource != null && audioSource.gameObject != null)
+            Destroy(audioSource.gameObject);
     }
 
     protected override void Internal_ItemHit(string hitPlayerUUID)
@@ -83,6 +87,9 @@ public class BoltWorldItem : WorldItem
         }
         
         hitKM.GetKartController().damageCooldown = 3.5f;
+
+        CoreManager.AudioManager.PlayOneShotSound(AudioFile.KART_DAMAGED, 1f, transform);
+
         Internal_ItemDestroyed();
     }
     

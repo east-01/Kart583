@@ -11,6 +11,8 @@ public abstract class MenuController : MonoBehaviour
     protected PlayerControls controlsReference;
 
     [SerializeField]
+    protected OpenCloseType openCloseType;
+    [SerializeField]
     protected Selectable firstSelect;
     /// <summary>
     /// Automatically focus on player one when they are available.
@@ -39,9 +41,8 @@ public abstract class MenuController : MonoBehaviour
     {
         controlsReference = new();
 
-        if(!TryGetComponent(out canvasGroup))
+        if(openCloseType == OpenCloseType.CANVAS_GROUP && !TryGetComponent(out canvasGroup))
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
-        BLog.Highlight($"Canvas group is \"{canvasGroup}\"");
 
         InitializeSubMenus();
 
@@ -97,7 +98,7 @@ public abstract class MenuController : MonoBehaviour
         if(focusedPlayer == null)
             return;
 
-        if(focusedPlayer.input.enabled)
+        if(focusedPlayer.input != null && focusedPlayer.input.enabled)
             focusedPlayer.input.SwitchCurrentActionMap(focusedPlayerInitialActionMap);
 
         focusedPlayer.input.onActionTriggered -= PlayerInput_ActionTriggered;
@@ -109,7 +110,7 @@ public abstract class MenuController : MonoBehaviour
 #region Events
     private void PlayerObjectManager_PlayerJoined(PlayerObject obj) 
     {
-        if(obj.PlayerIndex == 0 && autoFocusOnPlayerOne)
+        if(obj.PlayerIndex == 0 && autoFocusOnPlayerOne && focusedPlayer == null)
             SetFocus(obj);
     }
 
@@ -138,19 +139,28 @@ public abstract class MenuController : MonoBehaviour
 #region Open and Close
     public void Open(PlayerObject focus = null) 
     {
-        // gameObject.SetActive(true);
-        canvasGroup.alpha = 1.0f;
-        canvasGroup.interactable = true;
+        if(!gameObject.activeSelf) 
+            gameObject.SetActive(true);
+
+        if(openCloseType == OpenCloseType.GAME_OBJECT_ENABLE_DISABLE)
+            gameObject.SetActive(true);
+        else if(openCloseType == OpenCloseType.CANVAS_GROUP) {
+            canvasGroup.alpha = 1.0f;
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+        }
 
         if(focus != null)
             SetFocus(focus);
-        else if(!autoFocusOnPlayerOne)
+        else if(autoFocusOnPlayerOne && PlayerObjectManager.Instance.PlayerOne != null)
+            SetFocus(PlayerObjectManager.Instance.PlayerOne);
+        else
             RemoveFocus();
 
         if(hidesParent && parentMenu != null)
             parentMenu.Close();
 
-        BLog.Log($"MenuController \"{this}\" opened with focus \"{focus}\"", LogChannel.MenuController, 2);
+        BLog.Log($"MenuController \"{this}\" opened with {(focus != null ? $"focus \"{focus}\"" : "no focus")}", LogChannel.MenuController, 2);
         Opened();
     }
 
@@ -164,9 +174,13 @@ public abstract class MenuController : MonoBehaviour
         Closed();
         BLog.Log($"MenuController \"{this}\" closed", LogChannel.MenuController, 2);
         RemoveFocus();
-        // gameObject.SetActive(false);
-        canvasGroup.alpha = 0f;
-        canvasGroup.interactable = false;
+        if(openCloseType == OpenCloseType.GAME_OBJECT_ENABLE_DISABLE)
+            gameObject.SetActive(false);
+        else if(openCloseType == OpenCloseType.CANVAS_GROUP) {
+            canvasGroup.alpha = 0f;
+            canvasGroup.interactable = false;
+            canvasGroup.blocksRaycasts = false;
+        }
     }
 
     /// <summary>
@@ -205,7 +219,7 @@ public abstract class MenuController : MonoBehaviour
             });
         }
 
-        BLog.Log($"Menu \"{this}\" opening submenu \"{id}\" with focus \"{focus}\"", LogChannel.MenuController);
+        BLog.Log($"Menu \"{this}\" opening submenu \"{id}\"", LogChannel.MenuController);
         subMenu.Open(focus);
     }
 #endregion
@@ -272,7 +286,12 @@ public abstract class MenuController : MonoBehaviour
     } }
 
     public bool IsOpen { get { 
-        return canvasGroup.interactable && canvasGroup.alpha == 1; 
+        if(openCloseType == OpenCloseType.GAME_OBJECT_ENABLE_DISABLE)
+            return gameObject.activeSelf;
+        else if(openCloseType == OpenCloseType.CANVAS_GROUP)
+            return canvasGroup.interactable && canvasGroup.alpha == 1; 
+        else
+            return false;
     } }
     public PlayerObject FocusedPlayer => focusedPlayer; 
 
@@ -284,3 +303,5 @@ public struct SubMenuData
     public string id;
     public MenuController menuController;   
 }
+
+public enum OpenCloseType { GAME_OBJECT_ENABLE_DISABLE, CANVAS_GROUP }

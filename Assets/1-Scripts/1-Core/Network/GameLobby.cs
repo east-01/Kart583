@@ -127,7 +127,6 @@ public class GameLobby
                 break;
             case LobbyState.MAP_SELECTION:
                 bool autoSelectValid = CanAutoSelectLevel && timeInState >= MAP_PICK_TIME;
-                BLog.Highlight($"In map selection state level. Level=\"{level}\" MapScene=\"{MapScene}\"");
                 if(level == null && (autoSelectValid || forceMapPick)) {
                     forceMapPick = false;
                     KartLevel? selectedLevel;

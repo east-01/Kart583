@@ -188,8 +188,16 @@ MonoBehaviour:
   hidesSiblings: 1
   subMenus: []
   tooltips: []
-  enableDebug: 1
   mixer: {fileID: 24100000, guid: a7e6490e42d63f64c86fcd300eff3763, type: 2}
+  channelDatas:
+  - label: MasterVolume
+    slider: {fileID: 4512735740833150522}
+  - label: MusicVolume
+    slider: {fileID: 6335423455199711399}
+  - label: EnvironmentVolume
+    slider: {fileID: 539523959596883931}
+  - label: SoundFXVolume
+    slider: {fileID: 4151869255850608922}
 --- !u!1 &3000629787821254168
 GameObject:
   m_ObjectHideFlags: 0
@@ -877,6 +885,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bcc4553f4a4f22e4797e870c34870a1c, type: 3}
+--- !u!114 &539523959596883931 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 902198638340818733, guid: bcc4553f4a4f22e4797e870c34870a1c, type: 3}
+  m_PrefabInstance: {fileID: 862869029058042102}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &7919469131495415460 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7358351792775906898, guid: bcc4553f4a4f22e4797e870c34870a1c, type: 3}
@@ -1192,6 +1211,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bcc4553f4a4f22e4797e870c34870a1c, type: 3}
+--- !u!114 &4151869255850608922 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 902198638340818733, guid: bcc4553f4a4f22e4797e870c34870a1c, type: 3}
+  m_PrefabInstance: {fileID: 3826696248580247095}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &5982251514976421989 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7358351792775906898, guid: bcc4553f4a4f22e4797e870c34870a1c, type: 3}
@@ -1351,3 +1381,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7358351792775906898, guid: bcc4553f4a4f22e4797e870c34870a1c, type: 3}
   m_PrefabInstance: {fileID: 6588400054388529034}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6335423455199711399 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 902198638340818733, guid: bcc4553f4a4f22e4797e870c34870a1c, type: 3}
+  m_PrefabInstance: {fileID: 6588400054388529034}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

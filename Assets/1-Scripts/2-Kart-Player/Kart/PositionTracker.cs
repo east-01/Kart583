@@ -93,8 +93,17 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
             hasStartedRace = true;
             hasFinishedRace = false;
             lapNumber = 0;
-        } else if(advancedLapCompleted) 
+        } else if(advancedLapCompleted) {
             lapNumber += 1;
+
+            if(lapNumber < gameplayManager.RaceManager.settings.Laps-1) {
+                CoreManager.AudioManager.PlaySound(AudioFile.FX_LAP_COMPLETE_NORMAL, 1f);
+            } else if(lapNumber == gameplayManager.RaceManager.settings.Laps-1) {
+                CoreManager.AudioManager.PlaySound(AudioFile.FX_LAP_COMPLETE_LAST_LAP, 1f);            
+            } else {
+                CoreManager.AudioManager.PlaySound(AudioFile.FX_RACE_COMPLETE, 1f);
+            } 
+        }
     }
 
     void Update() {

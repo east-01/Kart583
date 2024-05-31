@@ -91,6 +91,18 @@ public class CoreManager : MonoBehaviour
         CheckScreenLogger();
     }
 
+    private void Start() 
+    {
+        optionsMenuController.gameObject.SetActive(true);
+        optionsMenuController.Close();
+        optionsMenuController.LoadOptions();
+    }
+
+    private void OnDestroy() 
+    {
+        optionsMenuController.SaveOptions();
+    }
+
     private void Update() 
     {
         CheckNetworkManager();
