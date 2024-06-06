@@ -155,7 +155,6 @@ public class NetworkStateManager : MonoBehaviour
 #region Events
     private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)
     {
-        BLog.Highlight("client connection state: " + args.ConnectionState);
         _clientConnectionState = args.ConnectionState;
         if(_clientConnectionState != LocalConnectionState.Stopped) {
             clientStatusText.gameObject.SetActive(true);
