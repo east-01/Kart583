@@ -9,7 +9,6 @@ using UnityEngine;
 /// <summary>
 /// The CoreManager should be placed in all scenes. It will spawn other essential managers.
 /// </summary>
-[RequireComponent(typeof(DevSettings))]
 [RequireComponent(typeof(AudioManager))]
 [RequireComponent(typeof(GameplayManagerDelegate))]
 [RequireComponent(typeof(LobbyCommunicator))]
@@ -20,7 +19,6 @@ public class CoreManager : MonoBehaviour
 
     /* On-component references */
     public static CoreManager Instance;
-    public static DevSettings DevSettings { get { return Instance.devSettings;} }
     public static AudioManager AudioManager { get { return Instance.audioManager; } }
     public static GameplayManagerDelegate GameplayManagerDelegate { get { return Instance.gameplayManagerDelegate; } }
     public static LobbyCommunicator LobbyCommunicator { get { return Instance.lobbyCommunicator; } }
@@ -51,7 +49,6 @@ public class CoreManager : MonoBehaviour
     [Header("Settings")] public bool isMultiplayer;
     [SerializeField] private int playerLimit = 8;
 
-    private DevSettings devSettings;
     private AudioManager audioManager;
     private GameplayManagerDelegate gameplayManagerDelegate;
     private LobbyCommunicator lobbyCommunicator;
@@ -72,12 +69,11 @@ public class CoreManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
         }
 
-        if(!notifiedOfRelease && !GameVersion.IsDevelopment) {
-            Debug.Log($"<color=aqua>Running release build {GameVersion.Version}</color>");
+        if(!notifiedOfRelease && !DevSettings.IsDevelopment()) {
+            Debug.Log($"<color=aqua>Running release build {DevSettings.GetVersionString()}</color>");
             notifiedOfRelease = true;
         }
 
-        devSettings = GetComponent<DevSettings>();
         audioManager = GetComponent<AudioManager>();
         gameplayManagerDelegate = GetComponent<GameplayManagerDelegate>();
         lobbyCommunicator = GetComponent<LobbyCommunicator>();
@@ -96,6 +92,8 @@ public class CoreManager : MonoBehaviour
         optionsMenuController.gameObject.SetActive(true);
         optionsMenuController.Close();
         optionsMenuController.LoadOptions();
+
+        HandleDeveloperSettings();
     }
 
     private void OnDestroy() 
@@ -109,6 +107,7 @@ public class CoreManager : MonoBehaviour
         CheckNetSceneController();
     }
 
+#region Essential component checks
     private void CheckNetworkManager() 
     {
         if(NetworkManager.Instances.Count > 0)
@@ -163,14 +162,56 @@ public class CoreManager : MonoBehaviour
 
         Instantiate(screenLoggerPrefab);
     }
+#endregion
+
+    public void HandleDeveloperSettings() 
+    {
+
+        DevSettings.SettingsPrintout.ForEach(s => BLog.Log(s, LogChannel.DevSettings));
+
+        if(DevSettings.Settings.HaveStandalonePlayerRunAsServer && !Application.isEditor) {
+            NetworkStateManager nsm = InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>();
+            nsm.StartServer();
+            return;
+        }
+
+        if(DevSettings.Settings.LoadMode != LoadMode.NONE)
+            SimulateLoad();
+    }
+
+    /// <summary>
+    /// When loadMode != LoadMode.NONE this will load the user into a map either in local play or multiplayer depending on load mode.
+    /// For multiplayer load mode, there must be a server instance running to recieve the player.
+    /// </summary>
+    public void SimulateLoad() 
+    {
+        if(DevSettings.Settings.LoadMode == LoadMode.NONE) {
+            Debug.LogError("Tried to simulate load but the LoadMode was set to NONE.");
+            return;
+        }
+
+        CoreManager.Instance.isMultiplayer = DevSettings.Settings.LoadMode == LoadMode.LOAD_LOBBY;
+
+        if(DevSettings.Settings.LoadMode == LoadMode.LOAD_LOBBY) {
+            CoreManager.TransitionManager.LoadScene(SceneNames.MENU_LOBBY);
+        } else if(DevSettings.Settings.LoadMode == LoadMode.LOAD_MAP_LOCAL) {
+            KartLevel mapPick = DevSettings.Settings.OverrideMapPick ? DevSettings.Settings.Map : LevelAtlas.PickRandomLevel();
+            if(!DevSettings.Settings.OverrideMapPick) 
+                BLog.Log($"SimulateLoad: loading into local play map but override map pick is off, picked {mapPick} randomly.", LogChannel.DevSettings, 0);
+            string sceneName = CoreManager.LevelAtlas.RetrieveData(mapPick).sceneName;
+            CoreManager.TransitionManager.LoadScene(sceneName);
+        }
+
+        DevSettings.Settings.hasProcessedLoadMode = true;
+    }
 
     /// <summary>
     /// Check if the running instance is a server instance. More reliable than InstanceFinder because 
     ///   it will handle cases where a NetworkManager doesn't exist.
     /// </summary>
-    public bool IsServer { get {
+    public static bool IsServerOnly { get {
         if(NetworkManager.Instances.Count == 0) return false;
-        return InstanceFinder.IsServer;
+        return InstanceFinder.IsServer && !InstanceFinder.IsHost;
     } }
     public static bool IsMultiplayer { 
         get { return Instance.isMultiplayer; } 
@@ -182,10 +223,9 @@ public class CoreManager : MonoBehaviour
     }
 
     public int PlayerLimit { get {
-        if(DevSettings.OverridePlayerLimit)
-            return DevSettings.playerLimit;
+        if(DevSettings.Settings.OverridePlayerLimit)
+            return DevSettings.Settings.PlayerLimit;
         else
             return playerLimit;
     } }
-
 }

@@ -81,6 +81,7 @@ public class MenuLobbyViewController : MonoBehaviour
 
         NetworkStateManager nsm = _controller.ConnectedNetworkManager.GetComponent<NetworkStateManager>();
         bool isConnected = _lobbyManager != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started;
+        BLog.Highlight("updating view, is connected: " + isConnected);
         if(isConnected)
             UpdateConnectedView(nsm);
         else
@@ -89,8 +90,8 @@ public class MenuLobbyViewController : MonoBehaviour
 
     public void UpdateConnectedView(NetworkStateManager nsm) 
     {
-        disconnectedViewContainer.SetActive(false);
         connectedViewContainer.SetActive(true);
+        disconnectedViewContainer.SetActive(false);
 
         BLog.Log($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {CoreManager.LobbyCommunicator.LobbyData.HasValue})", LogChannel.SceneDelegate, 0); 
 
@@ -133,8 +134,8 @@ public class MenuLobbyViewController : MonoBehaviour
 
     public void UpdateDisconnectedView(NetworkStateManager nsm) 
     {
-        disconnectedViewContainer.SetActive(true);
         connectedViewContainer.SetActive(false);
+        disconnectedViewContainer.SetActive(true);
 
         // Status text
         if(nsm == null)
@@ -142,7 +143,7 @@ public class MenuLobbyViewController : MonoBehaviour
         else
             switch(nsm.ClientConnectionState) {
                 case LocalConnectionState.Stopped:
-                    disconnectedStatusText.text = "Client not started (Shift+F1)";
+                    disconnectedStatusText.text = $"No connection. Retrying in {_controller.retryTimer}s";
                     break;
                 case LocalConnectionState.Starting:
                     disconnectedStatusText.text = "Starting connection";

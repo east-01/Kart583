@@ -14,7 +14,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
     private GameplayManager gameplayManager;
 
-    private Waypoints waypoints;
+    private Waypoints Waypoints => gameplayManager.KartLevelManager.Waypoints;
 
     public int waypointIndex;
     public float segmentCompletion;
@@ -42,22 +42,12 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 	}
 
     void Start() 
-    {
-        GameObject waypointsObj = GameObject.Find("Waypoints");
-        if(waypointsObj != null && waypointsObj.GetComponent<Waypoints>() == null) waypointsObj = null;
-        if(waypointsObj == null) {
-            Debug.LogError("Failed to find waypoints GameObject in this scene, disabling.");
-            gameObject.SetActive(false);
-            return;
-        }
-        waypoints = waypointsObj.GetComponent<Waypoints>();
-        
+    {        
         segmentCompletion = lapCompletion = RaceCompletion = 0;
 
         hasStartedRace = false;
         hasFinishedRace = false;
         lapNumber = 0;
-
     }
 
     public void GameplayManagerLoaded(GameplayManager gameplayManager)
@@ -70,10 +60,10 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     {
         BLog.Log($"PositionTracker recieved race phase change to {currentPhase}", LogChannel.KartManager, 2);
         if(currentPhase == RacePhase.RACING) {        
-            if(CoreManager.DevSettings.OverrideRaceProgressAtStart)
-                SetRaceProgress(CoreManager.DevSettings.raceProgress);
+            if(DevSettings.Settings.OverrideRaceProgressAtStart)
+                SetRaceProgress(DevSettings.Settings.RaceProgress);
             else {
-                waypointIndex = waypoints.Count-1;
+                waypointIndex = Waypoints.Count-1;
                 lapNumber = 0;
             }
         }
@@ -85,7 +75,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
         int enteredIndex = other.gameObject.transform.GetSiblingIndex();
 
         bool advancedNaturally = enteredIndex == waypointIndex + 1;
-        bool advancedLapCompleted = waypointIndex + 1 == waypoints.transform.childCount && enteredIndex == 0;
+        bool advancedLapCompleted = waypointIndex + 1 == Waypoints.transform.childCount && enteredIndex == 0;
 
         if(advancedNaturally || advancedLapCompleted) waypointIndex = enteredIndex;
 
@@ -121,19 +111,17 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
             hasFinishedRace = true;
             RaceFinished();
         }
-    
     }
 
     private void SetRaceProgress(float raceProgress) 
     {
-        print($"setting race progress to {raceProgress}");
         raceProgress = Mathf.Clamp01(raceProgress);
         
         hasStartedRace = raceProgress > 0;
         hasFinishedRace = raceProgress == 1;
 
-        lapNumber = (int)(raceProgress*(float)gameplayManager.RaceManager.settings.Laps);
-        waypointIndex = (int)(raceProgress*(float)waypoints.Count);
+        lapNumber = (int)(raceProgress*gameplayManager.RaceManager.settings.Laps);
+        waypointIndex = (int)(raceProgress*Waypoints.Count);
 
         Vector3 hereToNextVec = GetNextWaypoint().position-GetCurrentWaypoint().position;
         // Obviously, this raceProgress*hereToNextVec doesn't represent the true point in segment
@@ -163,13 +151,13 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     [TargetRpc]
     public void TargetRpcSetRacePosition(NetworkConnection client, int racePosition) { this.racePos = racePosition; }
 
-    public Waypoints GetWaypoints() { return waypoints; }
-    public Transform GetCurrentWaypoint() { return waypoints.GetWaypointFromIndex(waypointIndex); }
+    public Waypoints GetWaypoints() { return Waypoints; }
+    public Transform GetCurrentWaypoint() { return Waypoints.GetWaypointFromIndex(waypointIndex); }
     public Transform GetNextWaypoint() 
     {
         int idx = waypointIndex+1;
-        if(idx >= waypoints.Count) idx = 0;
-        return waypoints.GetWaypointFromIndex(idx);
+        if(idx >= Waypoints.Count) idx = 0;
+        return Waypoints.GetWaypointFromIndex(idx);
     }
 
     public BoxCollider GetNextWaypointCollider() { return GetNextWaypoint().GetComponent<BoxCollider>(); }
@@ -202,15 +190,15 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     public float ConvertToLapProgress((int waypointIndex, float segmentCompletion) position) 
     {
         // lc1&2 represent the lap completion percentage at both waypoint positions
-        float lc1 = position.waypointIndex/(float)waypoints.Count;
-        float lc2 = ((position.waypointIndex+1)%waypoints.Count)/(float)waypoints.Count;
+        float lc1 = position.waypointIndex/(float)Waypoints.Count;
+        float lc2 = ((position.waypointIndex+1)%Waypoints.Count)/(float)Waypoints.Count;
         if(lc2 == 0) lc2 = 1;
         return Mathf.Clamp01(Mathf.Lerp(lc1, lc2, position.segmentCompletion));        
     }
 
     public (int, float) ConvertFromLapProgress(float lapProgress) 
     {
-        float segmentComp = 1/(float)waypoints.Count;
+        float segmentComp = 1/(float)Waypoints.Count;
         return ((int)(lapProgress/segmentComp), (lapProgress%segmentComp)/segmentComp);
     }
 

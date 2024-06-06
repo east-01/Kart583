@@ -21,8 +21,8 @@ public class NetworkStateManager : MonoBehaviour
     private Tugboat tugboat;
     private FishyUnityTransport fishyUnityTransport;
 
-    private LocalConnectionState _serverConnectionState;
-    private LocalConnectionState _clientConnectionState;
+    [SerializeField] private LocalConnectionState _serverConnectionState;
+    [SerializeField] private LocalConnectionState _clientConnectionState;
 
     public LocalConnectionState ServerConnectionState { get { return _serverConnectionState; }}
     public LocalConnectionState ClientConnectionState { get { return _clientConnectionState; }}
@@ -45,7 +45,7 @@ public class NetworkStateManager : MonoBehaviour
         _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
 
         // Switch transport between FishyUnityTransport and Tugboat
-        if(GameVersion.IsDevelopment)
+        if(DevSettings.IsDevelopment())
             UseLocalTransport();
         else
             UseGlobalTransport();
@@ -93,7 +93,7 @@ public class NetworkStateManager : MonoBehaviour
             Debug.LogWarning("Ignoring StartClient call. Client is already started.");
             return;            
         }
-
+        BLog.Highlight("client starting");
         _networkManager.ClientManager.StartConnection();
     }
 
@@ -150,6 +150,7 @@ public class NetworkStateManager : MonoBehaviour
 #region Events
     private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)
     {
+        BLog.Highlight("client connection state: " + args.ConnectionState);
         _clientConnectionState = args.ConnectionState;
         if(_clientConnectionState != LocalConnectionState.Stopped) {
             clientStatusText.gameObject.SetActive(true);

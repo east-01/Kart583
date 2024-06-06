@@ -695,6 +695,7 @@ GameObject:
   - component: {fileID: 157163642}
   - component: {fileID: 157163641}
   - component: {fileID: 157163640}
+  - component: {fileID: 157163645}
   - component: {fileID: 157163639}
   - component: {fileID: 157163638}
   - component: {fileID: 157163644}
@@ -720,7 +721,7 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 157163639}
   _networkObjectCache: {fileID: 157163639}
-  _componentConfiguration: 0
+  _componentConfiguration: 2
   _synchronizeParent: 0
   _packing:
     Position: 1
@@ -877,6 +878,22 @@ MonoBehaviour:
   _componentIndexCache: 1
   _addedNetworkObject: {fileID: 157163639}
   _networkObjectCache: {fileID: 157163639}
+--- !u!54 &157163645
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 157163637}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &192400455
 PrefabInstance:
   m_ObjectHideFlags: 0

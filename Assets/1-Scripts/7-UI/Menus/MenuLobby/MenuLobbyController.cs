@@ -18,6 +18,8 @@ public class MenuLobbyController : MenuController
     private NetworkManager networkManager; // The networkmanager that this menu is connected to.
     private NetworkStateManager networkStateManager;
 
+    public int retryTimer;
+
     private void Start() 
     {
 
@@ -37,6 +39,12 @@ public class MenuLobbyController : MenuController
     }
 
     private void Update() {
+        if(networkStateManager != null && networkStateManager.ClientConnectionState == LocalConnectionState.Stopped && retryTimer == 0) {
+            retryTimer = 5;
+            StartCoroutine(ConnectionRetryTimer());
+            CoreManager.LobbyCommunicator.StartCommunication();
+        }
+
         if(PlayerObjectManager.Instance == null)
             Debug.LogWarning("PlayerObjectManager instance is null!");
 
@@ -49,17 +57,15 @@ public class MenuLobbyController : MenuController
             }
         }
 
-        if(GameVersion.IsDevelopment && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
+        if(DevSettings.IsDevelopment() && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
             NetSceneController.LobbyManager.RequestForceMapPick();
     }
 
-    private IEnumerator StartConnection() 
-    {
-        yield return new WaitForSeconds(0.3f);
-        if(CoreManager.IsMultiplayer) {
-            networkStateManager.StartClient();                
-        } else if(CoreManager.IsLocal) {
-            networkStateManager.StartHost();
+    private IEnumerator ConnectionRetryTimer() {
+        while(retryTimer > 0) {
+            _viewController.UpdateView();
+            yield return new WaitForSeconds(1f);
+            retryTimer--;
         }
     }
 

@@ -287,7 +287,7 @@ public class LobbyManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void ServerRpcRequestForceMapPick(NetworkConnection client) 
     {
-        if(!GameVersion.IsDevelopment) {
+        if(!DevSettings.IsDevelopment()) {
             Debug.LogWarning("Can't force map pick. We're not in a development build.");
             return;
         }

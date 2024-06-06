@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 529355123246646425}
   - component: {fileID: 529355123246646426}
   - component: {fileID: 6923415110443574716}
+  - component: {fileID: 2009229779177998546}
   - component: {fileID: 9047167128652772034}
   - component: {fileID: 937074941977195602}
   - component: {fileID: 1585626950171558256}
@@ -74,6 +75,25 @@ MonoBehaviour:
   _updateHostVisibility: 1
   _defaultConditions:
   - {fileID: 11400000, guid: 2033f54fd2794464bae08fa5a55c8996, type: 2}
+--- !u!114 &2009229779177998546
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 529355123246646427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fdaae44044276a49a52229c1597e33b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _updateOrder: 0
+  _timingType: 0
+  _allowTickDropping: 0
+  _maximumFrameTicks: 2
+  _tickRate: 30
+  _pingInterval: 1
+  _physicsMode: 0
 --- !u!114 &9047167128652772034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -86,6 +106,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afd70df0fd0570f4ca4d7121c89b5d87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _serverConnectionState: 0
+  _clientConnectionState: 0
   debugCanvas: {fileID: 8114945978567423017}
   clientStatusText: {fileID: 3100480469268699613}
   serverStatusText: {fileID: 703373483973341448}

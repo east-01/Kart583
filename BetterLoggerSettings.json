@@ -5,7 +5,7 @@
     "$id": "2",
     "SceneDelegate": {
       "$id": "3",
-      "enable": false,
+      "enable": true,
       "color": "FF009F"
     },
     "GameLobby": {

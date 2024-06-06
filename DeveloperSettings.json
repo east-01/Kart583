@@ -1,0 +1,22 @@
+{
+  "$id": "1",
+  "major": 0,
+  "minor": 5,
+  "revision": 1,
+  "releaseType": 1,
+  "hasProcessedLoadMode": true,
+  "Enable": true,
+  "OverridePlayerLimit": false,
+  "PlayerLimit": 1,
+  "LoadMode": 0,
+  "OverrideMapPick": false,
+  "Map": 0,
+  "HaveStandalonePlayerRunAsServer": false,
+  "ManualLobbyPlayerWaitSwitch": false,
+  "OverrideRaceProgressAtStart": false,
+  "RaceProgress": 0.923,
+  "OverrideLapCount": false,
+  "LapCount": 1,
+  "OverrideBots": false,
+  "Bots": false
+}

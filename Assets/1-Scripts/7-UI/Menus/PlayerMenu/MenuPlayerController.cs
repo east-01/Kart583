@@ -116,7 +116,6 @@ public class MenuPlayerController : MenuController
         if(!PlayerObjectManager.Instance.GetPlayerObjects().All(po => po.data.ready)) return;
 
         CoreManager.LobbyCommunicator.StartCommunication();
-        print("DEBUG: Starting communication with lobby and hoping that's how we get to a lobby scene");
         CoreManager.TransitionManager.LoadScene(SceneNames.MENU_LOBBY);
 
         PlayerObjectManager.Instance.GetPlayerInputManager().DisableJoining();

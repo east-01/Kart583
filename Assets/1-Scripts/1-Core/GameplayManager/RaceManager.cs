@@ -11,6 +11,8 @@ using UnityEngine.InputSystem;
 public class RaceManager : NetworkBehaviour
 {
 
+    public static float RACE_TIME = 30/*60*60*30*/;
+
     /* ----- Settings fields ---- */
     public RaceSettings settings;
 
@@ -23,9 +25,15 @@ public class RaceManager : NetworkBehaviour
     public delegate void RacePhaseChangeHandler(RacePhase previousPhase, RacePhase currentPhase);
     public event RacePhaseChangeHandler RacePhaseChanged;
 
-    [SerializeField] 
-    private float raceTime;
-    private bool waitingForPlayerInput = false;
+    [SyncObject]
+    private readonly SyncTimer raceTime = new();
+    public float RaceTime => raceTime.Remaining;
+    public float RaceTimeElapsed => raceTime.Elapsed;
+    [SerializeField]
+    private float raceTimeReadout;
+    private float simulatedTimer;
+
+    private int countdownSecond;
 
     /// <summary>
     /// Stores raceFinishTime first in RaceCompleted(), then gets position and point data in PopulatePlacements()
@@ -38,7 +46,7 @@ public class RaceManager : NetworkBehaviour
         gameplayManager = GetComponent<GameplayManager>();
         kartLevelManager = gameplayManager.KartLevelManager;
 
-        raceTime = -100;
+        raceTime.StopTimer(true);
 
         if(!base.IsServer)
             return;
@@ -63,31 +71,14 @@ public class RaceManager : NetworkBehaviour
 
     }
 
+    private void OnEnable() { raceTime.OnChange += RaceTime_OnChange; }
+    private void OnDisable() { raceTime.OnChange -= RaceTime_OnChange; }
+
     private void Update() 
     {
-        // if(waitingForPlayerInput && PlayerObjectManager.Instance != null) {
-        //     waitingForPlayerInput = false;
-        //     // Re-call race phase change since we probably missed something important by not having player input
-        //     RacePhaseChange(RacePhase.LATE_JOIN, phase, false);
-        // }
+        raceTime.Update(Time.deltaTime);
 
-        if(!waitingForPlayerInput && phase != RacePhase.LATE_JOIN && phase != RacePhase.WAITING_FOR_PLAYERS)
-            raceTime += Time.deltaTime;
-
-        // Client side actions
-        switch(phase) {
-            case RacePhase.COUNTDOWN:
-            int currSecond = Mathf.FloorToInt(raceTime);
-            int prevSecond = Mathf.FloorToInt(raceTime - Time.deltaTime);
-            if(currSecond != prevSecond) {
-                if(currSecond >= -3 && currSecond <= -1) {
-                    CoreManager.AudioManager.PlaySound(AudioFile.FX_COUNTDOWN, 1f);
-                } else if(currSecond == 0) {
-                    CoreManager.AudioManager.PlaySound(AudioFile.FX_COUNTDOWN_START, 1f);
-                }
-            }
-            break;
-        }
+        // BLog.Highlight("can move: " + CanMove);
 
         if(!base.IsServer)
             return;
@@ -105,8 +96,6 @@ public class RaceManager : NetworkBehaviour
                     phase = RacePhase.COUNTDOWN;
                 break;
             case RacePhase.COUNTDOWN:
-                if(raceTime >= 0)
-                    phase = RacePhase.RACING;
                 break;
             case RacePhase.RACING:
                 bool allHumanPlayersFinished = true;
@@ -132,10 +121,6 @@ public class RaceManager : NetworkBehaviour
 
     private void RacePhaseChange(RacePhase prev, RacePhase current, bool asServer) {
 
-        // If this is the case, waitingForPlayerObjectManager will be true and phase will be changed again
-        if(waitingForPlayerInput)
-            return;
-
         // Getting double-calls from the syncvar, this just makes sure we block a double call in a host instance.
         if(base.IsHost && !asServer)
             return;
@@ -159,10 +144,20 @@ public class RaceManager : NetworkBehaviour
                 }
                 break;
             case RacePhase.COUNTDOWN:
-                if(asServer)
+                if(asServer) {
+                    if(DevSettings.Settings.OverrideRaceProgressAtStart)
+                        phase = RacePhase.RACING;
+                    else
+                        raceTime.StartTimer(settings.startDelay, true);
+
+                    placements.Clear();
+
                     PrepareRace();
+                }
                 break;
             case RacePhase.RACING:
+                if(asServer)
+                    raceTime.StartTimer(RACE_TIME, true);
                 break;
             case RacePhase.FINISHED:
                 IGScreenMenuController sm = kartLevelManager.ScreenManager;
@@ -173,6 +168,21 @@ public class RaceManager : NetworkBehaviour
 
         if(current != RacePhase.LATE_JOIN) 
             pim.DisableJoining();
+    }
+
+    private void RaceTime_OnChange(SyncTimerOperation op, float prev, float next, bool asServer) 
+    {
+        if(!asServer)
+            return;
+        if(op == SyncTimerOperation.Finished) {
+            if(phase == RacePhase.COUNTDOWN)
+                phase = RacePhase.RACING;
+            else if(phase == RacePhase.RACING) {
+                FinalizePlacements();
+                phase = RacePhase.FINISHED;
+            }
+        } else if(op == SyncTimerOperation.Start)
+            simulatedTimer = next;
     }
 
     public override void OnStartClient() 
@@ -199,7 +209,10 @@ public class RaceManager : NetworkBehaviour
             phase = RacePhase.WAITING_FOR_PLAYERS;
     }
 
-    /** Prepare's the player objects and splitscreen manager for the race */
+    /// <summary>
+    /// Called when we enter the countdown phase.
+    /// Prepares the client for the race, enabling splitscreen and player components
+    /// </summary>
     [ObserversRpc]
     public void PrepareRace() 
     {
@@ -211,7 +224,7 @@ public class RaceManager : NetworkBehaviour
             po.input.SwitchCurrentActionMap("Gameplay");
             if(po.input.camera != null) {
                 po.input.camera.enabled = true;
-                if(po.PlayerIndex == 0) 
+                if(po.PlayerIndex == 0 && !CoreManager.IsServerOnly) 
                     po.input.camera.GetComponent<AudioListener>().enabled = true;
             }
         });
@@ -221,24 +234,11 @@ public class RaceManager : NetworkBehaviour
         // Disable main camera audio listener so we get player 0's camera audio
         CoreManager.Instance.GetComponent<AudioListener>().enabled = false;
         // kartLevelManager.RaceCamera.GetComponent<AudioListener>().enabled = false;
-
-        // Data management
-        if(base.IsServer)
-            placements.Clear();
-
-        // Load settings values
-        raceTime = CoreManager.DevSettings.OverrideRaceProgressAtStart ? 0 : -Math.Abs(settings.startDelay);
     }
 
-    /// <summary>
-    /// Server RPC calling RaceManager#CompletedRace
-    /// </summary>
+    /// <summary> Server RPC calling RaceManager#CompletedRace </summary>
     [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcCompletedRace(PlayerData data, float raceCompletion) 
-    {
-        CompletedRace(data, raceCompletion);
-    }
-
+    public void ServerRpcCompletedRace(PlayerData data, float raceCompletion) { CompletedRace(data, raceCompletion); }
     /// <summary>
     /// Notify the server that this player has completed the race
     /// </summary>
@@ -248,7 +248,7 @@ public class RaceManager : NetworkBehaviour
         if(placements.ContainsKey(data.uuid))
             return;
 
-        float raceFinishTime = raceTime;
+        float raceFinishTime = RaceTimeElapsed;
         if(raceCompletion < 1)
             raceFinishTime = -1;
 
@@ -281,8 +281,7 @@ public class RaceManager : NetworkBehaviour
     }
 
     public RacePhase Phase { get { return phase; } }
-    public float RaceTime { get { return raceTime; }}
-    public bool CanMove { get { return raceTime >= 0; } }
+    public bool CanMove { get { return (phase == RacePhase.RACING || phase == RacePhase.FINISHED) && RaceTime >= 0; } }
 
     public SyncDictionary<string, RacePlacementData> GetPlacements() { return placements; }
 
@@ -293,8 +292,8 @@ public struct RaceSettings
 {
     [SerializeField] private int laps;
     public readonly int Laps { get {
-        if(CoreManager.DevSettings.OverrideLapCount)
-            return CoreManager.DevSettings.lapCount;
+        if(DevSettings.Settings.OverrideLapCount)
+            return DevSettings.Settings.LapCount;
         else
             return laps;
     } }
@@ -302,8 +301,8 @@ public struct RaceSettings
     public float startBoostPercent;
     [SerializeField] private bool bots;
     public readonly bool Bots { get {
-        if(CoreManager.DevSettings.OverrideBots)
-            return CoreManager.DevSettings.bots;
+        if(DevSettings.Settings.OverrideBots)
+            return DevSettings.Settings.Bots;
         else
             return bots;
     } }

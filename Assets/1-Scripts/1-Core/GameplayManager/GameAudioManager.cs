@@ -47,7 +47,7 @@ public class GameAudioManager : MonoBehaviour
         if(currentPhase == RacePhase.RACING && musicFile != AudioFile.NONE) {
             if(ambianceSource != null)
                 ambianceSource.volume /= 2;
-            CoreManager.AudioManager.PlaySound(musicFile, 1f, true);
+            musicSource = CoreManager.AudioManager.PlaySound(musicFile, 1f, true);
         }
     }
 

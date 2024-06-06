@@ -303,7 +303,7 @@ MonoBehaviour:
   regularSize: 70
   regularColor: {r: 0.0037735105, g: 0.2421413, b: 1, a: 1}
   regularHeight: 430
-  finalCountdownSeconds: 3
+  finalCountdownSeconds: 2
   finalCountdownSize: 120
   finalCountdownColor: {r: 0, g: 0.7242532, b: 0.8773585, a: 1}
   finalCountdownHeight: 200
@@ -335,6 +335,7 @@ MonoBehaviour:
   displayedSecond: 0
   raceFloor: 0
   secondProgress: 0
+  goDisplayTime: 0
 --- !u!1 &2942346001280136486
 GameObject:
   m_ObjectHideFlags: 0

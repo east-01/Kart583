@@ -54,7 +54,7 @@ public class GameLobby
 
     /* Game related */
     private KartLevel? level;
-    private bool CanAutoSelectLevel { get { return CoreManager.IsMultiplayer && !CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch; } }
+    private bool CanAutoSelectLevel { get { return CoreManager.IsMultiplayer && !DevSettings.Settings.ManualLobbyPlayerWaitSwitch; } }
     public bool forceMapPick = false;
     private GameplayManager gameplayManager;
 
@@ -118,7 +118,7 @@ public class GameLobby
         switch(state) {
             case LobbyState.WAITING_FOR_PLAYERS:
                 bool timePassed = CanAutoSelectLevel && timeInState >= PLAYER_WAIT_TIME;
-                bool noAvailableSpace = CanAutoSelectLevel && !CoreManager.DevSettings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0;
+                bool noAvailableSpace = CanAutoSelectLevel && !DevSettings.Settings.ManualLobbyPlayerWaitSwitch && OpenSlots == 0;
                 if(Input.GetKeyDown(FORCE_MAP_PICK_KEY) || 
                    noAvailableSpace || 
                    timePassed || 
@@ -130,8 +130,8 @@ public class GameLobby
                 if(level == null && (autoSelectValid || forceMapPick)) {
                     forceMapPick = false;
                     KartLevel? selectedLevel;
-                    if(CoreManager.DevSettings.OverrideMapPick)
-                        selectedLevel = CoreManager.DevSettings.map;
+                    if(DevSettings.Settings.OverrideMapPick)
+                        selectedLevel = DevSettings.Settings.Map;
                     else 
                         selectedLevel = LevelAtlas.PickRandomLevel();
 

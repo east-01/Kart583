@@ -487,7 +487,7 @@ GameObject:
   - component: {fileID: 783342837203693960}
   - component: {fileID: 318379147591700670}
   - component: {fileID: 3383173762062893252}
-  - component: {fileID: 383425190380613429}
+  - component: {fileID: 6826620649756495999}
   m_Layer: 0
   m_Name: Kart
   m_TagString: Kart
@@ -798,6 +798,7 @@ MonoBehaviour:
   _componentIndexCache: 6
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
+  kartAudioVolume: 0.45
   simulatedRPM: 0
   kartAudioMixerGroup: {fileID: -8548119963356102531, guid: a7e6490e42d63f64c86fcd300eff3763, type: 2}
   idle: {fileID: 8300000, guid: d314286e2395d2d4a82f4269b5fc7774, type: 3}
@@ -829,7 +830,7 @@ MonoBehaviour:
   - {fileID: 1348276822467886517}
   - {fileID: 783342837203693960}
   - {fileID: 318379147591700670}
-  - {fileID: 383425190380613429}
+  - {fileID: 6826620649756495999}
   - {fileID: 9101915779885251598}
   - {fileID: 7733809655012709343}
   - {fileID: 761985607284333580}
@@ -850,7 +851,7 @@ MonoBehaviour:
   _scenePathHash: 0
   <SceneId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 32348030843385506
---- !u!114 &383425190380613429
+--- !u!114 &6826620649756495999
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -871,10 +872,10 @@ MonoBehaviour:
     Position: 1
     Rotation: 1
     Scale: 0
-  _interpolation: 2
+  _interpolation: 4
   _extrapolation: 2
-  _enableTeleport: 0
-  _teleportThreshold: 1
+  _enableTeleport: 1
+  _teleportThreshold: 5
   _scaleThreshold: 1
   _clientAuthoritative: 1
   _sendToOwner: 1

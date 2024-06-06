@@ -37,13 +37,15 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 		ownershipChanged = true;
 
 		// Sync enabled status with our ownership status
-		kartCtrl.enabled = base.IsOwner;
+		kartCtrl.enabled = base.IsOwner || base.IsServer;
 		kartStateManager.enabled = base.IsOwner;
 		// kartItemManager: Stays enabled so we can sync item wielding between players
 		// posTracker: Stays enabled, updates server on race position (TODO: Make this a server-side calculation it will be exploited)
 		// kartEffectManager: Stays enabled
 
 		// Bot/Human driver scripts are determined in UseHumanDriver and UseBotDriver
+
+		GetComponent<Rigidbody>().isKinematic = !(base.IsOwner || base.IsServer);
     }
 
 	/** Connects the PlayerInput to the HumanDriver script in the kart's brain. */
@@ -77,10 +79,10 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 		botItemManager.enabled = true;
 		humanDriver.enabled = false;
 
-		if(base.IsClient) { // Used when the player finishes race and switches to bot controller
+		if(!base.IsServer) { // Used when the player finishes race and switches to bot controller
 			ServerRpcSetIsHuman(false);
 			ServerRpcSetReady(true);
-		} else if(base.IsServer) {
+		} else {
 			isHuman = false;
 			data.ready = true;
 		}

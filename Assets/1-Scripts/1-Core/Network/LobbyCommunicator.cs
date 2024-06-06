@@ -63,8 +63,10 @@ public class LobbyCommunicator : MonoBehaviour
         lobbyData = null;
         initialized = false;
 
+        BLog.Highlight("Starting connection");
+
         // Transport configurement and server starting
-        if(GameVersion.IsDevelopment || CoreManager.IsLocal)
+        if(DevSettings.IsDevelopment() || CoreManager.IsLocal)
             CoreManager.NetworkStateManager.UseLocalTransport();
         else
             CoreManager.NetworkStateManager.UseGlobalTransport();

@@ -140,7 +140,7 @@ public class KartsIRManager : NetworkBehaviour
 
 		// Spawn for server
 		base.ServerManager.Spawn(newKart, owner, gameplayManager.GameLobby.MapScene.Value);
-		newKart.GetComponent<NetworkObject>().SetParent(kartLevelManager.KartContainer.GetComponent<EmptyNetworkBehaviour>());
+		// newKart.GetComponent<NetworkObject>().SetParent(kartLevelManager.KartContainer.GetComponent<EmptyNetworkBehaviour>());
 
         // PlayerData management
 		data.ready = false;

@@ -61,7 +61,7 @@ public class GameplayManager : NetworkBehaviour
 
         // Checking HasProcessedLoadMode is important for a Game scene that loads and then instantly unloads
         // i.e. Running TEST_TRACK as the editor scene, then DevSettings instantly loads a TEST_TRACK on top
-        if(CoreManager.DevSettings.LoadMode != LoadMode.NONE && !CoreManager.DevSettings.HasProcessedLoadMode)
+        if(DevSettings.Settings.LoadMode != LoadMode.NONE && !DevSettings.Settings.hasProcessedLoadMode)
             return;
 
         if(!CoreManager.LobbyCommunicator.InLobby) {

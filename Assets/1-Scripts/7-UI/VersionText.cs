@@ -8,6 +8,6 @@ public class VersionText : MonoBehaviour
 {
     void Start()
     {
-        GetComponent<TMP_Text>().text = "v" + GameVersion.Version;        
+        GetComponent<TMP_Text>().text = "v" + DevSettings.GetVersionString();        
     }
 }
