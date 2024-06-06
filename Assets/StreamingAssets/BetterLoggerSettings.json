@@ -1,0 +1,42 @@
+{
+  "$id": "1",
+  "verbosity": 5,
+  "channelDatas": {
+    "$id": "2",
+    "SceneDelegate": {
+      "$id": "3",
+      "enable": true,
+      "color": "FFFFFF"
+    },
+    "GameLobby": {
+      "$id": "4",
+      "enable": true,
+      "color": "FFFFFF"
+    },
+    "GameplayManager": {
+      "$id": "5",
+      "enable": true,
+      "color": "FFFFFF"
+    },
+    "LobbyManager": {
+      "$id": "6",
+      "enable": true,
+      "color": "FFFFFF"
+    },
+    "DevSettings": {
+      "$id": "7",
+      "enable": true,
+      "color": "FFFFFF"
+    },
+    "KartManager": {
+      "$id": "8",
+      "enable": true,
+      "color": "FFFFFF"
+    },
+    "MenuController": {
+      "$id": "9",
+      "enable": true,
+      "color": "FFFFFF"
+    }
+  }
+}

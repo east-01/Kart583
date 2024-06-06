@@ -169,14 +169,13 @@ public class CoreManager : MonoBehaviour
 
         DevSettings.SettingsPrintout.ForEach(s => BLog.Log(s, LogChannel.DevSettings));
 
-        if(DevSettings.Settings.HaveStandalonePlayerRunAsServer && !Application.isEditor) {
-            NetworkStateManager nsm = InstanceFinder.NetworkManager.GetComponent<NetworkStateManager>();
-            nsm.StartServer();
+        // If we're automatically running as server we don't want to do anything else, so return
+        // The actual start call is in NetworkStateManager#Start
+        if(DevSettings.Settings.HaveStandalonePlayerRunAsServer && !Application.isEditor)
             return;
-        }
 
-        if(DevSettings.Settings.LoadMode != LoadMode.NONE)
-            SimulateLoad();
+        // if(DevSettings.Settings.LoadMode != LoadMode.NONE)
+            // SimulateLoad();
     }
 
     /// <summary>

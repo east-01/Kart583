@@ -50,6 +50,11 @@ public class NetworkStateManager : MonoBehaviour
         else
             UseGlobalTransport();
 
+        if(DevSettings.Settings.HaveStandalonePlayerRunAsServer && !Application.isEditor) {
+            StartServer();
+            return;
+        }
+
     }
 
     void Update()
@@ -113,7 +118,7 @@ public class NetworkStateManager : MonoBehaviour
         // }
 
         if(ServerConnectionState != LocalConnectionState.Stopped) {
-            Debug.LogWarning("Ignoring StartServer call. Client is already started.");
+            Debug.LogWarning("Ignoring StartServer call. Server is already started.");
             return;            
         }
 
