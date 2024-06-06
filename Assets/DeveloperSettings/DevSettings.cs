@@ -156,6 +156,9 @@ public class DevSettings
     public static void SaveSettings(string serializedDeveloperSettings) { File.WriteAllText(FILE_PATH, serializedDeveloperSettings); }
     public static void LoadSettings() 
     {
+        if(!Directory.Exists(Application.streamingAssetsPath))
+            Directory.CreateDirectory(Application.streamingAssetsPath);
+
         if(File.Exists(FILE_PATH))
             settings = JsonConvert.DeserializeObject<DevSettings>(File.ReadAllText(FILE_PATH));
         else
