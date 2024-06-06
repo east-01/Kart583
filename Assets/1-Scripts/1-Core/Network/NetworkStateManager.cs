@@ -82,8 +82,19 @@ public class NetworkStateManager : MonoBehaviour
         return transportManager.Transport = tugboat;
     } }
 
-    public void UseLocalTransport() { transportManager.Transport = tugboat; }
-    public void UseGlobalTransport() { transportManager.Transport = fishyUnityTransport; }
+    public void UseLocalTransport() { 
+        transportManager.Transport = tugboat; 
+        tugboat.SetServerBindAddress("", IPAddressType.IPv4);
+        tugboat.SetClientAddress("localhost");
+        tugboat.SetPort(5000);
+    }
+    public void UseGlobalTransport() { 
+        // transportManager.Transport = fishyUnityTransport; 
+        transportManager.Transport = tugboat; 
+        tugboat.SetServerBindAddress("99.120.146.136", IPAddressType.IPv4);
+        tugboat.SetClientAddress("99.120.146.136");
+        tugboat.SetPort(7770);
+    }
 #endregion
 
 #region Server/Client Start and Stop
@@ -98,7 +109,7 @@ public class NetworkStateManager : MonoBehaviour
             Debug.LogWarning("Ignoring StartClient call. Client is already started.");
             return;            
         }
-        BLog.Highlight("client starting");
+        BLog.Log("Starting client connection", LogChannel.NetworkManager);
         _networkManager.ClientManager.StartConnection();
     }
 
@@ -107,6 +118,7 @@ public class NetworkStateManager : MonoBehaviour
         if(ClientConnectionState == LocalConnectionState.Stopped)
             return;
 
+        BLog.Log("Stopping client connection", LogChannel.NetworkManager);
         _networkManager.ClientManager.StopConnection();
     }
 
@@ -122,6 +134,7 @@ public class NetworkStateManager : MonoBehaviour
             return;            
         }
 
+        BLog.Log("Starting server connection", LogChannel.NetworkManager);
         _networkManager.ServerManager.StartConnection();
     }
 
@@ -130,6 +143,7 @@ public class NetworkStateManager : MonoBehaviour
         if(ServerConnectionState == LocalConnectionState.Stopped)
             return;
 
+        BLog.Log("Stopping server connection", LogChannel.NetworkManager);
         _networkManager.ServerManager.StopConnection(true);
     }
 

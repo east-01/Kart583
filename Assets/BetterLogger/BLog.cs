@@ -68,7 +68,7 @@ public class BLog : MonoBehaviour
 [Serializable]
 public enum LogChannel 
 {
-    Default, SceneDelegate, GameLobby, GameplayManager, LobbyManager, DevSettings, KartManager, MenuController
+    Default, SceneDelegate, GameLobby, GameplayManager, LobbyManager, DevSettings, KartManager, MenuController, NetworkManager
 }
 
 [Serializable]

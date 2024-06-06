@@ -16,7 +16,7 @@
     "GameplayManager": {
       "$id": "5",
       "enable": true,
-      "color": "45FF1E"
+      "color": "8DFF75"
     },
     "LobbyManager": {
       "$id": "6",
@@ -37,6 +37,11 @@
       "$id": "9",
       "enable": true,
       "color": "C2A0FF"
+    },
+    "NetworkManager": {
+      "$id": "10",
+      "enable": true,
+      "color": "00AD33"
     }
   }
 }
