@@ -8,7 +8,7 @@ using UnityEngine;
 public class BLog : MonoBehaviour
 {
 
-    public static readonly string FILE_PATH = "./BetterLoggerSettings.json";
+    public static readonly string FILE_PATH = Application.streamingAssetsPath + "/BetterLoggerSettings.json";
     public static int MAX_VERBOSITY = 5;
 
     private static BetterLoggerSettings settings;

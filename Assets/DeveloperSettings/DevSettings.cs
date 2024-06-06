@@ -11,7 +11,7 @@ using UnityEngine;
 public class DevSettings
 {
 
-    public static readonly string FILE_PATH = "./DeveloperSettings.json";
+    public static readonly string FILE_PATH = Application.streamingAssetsPath + "/DeveloperSettings.json";
 
 #region Game version fields
     public int major, minor, revision;
