@@ -91,7 +91,7 @@ public class NetworkStateManager : MonoBehaviour
     public void UseGlobalTransport() { 
         // transportManager.Transport = fishyUnityTransport; 
         transportManager.Transport = tugboat; 
-        tugboat.SetServerBindAddress("99.120.146.136", IPAddressType.IPv4);
+        tugboat.SetServerBindAddress("0.0.0.0", IPAddressType.IPv4);
         tugboat.SetClientAddress("99.120.146.136");
         tugboat.SetPort(7770);
     }
