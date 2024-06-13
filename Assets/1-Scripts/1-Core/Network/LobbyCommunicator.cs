@@ -48,7 +48,7 @@ public class LobbyCommunicator : MonoBehaviour
         if(timeCondition && PlayerObjectManager.Instance.PlayerObjectCount > 0 && !InLobby && CoreManager.LocalConnection.IsValid) {
             lastLobbyJoinRequestTime = Time.time;
 
-            NetSceneController.LobbyManager.JoinLobby(CoreManager.LocalConnection, PlayerObjectManager.Instance.PlayerOne.data);
+            NetSceneController.LobbyManager.JoinLobby(CoreManager.LocalConnection, PlayerObjectManager.Instance.Players);
         }
     }
 
@@ -62,8 +62,6 @@ public class LobbyCommunicator : MonoBehaviour
 
         lobbyData = null;
         initialized = false;
-
-        BLog.Highlight("Starting connection");
 
         // Transport configurement and server starting
         if(DevSettings.IsDevelopment() || CoreManager.IsLocal)

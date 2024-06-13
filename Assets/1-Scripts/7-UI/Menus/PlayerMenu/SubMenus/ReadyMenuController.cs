@@ -9,7 +9,7 @@ public class ReadyMenuController : PlayerPanelControllerSubMenu
     [SerializeField] private Button readyButton;
     [SerializeField] private TMP_Text readyText;
 
-    public new void Opened() 
+    protected override void Opened() 
     {
         readyButton.gameObject.SetActive(PlayerPanelController.PlayerBuildPhase == PlayerBuildPhase.WAITING_FOR_READY);
         readyText.gameObject.SetActive(PlayerPanelController.PlayerBuildPhase == PlayerBuildPhase.READY);
@@ -23,6 +23,7 @@ public class ReadyMenuController : PlayerPanelControllerSubMenu
 
         focusedPlayer.data.ready = true;
         PlayerPanelController.UpdatePanel();
+        BLog.Highlight("set player " + focusedPlayer.PlayerIndex + " as ready");
 
         parentMenu.GetComponentInParent<MenuPlayerController>().CheckReady();
     }

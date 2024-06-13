@@ -81,7 +81,6 @@ public class MenuLobbyViewController : MonoBehaviour
 
         NetworkStateManager nsm = _controller.ConnectedNetworkManager.GetComponent<NetworkStateManager>();
         bool isConnected = _lobbyManager != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started;
-        BLog.Highlight("updating view, is connected: " + isConnected);
         if(isConnected)
             UpdateConnectedView(nsm);
         else
@@ -115,7 +114,8 @@ public class MenuLobbyViewController : MonoBehaviour
             case LobbyState.MAP_SELECTION:
                 lobbyStatusText.text = $"Picking map";
 
-                _controller.OpenSubMenu(MenuLobbyController.SUB_MENU_MAP_SELECT);
+                if(CoreManager.IsLocal)
+                    _controller.OpenSubMenu(MenuLobbyController.SUB_MENU_MAP_SELECT);
                 break;
             case LobbyState.RACING:
                 lobbyStatusText.text = "At the track";

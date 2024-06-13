@@ -1,4 +1,5 @@
 using System;
+using FishNet.Connection;
 using UnityEngine;
 
 /// <summary>
@@ -10,6 +11,7 @@ public struct PlayerData {
     /// A unique identifier for this player
     /// </summary>
     public string uuid;
+    public NetworkConnection connection;
     /// <summary>
     /// The display name of the player
     /// </summary>

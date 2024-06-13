@@ -3,9 +3,9 @@
   "major": 0,
   "minor": 5,
   "revision": 1,
-  "releaseType": 0,
-  "hasProcessedLoadMode": false,
-  "Enable": false,
+  "releaseType": 1,
+  "hasProcessedLoadMode": true,
+  "Enable": true,
   "OverridePlayerLimit": false,
   "PlayerLimit": -1,
   "LoadMode": 0,
@@ -16,7 +16,7 @@
   "OverrideRaceProgressAtStart": false,
   "RaceProgress": 0.0,
   "OverrideLapCount": false,
-  "LapCount": -1,
-  "OverrideBots": false,
+  "LapCount": 1,
+  "OverrideBots": true,
   "Bots": false
 }

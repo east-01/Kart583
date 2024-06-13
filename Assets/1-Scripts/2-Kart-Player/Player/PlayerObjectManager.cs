@@ -127,6 +127,13 @@ public class PlayerObjectManager : MonoBehaviour
             return null;
         return playerObjects[0]; 
     } }
+    public List<PlayerData> Players { get {
+        List<PlayerData> pds = new();
+        foreach(PlayerObject po in playerObjects) {
+            pds.Add(po.data);
+        }
+        return pds;
+    } }
 
     public int PlayerObjectCount { get { return playerObjects.Count; } }
 

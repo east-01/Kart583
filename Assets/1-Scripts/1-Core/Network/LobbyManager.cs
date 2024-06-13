@@ -84,7 +84,7 @@ public class LobbyManager : NetworkBehaviour
     }
 
 #region Client Movement
-    public void JoinLobby(NetworkConnection newClient, PlayerData data) 
+    public void JoinLobby(NetworkConnection newClient, List<PlayerData> data) 
     {
         if(!base.IsServer) {
             ServerRpcJoinLobby(newClient, data);
@@ -112,11 +112,11 @@ public class LobbyManager : NetworkBehaviour
         if(lobbyToJoin == null)
             lobbyToJoin = CreateLobby();
 
-        lobbyToJoin.AddPlayer(newClient, data);
+        lobbyToJoin.AddPlayers(newClient, data);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcJoinLobby(NetworkConnection newClient, PlayerData data) { JoinLobby(newClient, data); }
+    public void ServerRpcJoinLobby(NetworkConnection newClient, List<PlayerData> data) { JoinLobby(newClient, data); }
 
     public void LeaveLobby(NetworkConnection client) 
     {
@@ -130,7 +130,7 @@ public class LobbyManager : NetworkBehaviour
         }
 
         GameLobby lobbyToLeave = GetLobby(client);
-        lobbyToLeave.RemovePlayer(client);
+        lobbyToLeave.RemoveClientsPlayers(client);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -193,7 +193,7 @@ public class LobbyManager : NetworkBehaviour
         LobbyUpdated?.Invoke(lobbyData, reason);
 
         // Invoke event for clients to said lobby
-        foreach(NetworkConnection client in lobby.Players.Keys) {
+        foreach(NetworkConnection client in lobby.Connections) {
             if(!Observers.Contains(client))
                 continue;
             TargetRpcLobbyUpdatedEvent(client, lobbyData, reason);

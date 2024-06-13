@@ -4,6 +4,7 @@ using System.Data;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 /** The PlayerPanelController is responsible for a single PlayerObject */
@@ -15,7 +16,6 @@ public class PlayerPanelController : MenuController
     public static readonly string READY_MENU_ID = "ReadyMenu";
 
     [SerializeField] private TMP_Text titleText;
-
     [SerializeField] private PlayerBuildPhase phase;
     private readonly Dictionary<PlayerBuildPhase, string> phaseSubMenu = new() {
         { PlayerBuildPhase.COLOR_SELECT, COLOR_SELECT_MENU_ID },
@@ -41,7 +41,7 @@ public class PlayerPanelController : MenuController
         The order is: Name -> Color -> Kart -> Ready */
     public void UpdateBuildPhase() 
     {
-        PlayerBuildPhase prePhase = phase;
+        // Get the sub menus current focus, if its null (this happens when the menu is first opened) set the current focus as this menus focus
         PlayerObject currentFocus = GetSubMenu(phaseSubMenu[phase]).FocusedPlayer;
         if(currentFocus == null)
             currentFocus = FocusedPlayer;
@@ -89,9 +89,10 @@ public class PlayerPanelController : MenuController
     public new void Open(PlayerObject focusedPlayer = null) 
     { 
         base.Open(focusedPlayer);
-        // Set player to unready in case it's set as ready
-        this.focusedPlayer.data.ready = false;
 
+        // Reset ready state so we don't automatically ready up the player when they open
+        this.focusedPlayer.data.ready = false;
+        
         UpdatePanel();
     }
 
@@ -132,7 +133,8 @@ public class PlayerPanelControllerSubMenu : MenuController
     {
         PlayerPanelController.RegressBuildPhase();
         uiElementSounds.PlayBackSound();
-        Close();
+        if(PlayerPanelController.PlayerBuildPhase != PlayerBuildPhase.WAITING_FOR_READY)
+            Close();
     }
 }
 

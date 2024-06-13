@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
@@ -37,7 +38,8 @@ public class GameLobby
     }
     private float timeInState;
 
-    private Dictionary<NetworkConnection, PlayerData> players = new(); // Players in lobby
+    // private Dictionary<NetworkConnection, PlayerData> players = new(); // Players in lobby
+    private List<PlayerData> players = new();
 
     /* Scene related */
     private SceneLookupData mapSceneData;
@@ -122,8 +124,10 @@ public class GameLobby
                 if(Input.GetKeyDown(FORCE_MAP_PICK_KEY) || 
                    noAvailableSpace || 
                    timePassed || 
-                   CoreManager.IsLocal)
+                   CoreManager.IsLocal) {
+                    BLog.Log($"Advanced to map selection via ForceMapPick: {Input.GetKeyDown(FORCE_MAP_PICK_KEY)}, noAvailableSpace: {noAvailableSpace}, timePassed: {timePassed}, local: {CoreManager.IsLocal}", LogChannel.GameLobby);
                     state = LobbyState.MAP_SELECTION;
+                }
                 break;
             case LobbyState.MAP_SELECTION:
                 bool autoSelectValid = CanAutoSelectLevel && timeInState >= MAP_PICK_TIME;
@@ -176,25 +180,36 @@ public class GameLobby
 #region Player Management
     public void AddPlayer(NetworkConnection conn, PlayerData data) 
     {
-        NetSceneController.LobbyManager.SetClientsLobby(conn, ID);
-        players.Add(conn, data);
+        if(NetSceneController.LobbyManager.GetLobbyID(conn) == null)
+            NetSceneController.LobbyManager.SetClientsLobby(conn, ID);
+        // players.Add(conn, data);
+        data.connection = conn;
+        players.Add(data);
         manager.UpdateLobby(id, LobbyUpdateReason.PLAYER_JOIN);
         BLog.Log($"{MessagePrefix}Added player {data.Summary} to lobby \"{id}\"", LogChannel.GameLobby, 0);
     }
 
-    public void RemovePlayer(NetworkConnection conn) 
+    public void AddPlayers(NetworkConnection conn, List<PlayerData> players) {
+        players.ForEach(pd => AddPlayer(conn, pd));
+    }
+
+    public void RemovePlayer(PlayerData data) 
     {
-        if(!players.ContainsKey(conn)) {
-            Debug.LogError($"Can't remove connection \"{conn}\" from lobby \"{ID}\", they're not in it.");
+        if(!players.Contains(data)) {
+            Debug.LogError($"Can't remove playerdata \"{data}\" from lobby \"{ID}\", they're not in it.");
             return;
         }
-        BLog.Log($"{MessagePrefix}Player {players[conn].Summary} to lobby \"{id}\"", LogChannel.GameLobby, 0);
-        NetSceneController.LobbyManager.RemoveClientsLobby(conn);
-        players.Remove(conn);
+        BLog.Log($"{MessagePrefix}Player {data.Summary} to lobby \"{id}\"", LogChannel.GameLobby, 0);
+        NetSceneController.LobbyManager.RemoveClientsLobby(data.connection);
+        players.Remove(data);
         manager.UpdateLobby(id, LobbyUpdateReason.PLAYER_LEAVE);
         if(PlayerCount == 0) {
             NetSceneController.LobbyManager.DeleteLobby(ID);
         }
+    }
+
+    public void RemoveClientsPlayers(NetworkConnection client) {
+        GetClientsPlayers(client).ForEach(pd => RemovePlayer(pd));
     }
 
     /// <summary>
@@ -202,8 +217,8 @@ public class GameLobby
     /// </summary>
     public void MovePlayersToLobby() 
     {
-        foreach(NetworkConnection client in players.Keys) {
-            NetSceneController.Instance.TargetRpcLoadScene(client, new(SceneNames.MENU_LOBBY), false);
+        foreach(PlayerData othersData in players) {
+            NetSceneController.Instance.TargetRpcLoadScene(othersData.connection, new(SceneNames.MENU_LOBBY), false);
         }
     }
 
@@ -219,8 +234,8 @@ public class GameLobby
         }
 
         BLog.Log($"{MessagePrefix}Sending {players.Count} player(s) to map, is server: {InstanceFinder.IsServer} is client: {InstanceFinder.IsClient}", LogChannel.GameLobby, 0);
-        foreach(NetworkConnection conn in players.Keys) {
-            NetSceneController.Instance.AddClientToScene(conn, mapSceneData);
+        foreach(NetworkConnection client in Connections) {
+            NetSceneController.Instance.AddClientToScene(client, mapSceneData);
         }
     }
 #endregion
@@ -254,15 +269,13 @@ public class GameLobby
         }
 
         SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
-        List<NetworkConnection> playerKeys = new List<NetworkConnection>(players.Keys);
-        foreach(NetworkConnection client in playerKeys) {
-            PlayerData data = players[client];
+        for(int i = 0; i < players.Count; i++) {
+            PlayerData data = players[i];
             if(!placements.ContainsKey(data.uuid)) {
                 Debug.LogWarning($"Tried to award points to \"{data.Summary}\" but they aren't in the placements dictionary.");
                 continue;
             }
             data.points += placements[data.uuid].pointsAwarded;
-            players[client] = data;
         }
     }
 #endregion
@@ -343,16 +356,20 @@ public class GameLobby
     }
 #endregion
 
-    public PlayerData? GetPlayerData(NetworkConnection client) 
+    public List<PlayerData> GetClientsPlayers(NetworkConnection client) 
     {
-        if(!players.ContainsKey(client))
-            return null;
-        return players[client];
+        List<PlayerData> clientsPlayers = new List<PlayerData>();
+        foreach(PlayerData pd in players) {
+            if(pd.connection == client) {
+                clientsPlayers.Add(pd);
+            }
+        }
+        return clientsPlayers;
     }
 
     public LobbyData Data { get {
         List<PlayerData> players = new();
-        foreach(PlayerData data in this.players.Values) { players.Add(data); }
+        foreach(PlayerData data in this.players) { players.Add(data); }
 
         return new() {
             players = players,
@@ -374,7 +391,15 @@ public class GameLobby
     public GameplayManager GameplayManager { get { return gameplayManager; } }
     public KartLevel? Level { get { return level; } }
 
-    public Dictionary<NetworkConnection, PlayerData> Players { get { return players; } }
+    public List<PlayerData> Players { get { return players; } }
+    public List<NetworkConnection> Connections { get {
+        List<NetworkConnection> connections = new();
+        foreach(PlayerData pd in players) {
+            if(!connections.Contains(pd.connection))
+                connections.Add(pd.connection);
+        }
+        return connections;
+    } }
     public int PlayerCount { get { return players.Count; } }
 
     public int OpenSlots { get { return CoreManager.Instance.PlayerLimit - players.Count; } }

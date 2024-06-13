@@ -4,6 +4,7 @@ using FishNet.Transporting;
 using FishNet.Transporting.Tugboat;
 using FishNet.Transporting.UTP;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -51,7 +52,7 @@ public class NetworkStateManager : MonoBehaviour
             UseGlobalTransport();
 
         if(DevSettings.Settings.HaveStandalonePlayerRunAsServer && !Application.isEditor) {
-            StartServer();
+            StartServer(true);
             return;
         }
 
@@ -64,7 +65,7 @@ public class NetworkStateManager : MonoBehaviour
             if (_serverConnectionState != LocalConnectionState.Stopped)
                 StopServer();
             else
-                StartServer();
+                StartServer(true);
         }
     }
 
@@ -122,7 +123,7 @@ public class NetworkStateManager : MonoBehaviour
         _networkManager.ClientManager.StopConnection();
     }
 
-    public void StartServer() 
+    public void StartServer(bool isMultiplayer) 
     {
         // if(ClientConnectionState != LocalConnectionState.Stopped) {
         //     Debug.LogError("Can't start server when client is active.");
@@ -133,6 +134,8 @@ public class NetworkStateManager : MonoBehaviour
             Debug.LogWarning("Ignoring StartServer call. Server is already started.");
             return;            
         }
+
+        CoreManager.IsMultiplayer = isMultiplayer;
 
         BLog.Log("Starting server connection", LogChannel.NetworkManager);
         _networkManager.ServerManager.StartConnection();
@@ -150,7 +153,7 @@ public class NetworkStateManager : MonoBehaviour
     public void StartHost() 
     {
         if(ServerConnectionState == LocalConnectionState.Stopped)
-            StartServer();
+            StartServer(false);
 
         if(ClientConnectionState == LocalConnectionState.Stopped)
             StartClient();

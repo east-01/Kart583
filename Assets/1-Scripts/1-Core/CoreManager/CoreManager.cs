@@ -174,8 +174,8 @@ public class CoreManager : MonoBehaviour
         if(DevSettings.Settings.HaveStandalonePlayerRunAsServer && !Application.isEditor)
             return;
 
-        // if(DevSettings.Settings.LoadMode != LoadMode.NONE)
-            // SimulateLoad();
+        if(DevSettings.Settings.LoadMode != LoadMode.NONE)
+            SimulateLoad();
     }
 
     /// <summary>

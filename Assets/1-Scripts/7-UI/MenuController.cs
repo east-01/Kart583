@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 public abstract class MenuController : MonoBehaviour
@@ -12,6 +14,39 @@ public abstract class MenuController : MonoBehaviour
 
     [SerializeField]
     protected OpenCloseType openCloseType;
+
+    [SerializeField]
+    private InputSystemUIInputModule inputSystemUIInputModule;
+    /// <summary>
+    /// The UIInputModule that this MenuController will use. If null, we will try to use the parent UIInputModule, this
+    ///   search happens recursively until we reach an existing one on a parent.
+    /// </summary>
+    public InputSystemUIInputModule InputSystemUIInputModule { get { 
+        if(inputSystemUIInputModule != null)
+            return inputSystemUIInputModule;
+        else if(parentMenu != null) {
+            return parentMenu.InputSystemUIInputModule;
+        } else {
+            return null;
+        }
+    } }
+
+    [SerializeField]
+    private EventSystem eventSystem;
+    /// <summary>
+    /// The EventSystem this MenuController will use. If null, we will try to use the parent EventSystem, this search happens
+    ///   recursively until we reach an existing one on a parent.
+    /// </summary>
+    public EventSystem EventSystem { get { 
+        if(eventSystem != null)
+            return eventSystem;
+        else if(parentMenu != null) {
+            return parentMenu.EventSystem;
+        } else {
+            return null;
+        }
+    } }
+
     [SerializeField]
     protected Selectable firstSelect;
     /// <summary>
@@ -71,6 +106,9 @@ public abstract class MenuController : MonoBehaviour
 
     protected void LateUpdate() 
     {
+        if(focusedPlayer != null && EventSystem.currentSelectedGameObject == null && firstSelect != null && focusedPlayer.input.currentControlScheme != "KeyboardMouse")
+            EventSystem.SetSelectedGameObject(firstSelect.gameObject);
+
         if(!menuControllerLoadedProperly)
             Debug.LogError($"MenuController script \"{this}\" on \"{gameObject.name}\" wasn't loaded properly. Make sure you call base.Awake() if you're overriding it.");
     }
@@ -86,11 +124,18 @@ public abstract class MenuController : MonoBehaviour
         focusedPlayerInitialActionMap = focusedPlayer.input.currentActionMap.name;
 
         focusedPlayer.input.SwitchCurrentActionMap("UI");
+        focusedPlayer.input.uiInputModule = InputSystemUIInputModule;
+        if(focusedPlayer.input.uiInputModule == null)
+            Debug.LogWarning($"MenuController \"{this}\" failed to assign UIInputModule to new focus. This may be a misconfiguration, ensure that a UIInputModule is assigned on this script or in a parent MenuController.");
 
         tooltips.ForEach(tt => tt.SetObservedInput(focusedPlayer.input));
 
-        if(ShouldSelect && firstSelect != null)
-            firstSelect.Select();
+        if(ShouldSelect && firstSelect != null) {
+            if(EventSystem != null)
+                EventSystem.SetSelectedGameObject(firstSelect.gameObject);
+            else
+                Debug.LogWarning($"MenuController \"{this}\" failed to find an EventSystem. This may be a misconfiguration, ensure that an EventSystem is assigned on this script or in a parent MenuController.");
+        }
     }
 
     public void RemoveFocus() 
@@ -110,7 +155,7 @@ public abstract class MenuController : MonoBehaviour
 #region Events
     private void PlayerObjectManager_PlayerJoined(PlayerObject obj) 
     {
-        if(obj.PlayerIndex == 0 && autoFocusOnPlayerOne && focusedPlayer == null)
+        if(IsOpen && obj.PlayerIndex == 0 && autoFocusOnPlayerOne && focusedPlayer == null)
             SetFocus(obj);
     }
 
@@ -121,7 +166,7 @@ public abstract class MenuController : MonoBehaviour
     {
         if(!allowInputEvents)
             return;
-        BLog.Log($"MenuController \"{this}\" recieved input event \"{context.action.name}\"", LogChannel.MenuController, 5);
+        BLog.Log($"MenuController \"{this}\" (focus: \"{(focusedPlayer != null ? focusedPlayer.PlayerIndex : "-")}\") recieved input event \"{context.action.name}\"", LogChannel.MenuController, 5);
         if(context.performed && context.action.name == controlsReference.UI.Cancel.name)
             SendMenuBack();
 
@@ -160,7 +205,7 @@ public abstract class MenuController : MonoBehaviour
         if(hidesParent && parentMenu != null)
             parentMenu.Close();
 
-        BLog.Log($"MenuController \"{this}\" opened with {(focus != null ? $"focus \"{focus}\"" : "no focus")}", LogChannel.MenuController, 2);
+        BLog.Log($"MenuController \"{this}\" opened with {(focus != null ? $"focus \"{focus.PlayerIndex}\"" : "no focus")}", LogChannel.MenuController, 0);
         Opened();
     }
 
@@ -199,6 +244,8 @@ public abstract class MenuController : MonoBehaviour
         if(parentMenu == null)
             return;
 
+        BLog.Highlight($"{this} is sending menu back");
+
         Close();
         parentMenu.Open();
     }
@@ -219,7 +266,7 @@ public abstract class MenuController : MonoBehaviour
             });
         }
 
-        BLog.Log($"Menu \"{this}\" opening submenu \"{id}\"", LogChannel.MenuController);
+        BLog.Log($"Menu \"{this}\" opening submenu \"{id}\"", LogChannel.MenuController, 1);
         subMenu.Open(focus);
     }
 #endregion

@@ -94,6 +94,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   openCloseType: 0
+  inputSystemUIInputModule: {fileID: 0}
+  eventSystem: {fileID: 0}
   firstSelect: {fileID: 688798066627004565}
   autoFocusOnPlayerOne: 1
   hidesParent: 0
@@ -167,6 +169,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   openCloseType: 0
+  inputSystemUIInputModule: {fileID: 2132687892516157250}
+  eventSystem: {fileID: 3177689134000746077}
   firstSelect: {fileID: 0}
   autoFocusOnPlayerOne: 1
   hidesParent: 0
@@ -513,6 +517,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   openCloseType: 0
+  inputSystemUIInputModule: {fileID: 2132687892516157250}
+  eventSystem: {fileID: 3177689134000746077}
   firstSelect: {fileID: 0}
   autoFocusOnPlayerOne: 0
   hidesParent: 1

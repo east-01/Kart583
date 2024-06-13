@@ -11,7 +11,7 @@ using UnityEngine.InputSystem;
 public class RaceManager : NetworkBehaviour
 {
 
-    public static float RACE_TIME = 30/*60*60*30*/;
+    public static float RACE_TIME = 60*60*30;
 
     /* ----- Settings fields ---- */
     public RaceSettings settings;
@@ -52,6 +52,7 @@ public class RaceManager : NetworkBehaviour
             return;
 
         // Initialize phases
+        BLog.Highlight("player count: " + gameplayManager.GameLobby.PlayerCount);
         /*if(PlayerObjectManager.Instance == null) {
             waitingForPlayerInput = true; // TODO: This is really dumb: we should only be waiting for player input on clients
             Debug.LogWarning("This is really dumb: we should only be waiting for player input on clients");
@@ -63,6 +64,8 @@ public class RaceManager : NetworkBehaviour
             phase = RacePhase.COUNTDOWN;
             PrepareRace();
         }
+
+        BLog.Highlight("race phase initialized as " + gameplayManager.GameLobby.PlayerCount);
 
         // Spawn bots if we're not waiting on a late join
         // If we are waiting for a late join, the bots will be spawn after said player joins
@@ -92,6 +95,7 @@ public class RaceManager : NetworkBehaviour
                 // TODO: Add a timer that kicks the player if they don't ready up by said time
                 // bool introAnimComplete = !kartLevelManager.HasRaceCamera || !kartLevelManager.RaceCamera.Animating;
                 // TODO: Add intro anim back in
+                BLog.Highlight($"apr: {gameplayManager.PlayerManager.AllPlayersReady}");
                 if(gameplayManager.PlayerManager.AllPlayersReady)
                     phase = RacePhase.COUNTDOWN;
                 break;

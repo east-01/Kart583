@@ -8,11 +8,11 @@ public class NameSelectController : PlayerPanelControllerSubMenu
 {
     [SerializeField] private TMP_InputField nameInputField;
 
-    protected new void Opened() 
+    protected override void Opened() 
     {
         // TODO: Add on screen keyboard for name select
         if(focusedPlayer.input.currentControlScheme == "Gamepad") {
-            focusedPlayer.data.name = KartsIRManager.SelectRandomBotName();
+            focusedPlayer.data.name = "Player " + focusedPlayer.PlayerIndex;
             PlayerPanelController.UpdatePanel();
         }
     }

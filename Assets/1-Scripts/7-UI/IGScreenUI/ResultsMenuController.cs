@@ -44,10 +44,8 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
 
 	protected override void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) 
 	{
-		if(gameplayManager == null) {
-			Debug.LogError("Tried to perfom InputAction on ScreenManager when gameplayManager is null!");
+		if(gameplayManager == null)
 			return;
-		}
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
 			if(gameplayManager.HasLobby) {
 				NetSceneController.LobbyManager.RequestLobbyMove();

@@ -54,11 +54,7 @@ public class MenuPlayerController : MenuController
         // Spawn player panel
         GameObject playerPanel = Instantiate(playerPanelPrefab, playerPanelContainer.transform);
         PlayerPanelController playerPanelController = playerPanel.GetComponent<PlayerPanelController>();
-        // playerPanelController.SetFocus(obj);
         playerPanelController.Open(obj);
-
-        // Connect ui input
-        obj.input.uiInputModule = playerPanel.GetComponentInChildren<InputSystemUIInputModule>();
 
         UpdatePanels();
     }

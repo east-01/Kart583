@@ -37,11 +37,11 @@ public class KartSelectController : PlayerPanelControllerSubMenu
 
     protected override void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) 
     {
-        if(context.performed && context.action.name == controlsReference.UI.Navigate.name) {
+        if(context.performed && context.action.name == controlsReference.UI.Navigate.name && Math.Abs(context.ReadValue<Vector2>().x) > 0.05) {
             currentName = KartNameArithmetic(currentName, (int)Mathf.Sign(context.ReadValue<Vector2>().x));
             uiElementSounds.PlaySelectSound();
             UpdateVisuals();
-        } else if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
+        } else if(context.phase == InputActionPhase.Canceled && context.action.name == controlsReference.UI.Submit.name) {
             uiElementSounds.PlayButtonSound();
             SetKartName(currentName);
         }

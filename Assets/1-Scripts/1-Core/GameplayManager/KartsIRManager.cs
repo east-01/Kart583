@@ -104,7 +104,7 @@ public class KartsIRManager : NetworkBehaviour
 
 #region Kart Spawning
 	[ServerRpc(RequireOwnership = false)]
-    public void ServerRpcSpawnKart(NetworkConnection owner, PlayerData data) { print("serverrpc called"); SpawnKart(owner, data); }
+    public void ServerRpcSpawnKart(NetworkConnection owner, PlayerData data) { SpawnKart(owner, data); }
 
     /// <summary>
 	/// Spawns a kart and add it to the game. Returns the KartManager from the new kart.
@@ -148,6 +148,7 @@ public class KartsIRManager : NetworkBehaviour
 		newKartManager.SetPlayerData(data);
 
 		// Run event
+		BLog.Highlight("Calling observers rpc spawn event for " + data.Summary);
 		ObserversRpcCallSpawnEvent(owner, data);
 
 		return newKartManager;
@@ -176,11 +177,15 @@ public class KartsIRManager : NetworkBehaviour
 		}
 		BLog.Log($"Spawning player \"{player.data.Summary}\"", LogChannel.GameplayManager, 0);
 		ServerRpcSpawnKart(base.LocalConnection, player.data);
+		BLog.Highlight("list size before: " + playerObjectsWaitingForKarts.Count);
 		playerObjectsWaitingForKarts.Add(uuid, player);		
+		BLog.Highlight("list size after: " + playerObjectsWaitingForKarts.Count);
 	}
 
 	public void KartManager_KartSpawned(NetworkConnection conn, PlayerData data) 
 	{		
+		BLog.Highlight($"{data.uuid} is searching, Player objects waiting for karts ({playerObjectsWaitingForKarts.Count}): ");
+		playerObjectsWaitingForKarts.ToList().ForEach(player => BLog.Highlight("  uuid " + player));
 		bool shouldAttemptToConnectPlayerObject = conn == base.LocalConnection && playerObjectsWaitingForKarts.ContainsKey(data.uuid);
 		BLog.Log($"Recieved kart spawn event for \"{data.Summary}\", will attempt to connect: {shouldAttemptToConnectPlayerObject}", LogChannel.GameplayManager, 1);
 		StartCoroutine(KartSearchCoroutine(data, shouldAttemptToConnectPlayerObject));

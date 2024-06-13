@@ -976,6 +976,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   openCloseType: 1
+  inputSystemUIInputModule: {fileID: 206937608882792046}
+  eventSystem: {fileID: 206937608882792044}
   firstSelect: {fileID: 1306794275}
   autoFocusOnPlayerOne: 1
   hidesParent: 1

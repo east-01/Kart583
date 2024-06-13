@@ -35,14 +35,21 @@ public class MenuLobbyController : MenuController
         networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
 
-        OpenSubMenu(SUB_MENU_MAP_SELECT);
+        retryTimer = -1;
+
+        if(CoreManager.IsLocal)
+            OpenSubMenu(SUB_MENU_MAP_SELECT);
     }
 
     private void Update() {
         if(networkStateManager != null && networkStateManager.ClientConnectionState == LocalConnectionState.Stopped && retryTimer == 0) {
-            retryTimer = 5;
-            StartCoroutine(ConnectionRetryTimer());
-            CoreManager.LobbyCommunicator.StartCommunication();
+            if(networkStateManager.ClientConnectionState == LocalConnectionState.Stopped && retryTimer == 0) {
+                retryTimer = 5;
+                StartCoroutine(ConnectionRetryTimer());
+                CoreManager.LobbyCommunicator.StartCommunication();
+            } else if(networkStateManager.ClientConnectionState != LocalConnectionState.Stopped && retryTimer >= 0) {
+                retryTimer = -1;
+            }
         }
 
         if(PlayerObjectManager.Instance == null)

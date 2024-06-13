@@ -65,10 +65,12 @@ public class NetSceneController : NetworkBehaviour
         SceneLoadData sld = new SceneLoadData(lookupData);
         sld.Options.AllowStacking = true;
         sld.Options.AutomaticallyUnload = false;
-        if(CoreManager.IsMultiplayer)
-            sld.Options.LocalPhysics = LocalPhysicsMode.Physics3D;
-        sld.ReplaceScenes = ReplaceOption.All;
-        sld.PreferredActiveScene = lookupData;
+        // if(CoreManager.IsMultiplayer)
+        //     sld.Options.LocalPhysics = LocalPhysicsMode.Physics3D; // https://learn.unity.com/tutorial/multi-scene-physics?uv=2019.4#
+        if(CoreManager.IsLocal) {
+            sld.ReplaceScenes = ReplaceOption.All;
+            sld.PreferredActiveScene = lookupData;
+        }
 
         base.SceneManager.LoadConnectionScenes(sld);
         BLog.Log($"Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}", LogChannel.SceneDelegate, 0);
