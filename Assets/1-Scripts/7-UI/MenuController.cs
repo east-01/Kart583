@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -116,8 +117,17 @@ public abstract class MenuController : MonoBehaviour
 #region Focus
     public void SetFocus(PlayerObject playerObj) 
     {
-        if(focusedPlayer != null)
-            RemoveFocus();
+        if(focusedPlayer != null) {
+            if(focusedPlayer.data.uuid == playerObj.data.uuid) {
+                BLog.Log($"{this}: Maintaining focus on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
+                return;
+            } else {
+                BLog.Log($"{this}:Removing focus from {focusedPlayer.PlayerIndex} and placing it on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
+                RemoveFocus();
+            }
+        } else {
+            BLog.Log($"{this}:No focus existing, placing focus on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
+        }
 
         focusedPlayer = playerObj;
         focusedPlayer.input.onActionTriggered += PlayerInput_ActionTriggered;
@@ -167,8 +177,9 @@ public abstract class MenuController : MonoBehaviour
         if(!allowInputEvents)
             return;
         BLog.Log($"MenuController \"{this}\" (focus: \"{(focusedPlayer != null ? focusedPlayer.PlayerIndex : "-")}\") recieved input event \"{context.action.name}\"", LogChannel.MenuController, 5);
-        if(context.performed && context.action.name == controlsReference.UI.Cancel.name)
+        if(context.performed && context.action.name == controlsReference.UI.Cancel.name) {
             SendMenuBack();
+        }
 
         Child_PlayerInput_ActionTriggered(context);
     }
@@ -205,7 +216,7 @@ public abstract class MenuController : MonoBehaviour
         if(hidesParent && parentMenu != null)
             parentMenu.Close();
 
-        BLog.Log($"MenuController \"{this}\" opened with {(focus != null ? $"focus \"{focus.PlayerIndex}\"" : "no focus")}", LogChannel.MenuController, 0);
+        BLog.Log($"MenuController \"{this}\" opened with {(focusedPlayer != null ? $"focus \"{focusedPlayer.PlayerIndex}\"" : "no focus")}", LogChannel.MenuController, 0);
         Opened();
     }
 
@@ -219,6 +230,7 @@ public abstract class MenuController : MonoBehaviour
         Closed();
         BLog.Log($"MenuController \"{this}\" closed", LogChannel.MenuController, 2);
         RemoveFocus();
+    
         if(openCloseType == OpenCloseType.GAME_OBJECT_ENABLE_DISABLE)
             gameObject.SetActive(false);
         else if(openCloseType == OpenCloseType.CANVAS_GROUP) {
@@ -241,13 +253,10 @@ public abstract class MenuController : MonoBehaviour
     /// </summary>
     protected virtual void SendMenuBack() 
     {
-        if(parentMenu == null)
-            return;
-
-        BLog.Highlight($"{this} is sending menu back");
-
         Close();
-        parentMenu.Open();
+
+        if(parentMenu != null)
+            parentMenu.Open();
     }
 
     public void OpenSubMenu(string id, PlayerObject focus = null) 
@@ -339,6 +348,9 @@ public abstract class MenuController : MonoBehaviour
             return canvasGroup.interactable && canvasGroup.alpha == 1; 
         else
             return false;
+    } }
+    public bool IsSubMenuOpen { get {
+        return subMenus.Any(sm => GetSubMenu(sm.id).IsOpen);
     } }
     public PlayerObject FocusedPlayer => focusedPlayer; 
 

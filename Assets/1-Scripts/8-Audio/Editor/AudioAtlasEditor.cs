@@ -48,7 +48,6 @@ public class AudioAtlasEditor : Editor
         }
 
         if (targ.prefixAudioMixerGroups == null) {
-            BLog.Highlight("created audio mixer group");
             targ.prefixAudioMixerGroups = new List<PrefixAudioMixerGroup>();
         }
 

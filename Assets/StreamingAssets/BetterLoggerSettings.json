@@ -5,12 +5,12 @@
     "$id": "2",
     "SceneDelegate": {
       "$id": "3",
-      "enable": false,
+      "enable": true,
       "color": "FF009F"
     },
     "GameLobby": {
       "$id": "4",
-      "enable": true,
+      "enable": false,
       "color": "FF8400"
     },
     "GameplayManager": {
@@ -20,12 +20,12 @@
     },
     "LobbyManager": {
       "$id": "6",
-      "enable": true,
+      "enable": false,
       "color": "FFC600"
     },
     "DevSettings": {
       "$id": "7",
-      "enable": true,
+      "enable": false,
       "color": "FDFF40"
     },
     "KartManager": {
@@ -35,12 +35,12 @@
     },
     "MenuController": {
       "$id": "9",
-      "enable": true,
+      "enable": false,
       "color": "C2A0FF"
     },
     "NetworkManager": {
       "$id": "10",
-      "enable": true,
+      "enable": false,
       "color": "00AD33"
     }
   }

@@ -145,7 +145,6 @@ public class SceneController : MonoBehaviour
             nsc.RegisterScene(scene);
 
         BLog.Log($"SceneDelegate#UnitySceneManager_SceneLoaded: Client loaded scene \"{scene.name}\"", LogChannel.SceneDelegate, 0);
-        BLog.Highlight($"Calling serverrpc client loaded scene with loadTarget={clientLoadTarget}");
         nsc.ServerRpcClientLoadedScene(CoreManager.LocalConnection, clientLoadTarget);
     }
 

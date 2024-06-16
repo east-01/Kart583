@@ -148,7 +148,6 @@ public class KartsIRManager : NetworkBehaviour
 		newKartManager.SetPlayerData(data);
 
 		// Run event
-		BLog.Highlight("Calling observers rpc spawn event for " + data.Summary);
 		ObserversRpcCallSpawnEvent(owner, data);
 
 		return newKartManager;
@@ -175,17 +174,14 @@ public class KartsIRManager : NetworkBehaviour
 			Debug.LogError("Can't spawn player, they are already in the playerObjectsWaitingForKarts dictionary.");
 			return;
 		}
+		player.data.ready = false;
+		playerObjectsWaitingForKarts.Add(uuid, player);		
 		BLog.Log($"Spawning player \"{player.data.Summary}\"", LogChannel.GameplayManager, 0);
 		ServerRpcSpawnKart(base.LocalConnection, player.data);
-		BLog.Highlight("list size before: " + playerObjectsWaitingForKarts.Count);
-		playerObjectsWaitingForKarts.Add(uuid, player);		
-		BLog.Highlight("list size after: " + playerObjectsWaitingForKarts.Count);
 	}
 
 	public void KartManager_KartSpawned(NetworkConnection conn, PlayerData data) 
 	{		
-		BLog.Highlight($"{data.uuid} is searching, Player objects waiting for karts ({playerObjectsWaitingForKarts.Count}): ");
-		playerObjectsWaitingForKarts.ToList().ForEach(player => BLog.Highlight("  uuid " + player));
 		bool shouldAttemptToConnectPlayerObject = conn == base.LocalConnection && playerObjectsWaitingForKarts.ContainsKey(data.uuid);
 		BLog.Log($"Recieved kart spawn event for \"{data.Summary}\", will attempt to connect: {shouldAttemptToConnectPlayerObject}", LogChannel.GameplayManager, 1);
 		StartCoroutine(KartSearchCoroutine(data, shouldAttemptToConnectPlayerObject));
@@ -281,8 +277,7 @@ public class KartsIRManager : NetworkBehaviour
     {
 		RaceSettings settings = gameplayManager.RaceManager.settings;
         if(settings.Bots) {
-            int botsToSpawn = Math.Min(settings.botLimit, CoreManager.Instance.PlayerLimit-KartCount);
-            for(int i = 0; i < botsToSpawn; i++) {
+            for(int i = 0; i < BotsToSpawn; i++) {
                 SpawnBot();
             }
         }
@@ -362,5 +357,6 @@ public class KartsIRManager : NetworkBehaviour
 		return counter;
 	 } }
 	public int BotPlayerCount { get { return KartCount-HumanPlayerCount; } }
+	public int BotsToSpawn => Math.Min(gameplayManager.RaceManager.settings.botLimit, CoreManager.Instance.PlayerLimit-KartCount);
 
 }

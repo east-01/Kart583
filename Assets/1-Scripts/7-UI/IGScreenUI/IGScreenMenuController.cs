@@ -1,7 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// The InGameMenuController doesn't really have anything going on in it's default state.
@@ -14,11 +11,16 @@ public class IGScreenMenuController : MenuController
 	public static readonly string RESULTS_MENU_ID = "ResultsMenu";
 	public static readonly string PAUSE_MENU_ID = "PauseMenu";
 
+	private void Update() {
+		if(Input.GetKeyDown(KeyCode.J))
+			BLog.Highlight("po input: " + PlayerObjectManager.Instance.PlayerOne.input.currentActionMap);
+	}
+
 	public void SetPauseOpen(bool open) 
 	{
-		if(open)
+		if(open) {
 			OpenSubMenu(PAUSE_MENU_ID, focusedPlayer);
-		else
+		} else
 			PauseMenuController.Close();
 	}
 

@@ -120,7 +120,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &6479124897333002784
 RectTransform:
   m_ObjectHideFlags: 0
@@ -169,8 +169,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   openCloseType: 0
-  inputSystemUIInputModule: {fileID: 2132687892516157250}
-  eventSystem: {fileID: 3177689134000746077}
+  inputSystemUIInputModule: {fileID: 0}
+  eventSystem: {fileID: 0}
   firstSelect: {fileID: 0}
   autoFocusOnPlayerOne: 1
   hidesParent: 0
@@ -1274,11 +1274,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6641689696003464405, guid: d24e6c2d0cbf3654dba540768ead1735, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6641689696003464405, guid: d24e6c2d0cbf3654dba540768ead1735, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6641689696003464405, guid: d24e6c2d0cbf3654dba540768ead1735, type: 3}
       propertyPath: m_AnchorMin.y
@@ -1286,7 +1286,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6641689696003464405, guid: d24e6c2d0cbf3654dba540768ead1735, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: -92.960884
       objectReference: {fileID: 0}
     - target: {fileID: 6641689696003464405, guid: d24e6c2d0cbf3654dba540768ead1735, type: 3}
       propertyPath: m_SizeDelta.y

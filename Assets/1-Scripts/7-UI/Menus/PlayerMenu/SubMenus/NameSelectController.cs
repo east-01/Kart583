@@ -12,7 +12,7 @@ public class NameSelectController : PlayerPanelControllerSubMenu
     {
         // TODO: Add on screen keyboard for name select
         if(focusedPlayer.input.currentControlScheme == "Gamepad") {
-            focusedPlayer.data.name = "Player " + focusedPlayer.PlayerIndex;
+            focusedPlayer.data.name = "Player " + (focusedPlayer.PlayerIndex+1);
             PlayerPanelController.UpdatePanel();
         }
     }

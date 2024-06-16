@@ -421,7 +421,6 @@ public struct LobbyData
     public List<PlayerData> players;
     public LobbyState state;
     public float timeInState;
-    public float playerWaitTimeout;
 }
 
 [Serializable]

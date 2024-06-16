@@ -68,7 +68,8 @@ public class HumanDriver : KartBehavior, GameplayManagerBehavior
                 kartItemManager.PerformItemInput(context.performed);
                 break;
             case "Pause":
-                kartLevelManager.RaceCamera.igScreenMenuController.SetPauseOpen(true);
+                if(!context.performed)
+                    kartLevelManager.RaceCamera.igScreenMenuController.SetPauseOpen(true);
                 break;
             default:
                 break;

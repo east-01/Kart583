@@ -23,7 +23,6 @@ public class ReadyMenuController : PlayerPanelControllerSubMenu
 
         focusedPlayer.data.ready = true;
         PlayerPanelController.UpdatePanel();
-        BLog.Highlight("set player " + focusedPlayer.PlayerIndex + " as ready");
 
         parentMenu.GetComponentInParent<MenuPlayerController>().CheckReady();
     }

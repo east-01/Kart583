@@ -48,30 +48,30 @@ public class RaceManager : NetworkBehaviour
 
         raceTime.StopTimer(true);
 
-        if(!base.IsServer)
+        if(base.IsClientOnly)
             return;
 
         // Initialize phases
-        BLog.Highlight("player count: " + gameplayManager.GameLobby.PlayerCount);
         /*if(PlayerObjectManager.Instance == null) {
             waitingForPlayerInput = true; // TODO: This is really dumb: we should only be waiting for player input on clients
             Debug.LogWarning("This is really dumb: we should only be waiting for player input on clients");
-        } else */if(gameplayManager.GameLobby.PlayerCount == 0) {
+        } else */if(gameplayManager.GameLobby == null) {
+            phase = RacePhase.WAITING_FOR_LOBBY;
+        } else {
+            InitializeWithLobby();
+        }
+
+    }
+
+    public void InitializeWithLobby() {
+        if(gameplayManager.GameLobby.PlayerCount == 0) {
             phase = RacePhase.LATE_JOIN;
-        } else if(kartLevelManager.HasRaceCamera) {
+        } else if(gameplayManager.PlayerManager.HumanPlayerCount < gameplayManager.GameLobby.PlayerCount) {
             phase = RacePhase.WAITING_FOR_PLAYERS;
         } else {
             phase = RacePhase.COUNTDOWN;
             PrepareRace();
         }
-
-        BLog.Highlight("race phase initialized as " + gameplayManager.GameLobby.PlayerCount);
-
-        // Spawn bots if we're not waiting on a late join
-        // If we are waiting for a late join, the bots will be spawn after said player joins
-        if(phase != RacePhase.LATE_JOIN) 
-            gameplayManager.PlayerManager.SpawnBots();
-
     }
 
     private void OnEnable() { raceTime.OnChange += RaceTime_OnChange; }
@@ -81,23 +81,37 @@ public class RaceManager : NetworkBehaviour
     {
         raceTime.Update(Time.deltaTime);
 
-        // BLog.Highlight("can move: " + CanMove);
-
         if(!base.IsServer)
             return;
 
         // We'll attempt to escalate the race phase each Update()
         // Only allowed to escalate once per frame
         switch(phase) {
+            case RacePhase.WAITING_FOR_LOBBY:
+                if(gameplayManager.GameLobby != null)
+                    InitializeWithLobby();
+                break;
             case RacePhase.LATE_JOIN:
                 break;
             case RacePhase.WAITING_FOR_PLAYERS:
                 // TODO: Add a timer that kicks the player if they don't ready up by said time
                 // bool introAnimComplete = !kartLevelManager.HasRaceCamera || !kartLevelManager.RaceCamera.Animating;
                 // TODO: Add intro anim back in
-                BLog.Highlight($"apr: {gameplayManager.PlayerManager.AllPlayersReady}");
-                if(gameplayManager.PlayerManager.AllPlayersReady)
-                    phase = RacePhase.COUNTDOWN;
+                KartsIRManager playerManager = gameplayManager.PlayerManager;
+                bool allPlayersReady = playerManager.AllPlayersReady && playerManager.HumanPlayerCount == gameplayManager.GameLobby.PlayerCount;
+                bool allBotsReady = gameplayManager.PlayerManager.BotPlayerCount == gameplayManager.PlayerManager.BotsToSpawn;
+                bool needToSpawnBots = gameplayManager.RaceManager.settings.Bots && playerManager.BotPlayerCount == 0 && playerManager.BotsToSpawn > 0;
+                // Two tracks if we're spawning bots or not
+                if(needToSpawnBots) {
+                    if(allPlayersReady) {
+                        playerManager.SpawnBots();
+                    } else if(allBotsReady) {
+                        phase = RacePhase.COUNTDOWN;
+                    }
+                } else {
+                    if(allPlayersReady)
+                        phase = RacePhase.COUNTDOWN;
+                }
                 break;
             case RacePhase.COUNTDOWN:
                 break;
@@ -142,10 +156,8 @@ public class RaceManager : NetworkBehaviour
                     pim.EnableJoining();
                 break;
             case RacePhase.WAITING_FOR_PLAYERS:
-                if(asServer) {
-                    gameplayManager.PlayerManager.SpawnBots();
+                if(asServer)
                     placements.Clear();
-                }
                 break;
             case RacePhase.COUNTDOWN:
                 if(asServer) {
@@ -350,5 +362,5 @@ public enum RaceType
 
 public enum RacePhase
 {
-    LATE_JOIN, WAITING_FOR_PLAYERS, COUNTDOWN, RACING, FINISHED
+    WAITING_FOR_LOBBY, LATE_JOIN, WAITING_FOR_PLAYERS, COUNTDOWN, RACING, FINISHED
 }

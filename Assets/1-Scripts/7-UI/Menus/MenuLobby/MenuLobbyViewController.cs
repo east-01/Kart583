@@ -36,7 +36,7 @@ public class MenuLobbyViewController : MonoBehaviour
     /// <summary>
     /// Set when the GameLobby switches to state WAITING_FOR_PLAYER, indicates when the player wait timer will run out.
     /// </summary>
-    public float playerWaitTimeout;
+    public float playerWaitTimeLeft;
 
     private void Start() 
     {
@@ -65,11 +65,19 @@ public class MenuLobbyViewController : MonoBehaviour
 
         if(!CoreManager.LobbyCommunicator.LobbyData.HasValue)
             return;
+
         LobbyData currentData = CoreManager.LobbyCommunicator.LobbyData.Value;
 
-        // Update player timeout text
-        if(currentData.state == LobbyState.WAITING_FOR_PLAYERS && playerWaitTimeout != -1) {
-            lobbyStatusText.text = $"Waiting for players ({Mathf.RoundToInt(playerWaitTimeout-Time.time)})";
+        // Update player timeout
+        if(currentData.state == LobbyState.WAITING_FOR_PLAYERS) {
+            if(playerWaitTimeLeft > 0) {
+                playerWaitTimeLeft -= Time.deltaTime;
+                lobbyStatusText.text = $"Waiting for players ({Mathf.FloorToInt(playerWaitTimeLeft)})";
+            } else if((GameLobby.PLAYER_WAIT_TIME - currentData.timeInState) > 0) {
+                playerWaitTimeLeft = GameLobby.PLAYER_WAIT_TIME - currentData.timeInState;
+            } else {
+                playerWaitTimeLeft = -1;
+            }
         }
     }
 
@@ -159,10 +167,8 @@ public class MenuLobbyViewController : MonoBehaviour
     {
         BLog.Log("MenuLobbyViewController#LobbyManager_LobbyUpdated: Recieved update event", LogChannel.SceneDelegate, 0); 
 
-        if(newData.state == LobbyState.WAITING_FOR_PLAYERS)
-            playerWaitTimeout = Time.time + (GameLobby.PLAYER_WAIT_TIME-newData.timeInState);
-        else
-            playerWaitTimeout = -1;
+        if(newData.state != LobbyState.WAITING_FOR_PLAYERS)
+            playerWaitTimeLeft = -1;
 
         UpdateView();
     }
