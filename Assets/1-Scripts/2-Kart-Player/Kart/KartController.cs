@@ -71,7 +71,7 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 
 	public float modelTheta;
 
-	private float driftEngageTime;
+	public float driftEngageTime;
 	public int driftDirection; // Indicates if we're in a left/right drift
 	private float driftTheta;
 	private float driftThetaTarget;
@@ -171,8 +171,6 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 				modelTheta = 0;
 
 			kartModel.forward = RotateVectorAroundAxis(transform.forward, transform.up, driftTheta + modelTheta);
-			float t = driftEngageTime/driftEngageDuration;
-			kartModel.localPosition = (initKartModelY + driftHopHeight*(-4*(t*t)+4*t))*Vector3.up;
 		}
 
 	}

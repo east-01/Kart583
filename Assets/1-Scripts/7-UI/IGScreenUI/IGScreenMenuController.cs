@@ -11,11 +11,6 @@ public class IGScreenMenuController : MenuController
 	public static readonly string RESULTS_MENU_ID = "ResultsMenu";
 	public static readonly string PAUSE_MENU_ID = "PauseMenu";
 
-	private void Update() {
-		if(Input.GetKeyDown(KeyCode.J))
-			BLog.Highlight("po input: " + PlayerObjectManager.Instance.PlayerOne.input.currentActionMap);
-	}
-
 	public void SetPauseOpen(bool open) 
 	{
 		if(open) {

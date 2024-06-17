@@ -832,6 +832,7 @@ MonoBehaviour:
   - {fileID: 783342837203693960}
   - {fileID: 318379147591700670}
   - {fileID: 6826620649756495999}
+  - {fileID: 5576040711175175114}
   - {fileID: 9101915779885251598}
   - {fileID: 7733809655012709343}
   - {fileID: 761985607284333580}
@@ -909,11 +910,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47c515c3f9885ee46a20e59f42a0b677, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 8
   _addedNetworkObject: {fileID: 3383173762062893252}
-  _networkObjectCache: {fileID: 0}
-  _synchronizePhysics2D: 0
-  _synchronizePhysics: 1
+  _networkObjectCache: {fileID: 3383173762062893252}
 --- !u!1 &5479924275931452875
 GameObject:
   m_ObjectHideFlags: 0
@@ -961,7 +960,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5bc62db68b2ac42a6c4ca6e6c4b9b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 8
+  _componentIndexCache: 9
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
 --- !u!114 &7733809655012709343
@@ -976,7 +975,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e201ae3e84db5704297821df3ce6d9d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 9
+  _componentIndexCache: 10
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   waypointPositions: []
@@ -998,7 +997,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d0455521fcd0814785f8e259692b7d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 10
+  _componentIndexCache: 11
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   dotProductToTurn:
@@ -1213,7 +1212,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4efa80f650ebff74bb29f2fc5e3bb727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 11
+  _componentIndexCache: 12
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   itemReleaseTimes: {x: 1, y: 10}

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 /** Manages all visual aspects of the kart model */
 public class KartModel : MonoBehaviour
@@ -21,6 +22,12 @@ public class KartModel : MonoBehaviour
     private bool showingBoostParticles;
 
     private Vector3 lastTrackedPosition;
+
+    public Transform heldItemTransform;
+
+    public bool drawHitbox = false;
+
+    public float[] verticalOffsets = new float[2];
 
     void Start() 
     {
@@ -69,6 +76,25 @@ public class KartModel : MonoBehaviour
             rearTire.transform.RotateAround(rearTire.transform.position, rearTire.transform.right, (rearRotationTheta/Time.deltaTime)*kartCtrl.momentum)
         );
 
+        // Vertical position
+        float modelHeight = GetComponentInChildren<MeshFilter>().mesh.bounds.size.z;
+        verticalOffsets[0] = (kartCtrl.Grounded() ? -kartCtrl.distanceFromGround : 0) + modelHeight/2f;
+
+        float t = kartCtrl.driftEngageTime/kartCtrl.driftEngageDuration;
+        verticalOffsets[1] = verticalOffsets[0] + kartCtrl.driftHopHeight*(-4*(t*t)+4*t);
+
+        Vector3 localPos = transform.localPosition;
+        if(kartCtrl.driftEngageTime > 0) {
+            localPos.y = verticalOffsets[1];
+        } else {
+            localPos.y = verticalOffsets[0];
+        }
+        transform.localPosition = localPos;
+
+        if(Input.GetKeyDown(KeyCode.J)) {
+            ToggleHitBox();   
+        }
+
         lastTrackedPosition = transform.position;
     }
 
@@ -78,8 +104,24 @@ public class KartModel : MonoBehaviour
             frontTires.ForEach(t => Gizmos.DrawWireSphere(t.transform.position, frontTireRadius));
             rearTires.ForEach(t => Gizmos.DrawWireSphere(t.transform.position, rearTireRadius));
         }
+
+        if(drawHitbox) {
+            BoxCollider boxCollider = kartCtrl.GetComponent<BoxCollider>();
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireCube(transform.position + boxCollider.center, boxCollider.size);
+        }
     }
 
     public void SetKartController(KartController kartController) { this.kartCtrl = kartController; }
+
+    public void ToggleHitBox() {
+        if(kartCtrl == null) {
+            Debug.LogError("Can't show hitbox, kart controller is null");
+            return;
+        }
+        BLog.Highlight("Drawing hitbox: " + drawHitbox);
+        drawHitbox = !drawHitbox;
+        GetComponentInChildren<MeshRenderer>().enabled = drawHitbox;
+    }
 
 }

@@ -30,6 +30,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 575097269189683243}
+  - {fileID: 4058547727115812376}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -62,6 +63,42 @@ MonoBehaviour:
   - {fileID: 1762058524178086083}
   boostParticles:
   - {fileID: 2794319151915495252}
+  heldItemTransform: {fileID: 4058547727115812376}
+  drawHitbox: 0
+  verticalOffsets:
+  - 0
+  - 0
+--- !u!1 &6153892123563630205
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4058547727115812376}
+  m_Layer: 0
+  m_Name: HeldItemPosition
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4058547727115812376
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6153892123563630205}
+  m_LocalRotation: {x: 0.17364816, y: -0, z: -0, w: 0.9848078}
+  m_LocalPosition: {x: 0, y: 0, z: -1.752}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5416276330841902365}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 20, y: 0, z: 0}
 --- !u!1 &6869910262659605576
 GameObject:
   m_ObjectHideFlags: 0
@@ -304,7 +341,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 245406496992670207, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.134
+      value: -0.008
       objectReference: {fileID: 0}
     - target: {fileID: 245406496992670207, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
       propertyPath: m_LocalRotation.w
@@ -615,7 +652,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 245406496992670207, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.135
+      value: -0.009
       objectReference: {fileID: 0}
     - target: {fileID: 245406496992670207, guid: 3536c4a88c7af3a4ca97542e29845276, type: 3}
       propertyPath: m_LocalRotation.w
@@ -718,6 +755,10 @@ PrefabInstance:
     - target: {fileID: 6310492774766986670, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}
       propertyPath: m_Name
       value: BoostParticles
+      objectReference: {fileID: 0}
+    - target: {fileID: 6651451137770812725, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}
+      propertyPath: InitialModule.startSize.scalar
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}

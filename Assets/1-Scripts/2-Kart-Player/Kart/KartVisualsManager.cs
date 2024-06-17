@@ -1,3 +1,4 @@
+using GameKit.Utilities;
 using Steamworks;
 using TMPro;
 using UnityEngine;
@@ -12,7 +13,7 @@ public class KartVisualsManager : KartBehavior
 
     private bool isModelLoaded = false;
     private bool isNameplateLoaded = false;
-
+    
     private void Update() 
     {
         PlayerData playerData = kartManager.GetPlayerData();
@@ -38,9 +39,15 @@ public class KartVisualsManager : KartBehavior
         KartDataPackage kdp = CoreManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
 		kartCtrl.settings = kdp.settings;
 	
-		GameObject newKartModel = Instantiate(kdp.model.gameObject, transform);
-		newKartModel.GetComponent<KartModel>().SetKartController(kartCtrl);
-		kartCtrl.kartModel = newKartModel.transform;
+        /* New kart model */
+		GameObject newKartModelGameObject = Instantiate(kdp.model.gameObject, transform);
+        KartModel newKartModel = newKartModelGameObject.GetComponent<KartModel>();
+		newKartModel.SetKartController(kartCtrl);
+		kartCtrl.kartModel = newKartModelGameObject.transform;
+
+        /* Hit item */
+        Transform hit = newKartModel.heldItemTransform;
+        kartItemManager.heldItemImage.transform.SetPositionAndRotation(hit.position, hit.rotation);
 
 		if(kartCtrl.kartModel != null) 
 			kartCtrl.initKartModelY = kartCtrl.kartModel.localPosition.y;
