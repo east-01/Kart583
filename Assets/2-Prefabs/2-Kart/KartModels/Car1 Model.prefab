@@ -65,6 +65,8 @@ MonoBehaviour:
   - {fileID: 2794319151915495252}
   - {fileID: 6573768492105472482}
   heldItemTransform: {fileID: 45655164344332740}
+  driftHopHeight: 0.4
+  damageStateSpinSpeed: 5
 --- !u!1 &6869910262659605576
 GameObject:
   m_ObjectHideFlags: 0

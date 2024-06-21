@@ -165,7 +165,7 @@ public class RaceManager : NetworkBehaviour
                         phase = RacePhase.RACING;
                     else
                         raceTime.StartTimer(settings.startDelay, true);
-
+                        
                     placements.Clear();
 
                     PrepareRace();

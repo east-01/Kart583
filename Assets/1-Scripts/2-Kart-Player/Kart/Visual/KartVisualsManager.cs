@@ -49,10 +49,10 @@ public class KartVisualsManager : KartBehavior
         Transform hit = newKartModel.heldItemTransform;
         kartItemManager.heldItemImage.transform.SetPositionAndRotation(hit.position, hit.rotation);
 
-		if(kartCtrl.kartModel != null) 
-			kartCtrl.initKartModelY = kartCtrl.kartModel.localPosition.y;
-		else
-			Debug.LogWarning("KartController on \"" + kartCtrl.gameObject.name + "\" doesn't have a kartModel assigned."); 
+		// if(kartCtrl.kartModel != null) 
+		// 	kartCtrl.initKartModelY = kartCtrl.kartModel.localPosition.y;
+		// else
+		// 	Debug.LogWarning("KartController on \"" + kartCtrl.gameObject.name + "\" doesn't have a kartModel assigned."); 
 
         isModelLoaded = true;
     }

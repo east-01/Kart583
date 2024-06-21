@@ -21,7 +21,7 @@ public class KartControllerFollow : MonoBehaviour
 		displayFov = fov;
 
 		Vector3 startPos = subject.gameObject.transform.position - (subject.KartForward*distance);
-		startPos += subject.up;
+		startPos += subject.Up;
 		transform.position = startPos;
 		transform.LookAt(subject.gameObject.transform.position);
 
@@ -32,7 +32,7 @@ public class KartControllerFollow : MonoBehaviour
 
 		KartController kc = subject;
 		float fov = this.fov;
-		if(kc != null && kc.isActiveAndEnabled && kc.TrackSpeed > 0 && kc.BoostInput && kc.BoostRatio > 0) {
+		if(kc != null && kc.isActiveAndEnabled && kc.EngineBase.TrackSpeed > 0 && kc.ActivelyBoosting && kc.BoostRatio > 0) {
 			fov *= 1.3f;
 		}
 
@@ -47,7 +47,7 @@ public class KartControllerFollow : MonoBehaviour
 		float heightDiff = kc.IsolateUpComponent(subject.gameObject.transform.position-transform.position).magnitude;
 
 		Vector3 targetPos = kc.gameObject.transform.position - (angle.normalized * distance);
-		targetPos += kc.up*Mathf.Lerp(heightDiff, height, angleSpeed*Time.deltaTime);
+		targetPos += kc.Up*Mathf.Lerp(heightDiff, height, angleSpeed*Time.deltaTime);
 
 		transform.position = targetPos;
 		transform.LookAt(kc.gameObject.transform.position);

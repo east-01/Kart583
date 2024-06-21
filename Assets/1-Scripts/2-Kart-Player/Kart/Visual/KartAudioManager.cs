@@ -91,12 +91,12 @@ public class KartAudioManager : KartBehavior
             engineNoiseSource.pitch = Mathf.Lerp(1, 1.65f, (simulatedRPM-IDLE_RPM)/(float)(MAX_RPM-IDLE_RPM));
     
         /* Drift noise mgmt */
-        if((kartCtrl.IsDriftEngaged || kartCtrl.damageCooldown > 0 ) && !driftNoiseSource.isPlaying)
+        if((kartCtrl.IsDriftEngaged || kartCtrl.EngineStallTime > 0 ) && !driftNoiseSource.isPlaying)
             driftNoiseSource.Play();
-        else if(!kartCtrl.IsDriftEngaged && kartCtrl.damageCooldown < 0.01f && driftNoiseSource.isPlaying)
+        else if(!kartCtrl.IsDriftEngaged && kartCtrl.EngineStallTime < 0.01f && driftNoiseSource.isPlaying)
             driftNoiseSource.Stop();
 
-        if(kartCtrl.damageCooldown > 0)
+        if(kartCtrl.EngineStallTime > 0)
             driftNoiseSource.volume = 1f;
         else
             driftNoiseSource.volume = kartAudioVolume;

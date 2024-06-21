@@ -481,7 +481,11 @@ GameObject:
   - component: {fileID: 5114485855354017640}
   - component: {fileID: 4518181260819848706}
   - component: {fileID: 8556894197583946043}
-  - component: {fileID: 364749038001437997}
+  - component: {fileID: 572464524133991983}
+  - component: {fileID: 1601468767175154010}
+  - component: {fileID: 66933459765028041}
+  - component: {fileID: 6922919158708807750}
+  - component: {fileID: 7931651294960783234}
   - component: {fileID: 351521495102920665}
   - component: {fileID: 1348276822467886517}
   - component: {fileID: 783342837203693960}
@@ -640,21 +644,82 @@ MonoBehaviour:
     maxBoostSpeed: 42.5
     acceleration: 10
     turnSpeed: 1.25
-  inputDeadzone: 0.1
-  wheelSlideTorque: 1000
-  damageStateSpinSpeed: 5
-  rideHeight: 0.35
-  velocityDecay: 15
-  minimumVelocityThreshold: 0.25
+  rawTurnInput: {x: 0, y: 0}
+  rawThrottleInput: 0
+  rawDriftInput: 0
+  rawBoostInput: 0
+--- !u!114 &572464524133991983
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af209ee2d8859684faf5437eb1f02cf0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 2
+  _addedNetworkObject: {fileID: 3383173762062893252}
+  _networkObjectCache: {fileID: 3383173762062893252}
+--- !u!114 &1601468767175154010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab4d49c308210b54ba464d9dfadaad3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 3
+  _addedNetworkObject: {fileID: 3383173762062893252}
+  _networkObjectCache: {fileID: 3383173762062893252}
   steeringWheelTurnSpeed: 5
-  turnMultiplierRangeDriftMatch: {x: 1.35, y: 1.55}
-  turnMultiplierRangeDriftDiffer: {x: -0.2, y: 0.35}
+--- !u!114 &66933459765028041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec396c28de753b84998da25e99dafbe5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 4
+  _addedNetworkObject: {fileID: 3383173762062893252}
+  _networkObjectCache: {fileID: 3383173762062893252}
+  rideHeight: 0.35
+  wheelSlideTorque: 60
+  velocityDecay: 10
+  turnMultiplierRangeDriftMatch: {x: 1.3, y: 1.725}
+  turnMultiplierRangeDriftDiffer: {x: -0.33, y: 0.4}
   driftAge: 4
-  driftAngleMin: 0.225
-  driftAngleMax: 0.4
-  driftEngageSpeedPercent: 0.45
-  driftEngageDuration: 0.25
-  driftHopHeight: 0.175
+  driftAngleExtents: {x: 0.1, y: 0.185}
+  driftEngageSpeedPercent: 0.1
+  driftEngageDuration: 0.3
+--- !u!114 &6922919158708807750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5130578726108140990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9154c25237286934db74428748056e88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 5
+  _addedNetworkObject: {fileID: 3383173762062893252}
+  _networkObjectCache: {fileID: 3383173762062893252}
+  drainBoostNatural: 1
+  drainBoostUsing: 1
   requiredBoostPercentage: 0.3
   boostGain: 1
   passiveBoostDrain: 3
@@ -665,53 +730,34 @@ MonoBehaviour:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 0.06829434
-      outSlope: 0.06829434
+      inSlope: 0.4669812
+      outSlope: 0.4669812
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.28967643
+      outWeight: 0.298573
     - serializedVersion: 3
-      time: 1.25
+      time: 0.15
       value: 1
-      inSlope: 1.3431635
+      inSlope: 13.082938
       outSlope: 0
       tangentMode: 65
       weightedMode: 0
-      inWeight: 0.042948533
-      outWeight: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
     - serializedVersion: 3
-      time: 10
+      time: 1
       value: 1
       inSlope: 0
       outSlope: 0
-      tangentMode: 0
+      tangentMode: 34
       weightedMode: 0
-      inWeight: 0
+      inWeight: 0.33333334
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  drawVectors: 0
-  turn: {x: 0, y: 0}
-  throttle: 0
-  boosting: 0
-  initKartModelY: 0
-  up: {x: 0, y: 1, z: 0}
-  velocity: {x: 0, y: 0, z: 0}
-  momentum: 0
-  grounded: 0
-  distanceFromGround: 0
-  airtime: 0
-  steeringWheelDirection: 0
-  boostAmount: 0
-  boostDecayTime: 0
-  modelTheta: 0
-  driftDirection: 0
-  driftParticles: 0
-  timeSinceLastCollision: 0
-  damageCooldown: 0
---- !u!114 &364749038001437997
+--- !u!114 &7931651294960783234
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -720,13 +766,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 5130578726108140990}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7804ead5b36448642999725e97b5b162, type: 3}
+  m_Script: {fileID: 11500000, guid: 5fb7eb9f818851b48910853984db7719, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 2
+  _componentIndexCache: 6
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
-  _state: 0
+  drawVectors: 0
 --- !u!114 &351521495102920665
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -739,7 +785,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3da2711004a73e94dacd077841e9a59f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 3
+  _componentIndexCache: 7
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   heldItemImage: {fileID: 8537382284469897725}
@@ -757,7 +803,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b5e3df2f0ea4da944a86a7e686a20570, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 4
+  _componentIndexCache: 8
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   waypointIndex: 0
@@ -779,7 +825,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5781423f02bfcf740bf2c8c351ebe318, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 5
+  _componentIndexCache: 9
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   bumpParticlePrefab: {fileID: 5024009746357069194, guid: ec3f674830402cc45bce805cf6493db7, type: 3}
@@ -796,7 +842,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bea8acda0d35ca4192a287e2e50fd0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 6
+  _componentIndexCache: 10
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   kartAudioVolume: 0.45
@@ -826,7 +872,11 @@ MonoBehaviour:
   _networkBehaviours:
   - {fileID: 4518181260819848706}
   - {fileID: 8556894197583946043}
-  - {fileID: 364749038001437997}
+  - {fileID: 572464524133991983}
+  - {fileID: 1601468767175154010}
+  - {fileID: 66933459765028041}
+  - {fileID: 6922919158708807750}
+  - {fileID: 7931651294960783234}
   - {fileID: 351521495102920665}
   - {fileID: 1348276822467886517}
   - {fileID: 783342837203693960}
@@ -865,7 +915,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 7
+  _componentIndexCache: 11
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   _componentConfiguration: 0
@@ -910,7 +960,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 47c515c3f9885ee46a20e59f42a0b677, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 8
+  _componentIndexCache: 12
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
 --- !u!1 &5479924275931452875
@@ -960,7 +1010,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d5bc62db68b2ac42a6c4ca6e6c4b9b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 9
+  _componentIndexCache: 13
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
 --- !u!114 &7733809655012709343
@@ -975,7 +1025,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e201ae3e84db5704297821df3ce6d9d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 10
+  _componentIndexCache: 14
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   waypointPositions: []
@@ -997,7 +1047,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d0455521fcd0814785f8e259692b7d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 11
+  _componentIndexCache: 15
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   dotProductToTurn:
@@ -1212,7 +1262,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4efa80f650ebff74bb29f2fc5e3bb727, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 12
+  _componentIndexCache: 16
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   itemReleaseTimes: {x: 1, y: 10}

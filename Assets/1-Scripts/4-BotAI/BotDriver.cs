@@ -115,12 +115,12 @@ public class BotDriver : KartBehavior
         /* Drift */
         driftSight = botPath.AnalyzePathFromCurrentPosition(driftVision);
         
-        bool driftingWrongWay = kartCtrl.DriftInput && kartCtrl.driftDirection != turnLR;
+        bool driftingWrongWay = kartCtrl.DriftInput && kartCtrl.DriftDirection != turnLR;
         kartCtrl.DriftInput = !stuck && !driftingWrongWay && driftSight > driftThreshold;
 
         /* Boost */
         boostSight = botPath.AnalyzePathFromCurrentPosition(boostVision);
-        kartCtrl.BoostInput = !stuck && !kartCtrl.DriftInput && kartCtrl.boostAmount > 0 && boostSight <= boostThreshold;
+        kartCtrl.BoostInput = !stuck && !kartCtrl.DriftInput && kartCtrl.BoostAmount > 0 && boostSight <= boostThreshold;
 
         /* Manage stuck */
         if(stuck && stuckAnimTime > 0) {

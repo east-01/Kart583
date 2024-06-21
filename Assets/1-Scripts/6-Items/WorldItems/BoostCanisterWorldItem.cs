@@ -7,8 +7,8 @@ public class BoostCanisterWorldItem : WorldItem
     protected override void Internal_ActivateItem(ItemSpawnData spawnData)
     {
         KartController kc = OwnerKartManager.GetKartController();
-        kc.boostDecayTime = 0;
-        kc.boostAmount = kc.settings.maxBoost;
+        kc.EngineBoost.SetBoostDecayTime(0);
+        kc.EngineBoost.SetBoostToMax();
 
         CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_BOOST_CANISTER, 1f, transform);
 

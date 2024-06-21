@@ -42,13 +42,13 @@ public class BoostDisplay : MonoBehaviour
 		/* Animations */
 		value = Mathf.Clamp01(kartController.BoostRatio);
 
-		if(value > kartController.requiredBoostPercentage && displayValue <= kartController.requiredBoostPercentage) { 
+		if(value > kartController.RequiredBoostPercentage && displayValue <= kartController.RequiredBoostPercentage) { 
 			Display(true);	
-		} else if(value < kartController.requiredBoostPercentage && displayValue >= kartController.requiredBoostPercentage && !kartController.ActivelyBoosting) { 
+		} else if(value < kartController.RequiredBoostPercentage && displayValue >= kartController.RequiredBoostPercentage && !kartController.ActivelyBoosting) { 
 			Display(false);	
 		}
 
-		if(!kartController.ActivelyBoosting && showing && value < kartController.requiredBoostPercentage) { 
+		if(!kartController.ActivelyBoosting && showing && value < kartController.RequiredBoostPercentage) { 
 			Display(false);
 		}
 
@@ -87,7 +87,7 @@ public class BoostDisplay : MonoBehaviour
 
 		backgroundTransform.sizeDelta = new(width, backgroundTransform.sizeDelta.y);
 
-		float minLineX = kartController.requiredBoostPercentage*(backgroundMaxWidth-backgroundMinWidth);
+		float minLineX = kartController.RequiredBoostPercentage*(backgroundMaxWidth-backgroundMinWidth);
 		minLine.anchoredPosition = new(minLineX, minLine.anchoredPosition.y);
 
     }

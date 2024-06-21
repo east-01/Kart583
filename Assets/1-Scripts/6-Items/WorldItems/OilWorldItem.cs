@@ -9,7 +9,7 @@ public class OilWorldItem : WorldItem
         lifeTime = 25f; // 30s of lifetime
 
         KartController kc = OwnerKartManager.GetKartController();
-        transform.position = OwnerKartManager.gameObject.transform.position - kc.KartForward.normalized*3f - kc.up*0.3f;
+        transform.position = OwnerKartManager.gameObject.transform.position - kc.KartForward.normalized*3f - kc.Up*0.3f;
 
         // TODO: Play activation animation and sound
         CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_OIL_SPILL, 1f, transform);
@@ -28,7 +28,7 @@ public class OilWorldItem : WorldItem
             return;
         }
         
-        hitKM.GetKartController().damageCooldown = 2f;
+        hitKM.GetKartController().EngineBase.ApplyStall(2f, StallType.SMALL);
 
         CoreManager.AudioManager.PlayOneShotSound(AudioFile.KART_DAMAGED, 1f, transform);
         CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_OIL_SPILL, 1f, transform);

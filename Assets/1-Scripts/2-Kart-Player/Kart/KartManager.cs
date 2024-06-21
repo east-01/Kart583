@@ -38,7 +38,6 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 
 		// Sync enabled status with our ownership status
 		kartCtrl.enabled = base.IsOwner || base.IsServer;
-		kartStateManager.enabled = base.IsOwner;
 		// kartItemManager: Stays enabled so we can sync item wielding between players
 		// posTracker: Stays enabled, updates server on race position (TODO: Make this a server-side calculation it will be exploited)
 		// kartEffectManager: Stays enabled

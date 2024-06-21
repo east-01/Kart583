@@ -64,10 +64,8 @@ MonoBehaviour:
   boostParticles:
   - {fileID: 2794319151915495252}
   heldItemTransform: {fileID: 4058547727115812376}
-  drawHitbox: 0
-  verticalOffsets:
-  - 0
-  - 0
+  driftHopHeight: 0.4
+  damageStateSpinSpeed: 5
 --- !u!1 &6153892123563630205
 GameObject:
   m_ObjectHideFlags: 0
@@ -701,18 +699,6 @@ PrefabInstance:
       value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 4799821675707382798, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4799821675707382798, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4799821675707382798, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4799821675707382798, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.002
       objectReference: {fileID: 0}
@@ -755,10 +741,6 @@ PrefabInstance:
     - target: {fileID: 6310492774766986670, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}
       propertyPath: m_Name
       value: BoostParticles
-      objectReference: {fileID: 0}
-    - target: {fileID: 6651451137770812725, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}
-      propertyPath: InitialModule.startSize.scalar
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f7fe510087f60c45b63dbef520611ac, type: 3}

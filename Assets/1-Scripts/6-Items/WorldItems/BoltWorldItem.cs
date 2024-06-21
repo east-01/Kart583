@@ -59,7 +59,7 @@ public class BoltWorldItem : WorldItem
         //Needs to change
         float forwardBackward = Mathf.Sign(spawnData.stickDirection.y);
         if(forwardBackward == 0) forwardBackward = 1;
-        transform.position = OwnerKartManager.gameObject.transform.position + forwardBackward*3f*kc.KartForward.normalized + kc.up*2;
+        transform.position = OwnerKartManager.gameObject.transform.position + forwardBackward*3f*kc.KartForward.normalized + kc.Up*2;
         dir = kc.KartForward;
         GetComponent<Rigidbody>().velocity = kc.TrackVelocity;
 
@@ -86,7 +86,7 @@ public class BoltWorldItem : WorldItem
             return;
         }
         
-        hitKM.GetKartController().damageCooldown = 3.5f;
+        hitKM.GetKartController().EngineBase.ApplyStall(3.5f, StallType.LARGE);
 
         CoreManager.AudioManager.PlayOneShotSound(AudioFile.KART_DAMAGED, 1f, transform);
 

@@ -15,8 +15,8 @@
   "ManualLobbyPlayerWaitSwitch": false,
   "OverrideRaceProgressAtStart": true,
   "RaceProgress": 0.0,
-  "OverrideLapCount": false,
-  "LapCount": 1,
+  "OverrideLapCount": true,
+  "LapCount": 20,
   "OverrideBots": true,
   "Bots": false
 }

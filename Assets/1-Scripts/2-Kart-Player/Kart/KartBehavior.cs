@@ -15,19 +15,54 @@ public class KartBehavior : NetworkBehaviour
     protected Rigidbody rb;
     protected Collider coll;
 
+#region Kart fields
     protected KartManager kartManager;
     protected KartController kartCtrl;
-    protected KartStateManager kartStateManager;
     protected KartItemManager kartItemManager;
     protected PositionTracker posTracker;
     protected KartVisualsManager kartVisualsManager;
     protected KartAudioManager kartAudioManager;
+#endregion
 
-    // Brain
+#region Engine fields
+    public EngineBase EngineBase { get; private set; }
+	public EngineSteeringWheel EngineSteeringWheel { get; private set; }
+	public EngineWheels EngineWheels { get; private set; }
+	public EngineBoost EngineBoost { get; private set; }
+	public KartVectorDrawer KartVectorDrawer { get; private set; }
+#endregion
+
+#region Shortcuts
+    public KartSettings Settings => kartCtrl.settings;
+
+    public bool CanMove => kartCtrl.CanMove;
+
+    public Vector3 Up => EngineBase.Up;
+    public bool Grounded => EngineWheels.Grounded;
+
+    public float SpeedRatio => EngineBase.SpeedRatio;
+    public float CurrentMaxSpeed => EngineBase.CurrentMaxSpeed;
+    public float TrackSpeed => EngineBase.TrackSpeed;
+    public Vector3 TrackVelocity => EngineBase.TrackVelocity;
+
+    public bool ActivelyBoosting => EngineBoost.ActivelyBoosting;
+    public float BoostRatio => EngineBoost.BoostRatio;
+    public float BoostAmount => EngineBoost.BoostAmount;
+    public float BoostDecayTime => EngineBoost.BoostDecayTime;
+
+    public bool IsDriftEngaged => EngineWheels.IsDriftEngaged;
+    public int DriftDirection => EngineWheels.DriftDirection;
+
+    public float EngineStallTime => EngineBase.EngineStallTime;
+    public float RequiredBoostPercentage => EngineBoost.RequiredBoostPercentage;
+#endregion
+
+#region Brain fields
     protected BotDriver botDriver;
     protected BotItemManager botItemManager;
     protected BotPath botPath;
     protected HumanDriver humanDriver;
+#endregion
 
     protected void Awake() 
     {
@@ -39,11 +74,16 @@ public class KartBehavior : NetworkBehaviour
         coll = kartManager.GetComponent<Collider>();
 
         kartCtrl = kartManager.GetComponent<KartController>();
-        kartStateManager = kartManager.GetComponent<KartStateManager>();
         kartItemManager = kartManager.GetComponent<KartItemManager>();
         posTracker = kartManager.GetComponent<PositionTracker>();
         kartVisualsManager = kartManager.GetComponent<KartVisualsManager>();
         kartAudioManager = kartManager.GetComponent<KartAudioManager>();
+
+        EngineBase = kartManager.GetComponent<EngineBase>();
+        EngineSteeringWheel = kartManager.GetComponent<EngineSteeringWheel>();
+        EngineWheels = kartManager.GetComponent<EngineWheels>();
+        EngineBoost = kartManager.GetComponent<EngineBoost>();
+        KartVectorDrawer= kartManager.GetComponent<KartVectorDrawer>();
 
         // Objects on children of manager
         botDriver = kartManager.GetComponentInChildren<BotDriver>();
@@ -63,7 +103,6 @@ public class KartBehavior : NetworkBehaviour
 
     public KartManager GetKartManager() { return kartManager; }
     public KartController GetKartController() { return kartCtrl; }
-    public KartStateManager GetKartStateManager() { return kartStateManager; }
     public KartItemManager GetKartItemManager() { return kartItemManager; }
     public PositionTracker GetPositionTracker() { return posTracker; }
     public KartVisualsManager GetKartVisualsManager() { return kartVisualsManager; }
