@@ -117,7 +117,7 @@ MonoBehaviour:
     bots: 1
     botLimit: 8
   phase: 0
-  raceTime: 0
+  raceTimeReadout: 0
 --- !u!114 &5244667296191878685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -133,7 +133,7 @@ MonoBehaviour:
   _componentIndexCache: 2
   _addedNetworkObject: {fileID: 7290347010873503086}
   _networkObjectCache: {fileID: 7290347010873503086}
-  kartPrefab: {fileID: 5130578726108140990, guid: e7f4da3d971f3514ea1449674dfa9614, type: 3}
+  kartPrefab: {fileID: 5130578726108140990, guid: f02595d1132c86b47bc3bb79439e612f, type: 3}
   playerObjectInGamePrefab: {fileID: 9125697113128256683, guid: 4a54a36e22ff8ec46b9f7ae27d20a906, type: 3}
   kartObjects: []
   playerPositions: []
@@ -149,6 +149,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 78eb3863d0f1e464e9f14c77dad7989f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ambianceFile: 0
+  musicFile: 0
 --- !u!114 &704151461757926555
 MonoBehaviour:
   m_ObjectHideFlags: 0
