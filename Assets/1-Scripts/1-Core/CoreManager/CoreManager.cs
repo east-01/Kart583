@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using AClockworkBerry;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Managing;
-using JetBrains.Annotations;
+using GameKit.Utilities;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 /// <summary>
 /// The CoreManager should be placed in all scenes. It will spawn other essential managers.
@@ -105,6 +107,8 @@ public class CoreManager : MonoBehaviour
     {
         CheckNetworkManager();
         CheckNetSceneController();
+
+        DeveloperSettingsUpdate();
     }
 
 #region Essential component checks
@@ -164,6 +168,7 @@ public class CoreManager : MonoBehaviour
     }
 #endregion
 
+#region Developer Settings
     public void HandleDeveloperSettings() 
     {
 
@@ -176,6 +181,37 @@ public class CoreManager : MonoBehaviour
 
         if(DevSettings.Settings.LoadMode != LoadMode.NONE)
             SimulateLoad();
+    }
+
+    /// <summary> Call from Update() to update developer settings. </summary>
+    public void DeveloperSettingsUpdate() 
+    {
+        if(IsLocal && DevSettings.Settings.EnableWarpPoint) {
+            bool savePressed = Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.N);
+            bool loadPressed = Input.GetKey(KeyCode.LeftCommand) && Input.GetKeyDown(KeyCode.M);
+            if(savePressed || loadPressed &&
+               PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.PlayerOne != null) {
+                static KartManager PlayerOneKartManager() {
+                    List<GameObject> kartObjects = NetSceneController.LobbyManager.GetLobby(LocalConnection).GameplayManager.PlayerManager.kartObjects;
+                    foreach(GameObject kartObject in kartObjects) {
+                        KartManager km = KartBehavior.LocateManager(kartObject);
+                        if(km == null) {
+                            Debug.LogError("Failed to get KartManager from kartObject");
+                            continue;
+                        }
+                        if(km.GetPlayerData().uuid == PlayerObjectManager.Instance.PlayerOne.data.uuid)
+                            return km;
+                    }
+                    return null;
+                }
+
+                if(savePressed) {
+                    DevSettings.Settings.WarpPosition = PlayerOneKartManager().transform.position;
+                } else if(loadPressed) {
+                    PlayerOneKartManager().transform.SetPosition(false, DevSettings.Settings.WarpPosition);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -203,6 +239,7 @@ public class CoreManager : MonoBehaviour
 
         DevSettings.Settings.hasProcessedLoadMode = true;
     }
+#endregion
 
     /// <summary>
     /// Check if the running instance is a server instance. More reliable than InstanceFinder because 

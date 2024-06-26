@@ -18,20 +18,14 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 {
 	/* 
 	KartController VX to do list:
-	 - (**) EngineBoost needs to use the decay function for when the controller stops using
-	     it. At the moment it just instantly sets the boost to 0.
-	 - (*) KartModel needs to interpolate the vertical offset of the model using a
-	     verticalOffset and targetVerticalOffset structure.
-	 - (**) Front wheel angles need to be adjusted
-	 - (****) Smarter turn function- try slowing down the kart the more the user turns to
-	     improve handling during the turn.
-	 - (?) Model glitches out during damage rotation animation.
+	 - (*) Particle effects for when you land
+	 - (**) Reversing while going forward takes forever to slow down
 	*/
 
 	private GameplayManager gameplayManager;
 
-	/* ----- Settings variables ----- */
-	public Transform kartModel;
+	public KartModel kartModel;	
+	public Transform kartModelTransform;
 	public KartSettings settings;
 
 	public GameplayManager GameplayManager => gameplayManager;
@@ -93,7 +87,13 @@ public class KartController : KartBehavior, GameplayManagerBehavior
     {
         rotationAxis = rotationAxis.normalized;
         Quaternion rotation = Quaternion.AngleAxis(angleRadians * Mathf.Rad2Deg, rotationAxis);
-        return rotation * inputVector;
+		Vector3 rotatedVector = rotation * inputVector;
+
+		// Correct potential numerical precision issues for vertical axis rotations
+		if (Mathf.Approximately(rotationAxis.y, 1.0f) || Mathf.Approximately(rotationAxis.y, -1.0f))
+			rotatedVector.y = inputVector.y;
+
+		return rotatedVector;
     }
 #endregion
 

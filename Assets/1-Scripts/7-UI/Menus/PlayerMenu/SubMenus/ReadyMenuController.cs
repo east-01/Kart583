@@ -22,7 +22,7 @@ public class ReadyMenuController : PlayerPanelControllerSubMenu
             focusedPlayer.data.SaveToPlayerPrefs(PlayerData.PLAYER_1_DATA);
 
         focusedPlayer.data.ready = true;
-        PlayerPanelController.UpdatePanel();
+        PlayerPanelController.UpdateBuildPhase();
 
         parentMenu.GetComponentInParent<MenuPlayerController>().CheckReady();
     }

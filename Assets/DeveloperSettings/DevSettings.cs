@@ -69,6 +69,25 @@ public class DevSettings
     }
 #endregion
 
+#region Waypoints
+    private bool enableWarpPoint;
+    public bool EnableWarpPoint {
+        get { return Enable && enableWarpPoint; }
+        set { enableWarpPoint = value;}
+    }
+
+    private float[] warpPositionCoordinates = new float[3];
+    [JsonIgnore]
+    public Vector3 WarpPosition {
+        get { return enableWarpPoint ? new(warpPositionCoordinates[0], warpPositionCoordinates[1], warpPositionCoordinates[2]) : Vector3.zero; }
+        set { 
+            warpPositionCoordinates[0] = value.x; 
+            warpPositionCoordinates[1] = value.y; 
+            warpPositionCoordinates[2] = value.z; 
+        }
+    }
+#endregion
+
 #region Server settings
     private bool haveStandalonePlayerRunAsServer;
     public bool HaveStandalonePlayerRunAsServer { 

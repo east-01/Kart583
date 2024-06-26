@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using Steamworks;
 using UnityEngine;
 
 /// <summary>
@@ -20,8 +22,12 @@ public class EngineBoost : KartBehavior
     [SerializeField] private float requiredBoostPercentage = 0.3f;
     public new float RequiredBoostPercentage => requiredBoostPercentage;
     [SerializeField] private float boostGain = 1f;
-    [SerializeField] private float passiveBoostDrain = 3f;
-    [SerializeField] private float activeBoostDrain = 1.75f;
+    /// <summary>Boost drain factor without any interaction</summary>
+    [SerializeField] private float boostDrainNaturalPassive = 1.8f;
+    /// <summary>Boost drain factor after the player uses boost and stops</summary>
+    [SerializeField] private float boostDrainNaturalPostUse = 3f;
+    /// <summary>Boost drain factor while the player is using boost</summary>
+    [SerializeField] private float boostDrainUsing = 1.75f;
     /// <summary>Converts the boost decay time into a [0,1] float representing the speed of passive boost drain</summary>
     [SerializeField] private AnimationCurve boostDecayCurve;
 #endregion
@@ -31,6 +37,7 @@ public class EngineBoost : KartBehavior
     public new float BoostAmount { get; private set; }
     /// <summary>Time counting how long its been for the boost to drain</summary>
 	public new float BoostDecayTime { get; private set; }
+    private BoostDecayType boostDecayType; 
 #endregion
 
 #region Utility fields
@@ -48,22 +55,24 @@ public class EngineBoost : KartBehavior
 
     private void Update() 
     {
-        /* Boosting */
-		if(ActivelyBoosting) { 
-            // Using boost, drain it
-			BoostDecayTime = 0;
-            if(drainBoostUsing)
-    			BoostAmount = Mathf.Max(BoostAmount - activeBoostDrain*Time.deltaTime, 0); 
-		} else if(EngineWheels.IsDriftEngaged && EngineSteeringWheel.SteeringWheelMatchesDrift) {
-            // Drifting to gain boost, add boost gain
-			BoostDecayTime = 0;
-			BoostAmount += boostGain*Time.deltaTime;
-			if(BoostAmount > Settings.maxBoost) BoostAmount = Settings.maxBoost;
-		} else if(drainBoostNatural) { 
-            // Not using boost, drain it naturally
-			BoostDecayTime += Time.deltaTime;
-			BoostAmount = Mathf.Max(BoostAmount - boostDecayCurve.Evaluate(BoostDecayTime)*passiveBoostDrain*Time.deltaTime, 0);									
-		}
+        void ChangeBoostValue(float val) => BoostAmount = Mathf.Clamp(BoostAmount + val, 0, Settings.maxBoost);
+
+        bool gainingBoost = !ActivelyBoosting && EngineWheels.IsDriftEngaged && EngineSteeringWheel.SteeringWheelMatchesDrift;
+        if(gainingBoost) {
+            BoostDecayTime = 0;
+            boostDecayType = BoostDecayType.NATURAL_PASSIVE;
+            ChangeBoostValue(boostGain*Time.deltaTime);
+        } else if(ActivelyBoosting && drainBoostUsing) {
+            BoostDecayTime = 0;
+            boostDecayType = BoostDecayType.NATURAL_POST_USE;
+            ChangeBoostValue(-boostDrainUsing*Time.deltaTime);
+        } else if(!ActivelyBoosting && drainBoostNatural) {
+            BoostDecayTime += Time.deltaTime;
+
+            float decayFactor = boostDecayType == BoostDecayType.NATURAL_PASSIVE ? boostDrainNaturalPassive : boostDrainNaturalPostUse;
+            float decayCurve = boostDecayType == BoostDecayType.NATURAL_PASSIVE ? boostDecayCurve.Evaluate(BoostDecayTime) : 1f;
+            ChangeBoostValue(-decayFactor*decayCurve*Time.deltaTime);
+        }
 
 		if(kartCtrl.GameplayManager.RaceManager.RaceTime <= 0) {
 			BoostAmount = kartCtrl.GameplayManager.RaceManager.settings.startBoostPercent*Settings.maxBoost;
@@ -93,4 +102,9 @@ public class EngineBoost : KartBehavior
     public float SetBoostDecayTime(float boostDecayTime) => this.BoostDecayTime = boostDecayTime;
     public void SetBoostToMax() => this.BoostAmount = Settings.maxBoost;
 
+}
+
+public enum BoostDecayType {
+    NATURAL_PASSIVE,
+    NATURAL_POST_USE,
 }

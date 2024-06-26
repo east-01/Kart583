@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using GameKit.Utilities;
 using Steamworks;
 using TMPro;
@@ -7,6 +8,8 @@ public class KartVisualsManager : KartBehavior
 {
     [SerializeField]
     private GameObject bumpParticlePrefab;
+    [SerializeField]
+    private GameObject landParticlePrefab;
 
     [SerializeField]
     private GameObject nameplate;
@@ -43,7 +46,8 @@ public class KartVisualsManager : KartBehavior
 		GameObject newKartModelGameObject = Instantiate(kdp.model.gameObject, transform);
         KartModel newKartModel = newKartModelGameObject.GetComponent<KartModel>();
 		newKartModel.SetKartController(kartCtrl);
-		kartCtrl.kartModel = newKartModelGameObject.transform;
+		kartCtrl.kartModelTransform = newKartModelGameObject.transform;
+        kartCtrl.kartModel = newKartModel;
 
         /* Hit item */
         Transform hit = newKartModel.heldItemTransform;
@@ -74,6 +78,18 @@ public class KartVisualsManager : KartBehavior
     {
         GameObject particles = Instantiate(bumpParticlePrefab);
         particles.transform.position = position;
+    }
+
+    public void SpawnLandEffect(Transform position) 
+    {
+        List<Vector3> wheelPositions = kartCtrl.kartModel.WheelPositions;
+
+        CoreManager.AudioManager.PlayOneShotSound(AudioFile.KART_LAND, 0.25f, position);
+
+        kartCtrl.kartModel.WheelPositions.ForEach(wheelPos => {
+            GameObject particles = Instantiate(landParticlePrefab);
+            particles.transform.position = position.position;
+        });
     }
 
 }

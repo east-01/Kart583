@@ -15,6 +15,7 @@ public class ColorSelectController : PlayerPanelControllerSubMenu
     public void SetColor(string hexColor) 
     {
         focusedPlayer.data.hexColor = hexColor;
-        PlayerPanelController.UpdatePanel();
+        PlayerPanelController.SetPanelColor(hexColor);
+        PlayerPanelController.UpdateBuildPhase();
     }
 }

@@ -19,16 +19,25 @@ public class EngineBase : KartBehavior
 #region Runtime fields
     /// <summary>The up vector that the kart follows. Will always be normalized.</summary>
     public new Vector3 Up { get; private set; } = new(0, 1, 0);
+    public new Vector3 TrackVelocity { get; private set; }
+    public new float TrackSpeed { get; private set; }
+    public float TrackSpeedDerivative { get; private set; }
     /// <summary>Time engine is stalled, stalls usually come from damage</summary>
     public new float EngineStallTime { get; private set; } = 0;
     public StallType StallType { get; private set; } = StallType.NONE;
 #endregion
 
 #region Utility fields
-	public new Vector3 TrackVelocity => kartCtrl.RemoveUpComponent(rb.velocity); 
-	/// <summary>The velocity magnitude tangential to the up vector</summary>
-	public new float TrackSpeed => TrackVelocity.magnitude;
-	public new float CurrentMaxSpeed => EngineWheels.Momentum == 1 ? (EngineBoost.ActivelyBoosting ? Settings.maxBoostSpeed : Settings.maxSpeed) : Settings.maxSpeed/4f;
+    public new float CurrentMaxSpeed { get {
+        float maxSpeed = EngineBoost.ActivelyBoosting ? Settings.maxBoostSpeed : Settings.maxSpeed;
+        float absSteeringWheelDirection = Mathf.Abs(EngineSteeringWheel.SteeringWheelDirection);
+        if(absSteeringWheelDirection >= EngineSteeringWheel.INPUT_DEADZONE)
+            return maxSpeed*absSteeringWheelDirection;
+        else if(EngineWheels.Momentum == 1)
+            return maxSpeed;
+        else
+            return Settings.maxSpeed/4f;
+    } }
 	public new float SpeedRatio => EngineBase.TrackSpeed/CurrentMaxSpeed;
 #endregion
 
@@ -45,13 +54,22 @@ public class EngineBase : KartBehavior
 
     private void Update() 
     {
+        /* Engine stall */
         if(EngineStallTime > 0)
 			EngineStallTime = Math.Max(EngineStallTime-Time.deltaTime, 0);
 
+        if(Input.GetKeyDown(KeyCode.J))
+            ApplyStall(2.5f, StallType.SMALL);
     }
 
     private void FixedUpdate() 
-    {  
+    {
+        /* Track velocity*/
+        TrackVelocity = kartCtrl.RemoveUpComponent(rb.velocity);
+        float oldTrackSpeed = TrackSpeed;
+        TrackSpeed = TrackVelocity.magnitude;
+        TrackSpeedDerivative = (TrackSpeed-oldTrackSpeed)/Time.deltaTime;
+  
         /* Up force: It should always be that transform.Up == up */
 		// Code found here https://gamedev.stackexchange.com/questions/194641/how-to-set-transform-up-without-locking-the-y-axis
 		Quaternion zToUp = Quaternion.LookRotation(Up, -transform.forward);

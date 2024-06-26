@@ -67,6 +67,14 @@ public class DevSettingsWindow : EditorWindow
                 EditorGUI.indentLevel--;
             }
 
+            settings.EnableWarpPoint = EditorGUILayout.Toggle("Enable warp point", settings.EnableWarpPoint);
+            if(settings.EnableWarpPoint) {
+                EditorGUI.indentLevel++;
+                settings.WarpPosition = EditorGUILayout.Vector3Field("Warp position", settings.WarpPosition);
+                CreateNote("Use LCtrl+N to save and LCtrl+M to load. Only works in local instances.");
+                EditorGUI.indentLevel--;                
+            }
+
             GUILayout.Space(5);
 
             CreateHeader("Networking");

@@ -178,6 +178,7 @@ public abstract class MenuController : MonoBehaviour
             return;
         BLog.Log($"MenuController \"{this}\" (focus: \"{(focusedPlayer != null ? focusedPlayer.PlayerIndex : "-")}\") recieved input event \"{context.action.name}\"", LogChannel.MenuController, 5);
         if(context.performed && context.action.name == controlsReference.UI.Cancel.name) {
+            BLog.Highlight("sending " + this.GetType() + " back");
             SendMenuBack();
         }
 
@@ -195,6 +196,11 @@ public abstract class MenuController : MonoBehaviour
 #region Open and Close
     public void Open(PlayerObject focus = null) 
     {
+        if(hidesParent && parentMenu != null)
+            parentMenu.Close();
+        else if(parentMenu != null)
+            parentMenu.RemoveFocus();
+
         if(!gameObject.activeSelf) 
             gameObject.SetActive(true);
 
@@ -212,9 +218,6 @@ public abstract class MenuController : MonoBehaviour
             SetFocus(PlayerObjectManager.Instance.PlayerOne);
         else
             RemoveFocus();
-
-        if(hidesParent && parentMenu != null)
-            parentMenu.Close();
 
         BLog.Log($"MenuController \"{this}\" opened with {(focusedPlayer != null ? $"focus \"{focusedPlayer.PlayerIndex}\"" : "no focus")}", LogChannel.MenuController, 0);
         Opened();
@@ -253,6 +256,7 @@ public abstract class MenuController : MonoBehaviour
     /// </summary>
     protected virtual void SendMenuBack() 
     {
+        BLog.Highlight("Default sendmenuback implementation");
         Close();
 
         if(parentMenu != null)
@@ -349,11 +353,23 @@ public abstract class MenuController : MonoBehaviour
         else
             return false;
     } }
+    
+    public List<MenuController> SubMenus => subMenus.Select(smStr => GetSubMenu(smStr.id)).ToList();
     public bool IsSubMenuOpen { get {
         return subMenus.Any(sm => GetSubMenu(sm.id).IsOpen);
     } }
-    public PlayerObject FocusedPlayer => focusedPlayer; 
 
+    public PlayerObject FocusedPlayer => focusedPlayer; 
+    /// <summary> Utility to get the focused player (if it exists) or a focusedPlayer in child MenuControllers. </summary>
+    protected PlayerObject FocusedPlayerIncludingChildren { get {
+        if(focusedPlayer != null)
+            return focusedPlayer;
+        foreach(MenuController subMenu in SubMenus) {
+            if(subMenu.FocusedPlayerIncludingChildren != null)
+                return subMenu.FocusedPlayerIncludingChildren;
+        }
+        return null;
+    } }
 }
 
 [Serializable]

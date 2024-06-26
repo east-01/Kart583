@@ -638,6 +638,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   kartModel: {fileID: 0}
+  kartModelTransform: {fileID: 0}
   settings:
     maxSpeed: 35
     maxBoost: 3
@@ -722,28 +723,29 @@ MonoBehaviour:
   drainBoostUsing: 1
   requiredBoostPercentage: 0.3
   boostGain: 1
-  passiveBoostDrain: 3
-  activeBoostDrain: 1.75
+  boostDrainNaturalPassive: 1.8
+  boostDrainNaturalPostUse: 3
+  boostDrainUsing: 1.75
   boostDecayCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 0.4669812
-      outSlope: 0.4669812
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.298573
-    - serializedVersion: 3
-      time: 0.15
-      value: 1
       inSlope: 13.082938
-      outSlope: 0
-      tangentMode: 65
+      outSlope: 0.011575373
+      tangentMode: 1
       weightedMode: 0
       inWeight: 0.33333334
+      outWeight: 0.21847008
+    - serializedVersion: 3
+      time: 0.3
+      value: 1
+      inSlope: 3.6638641
+      outSlope: 0
+      tangentMode: 1
+      weightedMode: 0
+      inWeight: 0.11966007
       outWeight: 0.33333334
     - serializedVersion: 3
       time: 1
@@ -829,6 +831,7 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   bumpParticlePrefab: {fileID: 5024009746357069194, guid: ec3f674830402cc45bce805cf6493db7, type: 3}
+  landParticlePrefab: {fileID: 4451893144569110979, guid: a59afd0183adf9545a209a3b23ab4c1c, type: 3}
   nameplate: {fileID: 4608761901941505407}
 --- !u!114 &318379147591700670
 MonoBehaviour:

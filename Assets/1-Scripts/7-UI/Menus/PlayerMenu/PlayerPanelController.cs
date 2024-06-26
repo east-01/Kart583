@@ -34,56 +34,62 @@ public class PlayerPanelController : MenuController
         origPanelColor = GetComponent<Image>().color;
     }
 
+    // private void Update() { BLog.Highlight("Am i focused: " + focusedPlayer); }
+
     /** Shortcut for UpdateBuildPhase() & UpdateVisuals(). UpdateBuildPhase is called first. */
-    public void UpdatePanel() { UpdateBuildPhase(); UpdateVisuals(); }
+    // public void UpdateBuildPhase() { UpdateBuildPhase(); UpdateVisuals(); }
 
     /** Update the current selection so it reflects what stage we're at in player construction. 
         The order is: Name -> Color -> Kart -> Ready */
     public void UpdateBuildPhase() 
     {
         // Get the sub menus current focus, if its null (this happens when the menu is first opened) set the current focus as this menus focus
-        PlayerObject currentFocus = GetSubMenu(phaseSubMenu[phase]).FocusedPlayer;
+        PlayerObject currentFocus = FocusedPlayerIncludingChildren;
+        BLog.Highlight($"Current focus: \"{currentFocus}\"");
         if(currentFocus == null)
             currentFocus = FocusedPlayer;
 
         // Check player data and enable the corresponding phase
-        if(focusedPlayer.data.name.Length == 0) {
+        if(currentFocus.data.name.Length == 0) {
             phase = PlayerBuildPhase.NAME_SELECT;
-        } else if(focusedPlayer.data.hexColor == null) {
+        } else if(currentFocus.data.hexColor == null) {
             phase = PlayerBuildPhase.COLOR_SELECT;
-        } else if(focusedPlayer.data.kartType == KartType.NONE) {
+        } else if(currentFocus.data.kartType == KartType.NONE) {
             phase = PlayerBuildPhase.VEHICLE_SELECT;
-        } else if(!focusedPlayer.data.ready) {
+        } else if(!currentFocus.data.ready) {
             phase = PlayerBuildPhase.WAITING_FOR_READY;
         } else {
             phase = PlayerBuildPhase.READY;
         }
+        BLog.Highlight("Opening sub menu " + phase + " with " + currentFocus.PlayerIndex);
         OpenSubMenu(phaseSubMenu[phase], currentFocus);
     }
 
     public void RegressBuildPhase() 
     {
-        if(focusedPlayer.data.ready) {
-            focusedPlayer.data.ready = false;
-        } else if(focusedPlayer.data.kartType != KartType.NONE) {
-            focusedPlayer.data.kartType = KartType.NONE;
-        } else if(focusedPlayer.data.hexColor != null) {
-            focusedPlayer.data.hexColor = null;
-        } else if(focusedPlayer.data.name.Length > 0) {
-            focusedPlayer.data.name = "";
-        } else if(focusedPlayer.data.name == "") {
+        PlayerObject focus = FocusedPlayerIncludingChildren;
+        BLog.Highlight($" focus: \"{focus}\"");
+        if(focus.data.ready) {
+            focus.data.ready = false;
+        } else if(focus.data.kartType != KartType.NONE) {
+            focus.data.kartType = KartType.NONE;
+        } else if(focus.data.hexColor != null) {
+            focus.data.hexColor = null;
+        } else if(focus.data.name.Length > 0) {
+            focus.data.name = "";
+        } else if(focus.data.name == "") {
             MenuPlayerController mpc = FindObjectOfType<MenuPlayerController>();
-            mpc.RemovePanel(focusedPlayer, focusedPlayer.PlayerIndex != 0);
+            mpc.RemovePanel(focus, focus.PlayerIndex != 0);
             return;
         }
-        UpdatePanel();
+        UpdateBuildPhase();
     }
 
     /** Update the visuals to reflect what the player has selected in playerObj#data */
     public void UpdateVisuals() 
-    {
-        titleText.text = focusedPlayer.data.name;
-        GetComponent<Image>().color = focusedPlayer.data.hexColor != null ? HexToColor(focusedPlayer.data.hexColor) : origPanelColor;
+    {  
+        if(focusedPlayer == null)
+            return;
     }
 
     public new void Open(PlayerObject focusedPlayer = null) 
@@ -92,8 +98,17 @@ public class PlayerPanelController : MenuController
 
         // Reset ready state so we don't automatically ready up the player when they open
         this.focusedPlayer.data.ready = false;
-        
-        UpdatePanel();
+
+        // Visuals
+        titleText.text = this.focusedPlayer.data.name;
+        SetPanelColor(focusedPlayer.data.hexColor);
+
+        UpdateBuildPhase();
+    }
+
+    public void SetPanelColor(string color) 
+    {
+        GetComponent<Image>().color = color == null || color.Length == 0 ? HexToColor(color) : origPanelColor;
     }
 
     public Color HexToColor(string hex)
@@ -131,6 +146,7 @@ public class PlayerPanelControllerSubMenu : MenuController
 
     protected override void SendMenuBack()
     {
+        BLog.Highlight("ppcsm override");
         PlayerPanelController.RegressBuildPhase();
         uiElementSounds.PlayBackSound();
         if(PlayerPanelController.PlayerBuildPhase != PlayerBuildPhase.WAITING_FOR_READY)

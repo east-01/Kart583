@@ -43,12 +43,26 @@ public class EngineWheels : KartBehavior
 #region Runtime fields
 	public int Momentum { get; private set; }
 
+	public float TurnForce { get; private set;}
+	public float TurnForceMax { get; private set; }
+
     /// <summary>Stores last update's grounded status</summary>
 	public new bool Grounded { get; private set; }
 	private RaycastHit groundHit;
     public RaycastHit GroundHit => groundHit;
 	public float DistanceFromGround { get; private set; }
 	public float Airtime { get; private set; }
+	private LinearVelocityState linearVelocityState;
+	public LinearVelocityState LinearVelocityState { 
+		get { return linearVelocityState; } 
+		private set {
+			TimeInLinearVelocityState = 0f;
+			LinearVelocityState prev = linearVelocityState;
+			linearVelocityState = value;
+			LinearVelocityStateChangedEvent?.Invoke(value, prev);
+		} 
+	}
+	public float TimeInLinearVelocityState { get; private set; }
 
     public bool Drifting { get; private set; }
 	public float DriftTimeElapsed { get; private set; }
@@ -59,6 +73,11 @@ public class EngineWheels : KartBehavior
 #region Utility fields
 	public bool CanDriftEngage => kartCtrl.CanMove && kartCtrl.RawDriftInput && Grounded && EngineBase.SpeedRatio >= driftEngageSpeedPercent && Momentum == 1;
 	public bool IsHopping => DriftTimeElapsed >= 0 && DriftTimeElapsed < DriftEngageDuration;
+#endregion
+
+#region Events
+	public delegate void LinearVelocityStateHandler(LinearVelocityState curr, LinearVelocityState prev);
+	public event LinearVelocityStateHandler LinearVelocityStateChangedEvent;
 #endregion
 
     protected new void Awake() 
@@ -73,6 +92,9 @@ public class EngineWheels : KartBehavior
 		bool lastFrameGrounded = this.Grounded;
 		Grounded = CheckGrounded();
 		if(Grounded) { 
+			if(Airtime > 0.25f)
+				kartVisualsManager.SpawnLandEffect(transform);
+
 			Airtime = 0;
 		} else { 
 			if(lastFrameGrounded) Airtime = 0; // We've just gone airborne, reset airtime
@@ -96,41 +118,51 @@ public class EngineWheels : KartBehavior
 
     private void FixedUpdate() 
     {
-        Momentum = EngineBase.TrackSpeed > 0.1f ? (Vector3.Dot(rb.velocity, transform.forward) >= 0 ? 1 : -1) : 0;
+		/* Momentum calculation */
+		if(EngineBase.TrackSpeed > 0.1f) {
+			if(Vector3.Dot(rb.velocity, transform.forward) >= 0)
+				Momentum = 1;
+			else
+				Momentum = -1;
+		} else
+			Momentum = 0;
+
+		UpdateStates();
 
         /* Variables */
         float throttleInput = kartCtrl.ThrottleInput;
 
         /* Forward/backward velocity */
-		if(Mathf.Abs(throttleInput) > EngineSteeringWheel.INPUT_DEADZONE && (EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed || Mathf.Sign(throttleInput) != Momentum)) {
-			// Adding
-			Vector3 throttleForce = (EngineBoost.ActivelyBoosting ? 1f : throttleInput) * (EngineBoost.ActivelyBoosting ? Settings.acceleration*5f : Settings.acceleration) * transform.forward;
-
-			if(Grounded) {
+		switch(LinearVelocityState) {
+			case LinearVelocityState.NORMAL_ACCELERATION:
+				Vector3 throttleForce = (EngineBoost.ActivelyBoosting ? 1f : throttleInput) * (EngineBoost.ActivelyBoosting ? Settings.acceleration*5f : Settings.acceleration) * transform.forward;
 				rb.AddForce(throttleForce, ForceMode.Acceleration);	
 				KartVectorDrawer.DrawVector(throttleForce, Color.yellow);
-			}
-		} else {
-			// Decay
-			if(EngineBase.TrackSpeed > 0.1f) {
+				break;
+			case LinearVelocityState.VELOCITY_DECAY:
 				rb.AddForce(-kartCtrl.RemoveUpComponent(rb.velocity.normalized)*(velocityDecay*Time.deltaTime), ForceMode.VelocityChange);
-			} else {
+				break;
+			case LinearVelocityState.STOPPED:
 				rb.velocity = Vector3.zero;
-			}
+				break;
 		}
 
-		/* Turning: Each frame, we want to change transform.forward by a certain amount specified by the steeringWheelDirection. */
-		if(Math.Abs(EngineSteeringWheel.SteeringWheelDirection) > EngineSteeringWheel.INPUT_DEADZONE) {
-			float turnForce = EngineSteeringWheel.SteeringWheelDirection*
-							  Settings.turnSpeed*
-							  DriftTurnMultiplier*
-							  (Momentum != -1 ? 1 : -1);
+		TurnForce = EngineSteeringWheel.SteeringWheelDirection*
+					Settings.turnSpeed*
+					DriftTurnMultiplier*
+					(Grounded ? 1 : 0.25f)*
+					(Momentum != -1 ? 1 : -1);
 
-			if(!Grounded) 
-				turnForce *= 0.25f; // Air turn speed is a quarter of ground turn speed
-				
-			rb.angularVelocity = Up*turnForce;
-		} else
+		// All values that could be 1 are set to 1
+		TurnForceMax = Mathf.Sign(EngineSteeringWheel.SteeringWheelDirection)*
+					   Settings.turnSpeed*
+					   DriftTurnMultiplier*
+					   (Momentum != -1 ? 1 : -1);
+
+		/* Turning: Each frame, we want to change transform.forward by a certain amount specified by the steeringWheelDirection. */
+		if(Math.Abs(EngineSteeringWheel.SteeringWheelDirection) > EngineSteeringWheel.INPUT_DEADZONE)				
+			rb.angularVelocity = Up*TurnForce;
+		else
 			rb.angularVelocity = Vector3.zero;
 
         /* Tire force: Since we're simulating tires rolling, the velocity direction
@@ -152,6 +184,24 @@ public class EngineWheels : KartBehavior
 			}
 		}
     }
+
+	private void UpdateStates() 
+	{
+		float throttleInput = kartCtrl.ThrottleInput;
+		bool throttleInputValid = Mathf.Abs(throttleInput) > EngineSteeringWheel.INPUT_DEADZONE;
+		bool shouldApplyNormalAcceleration = EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed || Mathf.Sign(throttleInput) != Momentum;
+		bool normalAcceleration = throttleInputValid && shouldApplyNormalAcceleration;
+
+		bool trackSppedAboveThreshold = EngineBase.TrackSpeed > 0.1f;
+
+		if(normalAcceleration) {
+			LinearVelocityState = LinearVelocityState.NORMAL_ACCELERATION;
+		} else if(trackSppedAboveThreshold) {
+			LinearVelocityState = LinearVelocityState.VELOCITY_DECAY;
+		} else {
+			LinearVelocityState = LinearVelocityState.STOPPED;
+		}
+	}
 
     /// <summary>Attempt to engage drift, has the possibility of failing due to missed conditions.</summary>
     public void SetDrifting(bool drifting) 
@@ -198,4 +248,10 @@ public class EngineWheels : KartBehavior
 		} 
 	}
 
+}
+
+public enum LinearVelocityState {
+	NORMAL_ACCELERATION,
+	VELOCITY_DECAY,
+	STOPPED
 }

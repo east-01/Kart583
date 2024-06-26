@@ -49,7 +49,7 @@ public class KartSelectController : PlayerPanelControllerSubMenu
 
     public void SetKartName(KartType kartName) {
         focusedPlayer.data.kartType = kartName;
-        PlayerPanelController.UpdatePanel();
+        PlayerPanelController.UpdateBuildPhase();
     }
 
     void UpdateVisuals() 

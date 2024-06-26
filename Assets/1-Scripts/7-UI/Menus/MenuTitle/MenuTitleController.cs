@@ -22,4 +22,6 @@ public class MenuTitleController : MenuController
     {
         Application.Quit();
     }
+
+    protected override void SendMenuBack() {}
 }
