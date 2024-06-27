@@ -6,66 +6,53 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.UI;
 
+/// <summary>
+/// Is a host for all OptionsSubMenus, which get pulled up from "tabs" (buttons)
+///   in the 
+/// </summary>
 public class OptionsMenuController : MenuController
 {
     
-    [SerializeField] private AudioMixer mixer;
-    [SerializeField] private List<ChannelData> channelDatas;
+    public static readonly string GRAPHICS_OPTIONS_MENU_ID = "GraphicsOptions";
+    public static readonly string VOLUME_OPTIONS_MENU_ID = "VolumeOptions";
 
 #region Save/Load
-    public void SaveOptions() 
-    {
-        // Set mixer data
-        for(int i = 0; i < channelDatas.Count; i++) {
-            PlayerPrefs.SetFloat(channelDatas[i].label, GetVolume(i));
-        }
-
-        PlayerPrefs.Save();
-    }
-
     public void LoadOptions() 
     {
-        // Load mixer data
-        for(int i = 0; i < channelDatas.Count; i++) {
-            ChannelData cd = channelDatas[i];
-            float volume = PlayerPrefs.GetFloat(cd.label, 1);
-            SetVolume(i, volume, true);
-        }
+        subMenus.ForEach(sm => (GetSubMenu(sm.id) as OptionsSubMenu).LoadOptions());
     }
-#endregion
-
-#region Mixer
-    public void SetVolumeMaster(float volume) { SetVolume(0, volume); }
-    public void SetVolumeMusic(float volume) { SetVolume(1, volume); }
-    public void SetVolumeEnvironment(float volume) { SetVolume(2, volume); }
-    public void SetVolumeSoundFX(float volume) { SetVolume(3, volume); }
-
-    public void SetVolume(int channel, float volume, bool setSliderValue = false) 
+    
+    public void SaveOptions() 
     {
-        if(channel < 0 || channel >= channelDatas.Count) {
-            Debug.LogError($"Can't set channel volume, provided channel is out of bounds {channel} isn't in bounds [0, {channelDatas.Count})");
-            return;
-        }
-        ChannelData cd = channelDatas[channel];
-        mixer.SetFloat(cd.label, Mathf.Log10(volume)*20f);
-
-        if(setSliderValue)
-            cd.slider.value = volume;
+        subMenus.ForEach(sm => (GetSubMenu(sm.id) as OptionsSubMenu).SaveOptions());
+        PlayerPrefs.Save();
     }
+    #endregion
 
-    public float GetVolume(int channel) 
+    protected override void Opened()
     {
-        if(channel < 0 || channel >= channelDatas.Count) {
-            Debug.LogError($"Can't get channel volume, provided channel is out of bounds {channel} isn't in bounds [0, {channelDatas.Count})");
-            return 0;
-        }
-        mixer.GetFloat(channelDatas[channel].label, out float vol);
-        // Invert function from setting the mixer float
-        vol = Mathf.Pow(10f, vol / 20f);
-        return vol;
+        base.Opened();
+        OpenSubMenu(GRAPHICS_OPTIONS_MENU_ID);
     }
-#endregion
 
+    public void OpenOptionsSubMenu(string id) => OpenSubMenu(id);
+
+}
+
+public abstract class OptionsSubMenu : MenuController {
+    [SerializeField] private Button tabButton;
+    public abstract void SaveOptions();
+    public abstract void LoadOptions();
+    protected override void Opened()
+    {
+        base.Opened();
+        tabButton.enabled = false;
+    }
+    protected override void Closed()
+    {
+        base.Closed();
+        tabButton.enabled = true;
+    }
 }
 
 [Serializable]

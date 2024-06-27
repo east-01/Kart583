@@ -690,6 +690,10 @@ PrefabInstance:
       propertyPath: overridePlayerLimit
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6513168960416595471, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8577002329458259215, guid: ddb479cc0995422419e5e059ba346d62, type: 3}
       propertyPath: m_RootOrder
       value: 0

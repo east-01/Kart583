@@ -155,7 +155,7 @@ public class EngineWheels : KartBehavior
 				KartVectorDrawer.DrawVector(throttleForce, Color.yellow);
 				break;
 			case LinearVelocityState.BRAKING_DECELERATION:
-				Vector3 throttleForce = processedThrottleInput * processedAccelerationInput * transform.forward;
+				throttleForce = processedThrottleInput * processedAccelerationInput * transform.forward;
 				rb.AddForce(throttleForce, ForceMode.Acceleration);	
 				break;
 			case LinearVelocityState.VELOCITY_DECAY:
@@ -208,8 +208,17 @@ public class EngineWheels : KartBehavior
 	{
 		float throttleInput = kartCtrl.ThrottleInput;
 		bool throttleInputValid = Mathf.Abs(throttleInput) > EngineSteeringWheel.INPUT_DEADZONE;
-		bool shouldApplyNormalAcceleration = EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed && Mathf.Sign(throttleInput) == Momentum;
-		bool shouldApplyBreakingDeceleration = EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed && Mathf.Sign(throttleInput) != Momentum;
+		bool throttleMatchesMomentum;
+		if(Momentum != 0)
+			throttleMatchesMomentum = Mathf.Sign(throttleInput) == Momentum;
+		else
+			throttleMatchesMomentum = true;
+
+		BLog.Highlight($"sign ti: {Mathf.Sign(throttleInput)} == {Momentum} yields {throttleMatchesMomentum}");
+		bool canAccelerate = Momentum == 0 || EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed;
+		BLog.Highlight($"can accelerate " + canAccelerate);
+		bool shouldApplyNormalAcceleration = canAccelerate && throttleMatchesMomentum;
+		bool shouldApplyBreakingDeceleration = canAccelerate && !throttleMatchesMomentum;
 		bool normalAcceleration = throttleInputValid && shouldApplyNormalAcceleration;
 
 		bool trackSpeedAboveThreshold = EngineBase.TrackSpeed > 0.1f;
