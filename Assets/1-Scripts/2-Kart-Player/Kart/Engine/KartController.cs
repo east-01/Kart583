@@ -117,7 +117,7 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 		get { return CanMove && rawDriftInput; } 
 		set {
 			rawDriftInput = value;
-			if(value && !EngineWheels.Drifting && EngineWheels.Grounded && !EngineBoost.ActivelyBoosting)
+			if(value && EngineWheels.CanDriftEngage)
 				EngineWheels.SetDrifting(value);
 			else if(!value && EngineWheels.Drifting)
 				EngineWheels.SetDrifting(value);

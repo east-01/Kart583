@@ -8,6 +8,7 @@ public class BoostCanisterWorldItem : WorldItem
     {
         KartController kc = OwnerKartManager.GetKartController();
         kc.EngineBoost.SetBoostDecayTime(0);
+        kc.EngineBoost.SetBoostDecayType(BoostDecayType.NATURAL_PASSIVE);
         kc.EngineBoost.SetBoostToMax();
 
         CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_BOOST_CANISTER, 1f, transform);

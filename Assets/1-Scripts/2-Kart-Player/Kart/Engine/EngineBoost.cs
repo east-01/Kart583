@@ -57,11 +57,12 @@ public class EngineBoost : KartBehavior
     {
         void ChangeBoostValue(float val) => BoostAmount = Mathf.Clamp(BoostAmount + val, 0, Settings.maxBoost);
 
-        bool gainingBoost = !ActivelyBoosting && EngineWheels.IsDriftEngaged && EngineSteeringWheel.SteeringWheelMatchesDrift;
+        bool gainingBoost = !ActivelyBoosting && EngineWheels.IsDriftEngaged;
         if(gainingBoost) {
             BoostDecayTime = 0;
             boostDecayType = BoostDecayType.NATURAL_PASSIVE;
-            ChangeBoostValue(boostGain*Time.deltaTime);
+            if(EngineSteeringWheel.SteeringWheelMatchesDrift)
+                ChangeBoostValue(boostGain*Time.deltaTime);
         } else if(ActivelyBoosting && drainBoostUsing) {
             BoostDecayTime = 0;
             boostDecayType = BoostDecayType.NATURAL_POST_USE;
@@ -100,6 +101,7 @@ public class EngineBoost : KartBehavior
     }
 
     public float SetBoostDecayTime(float boostDecayTime) => this.BoostDecayTime = boostDecayTime;
+    public void SetBoostDecayType(BoostDecayType boostDecayType) => this.boostDecayType = boostDecayType;
     public void SetBoostToMax() => this.BoostAmount = Settings.maxBoost;
 
 }

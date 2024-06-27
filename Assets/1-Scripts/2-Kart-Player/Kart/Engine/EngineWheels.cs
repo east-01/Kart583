@@ -71,13 +71,16 @@ public class EngineWheels : KartBehavior
 #endregion
 
 #region Utility fields
-	public bool CanDriftEngage => kartCtrl.CanMove && kartCtrl.RawDriftInput && Grounded && EngineBase.SpeedRatio >= driftEngageSpeedPercent && Momentum == 1;
+	public bool CanDriftEngage => kartCtrl.CanMove && kartCtrl.RawDriftInput && Grounded && EngineBase.SpeedRatio >= driftEngageSpeedPercent && Momentum == 1 && !EngineBoost.ActivelyBoosting;
 	public bool IsHopping => DriftTimeElapsed >= 0 && DriftTimeElapsed < DriftEngageDuration;
 #endregion
 
 #region Events
 	public delegate void LinearVelocityStateHandler(LinearVelocityState curr, LinearVelocityState prev);
 	public event LinearVelocityStateHandler LinearVelocityStateChangedEvent;
+
+	public delegate void KartLandedHandler();
+	public event KartLandedHandler KartLandedEvent;
 #endregion
 
     protected new void Awake() 
@@ -85,6 +88,9 @@ public class EngineWheels : KartBehavior
         base.Awake();
 
     }
+
+	private void OnEnable() { KartLandedEvent += EngineWheels_KartLanded; }
+	private void OnDisable() { KartLandedEvent -= EngineWheels_KartLanded; }
 
     private void Update() 
     {
@@ -94,6 +100,8 @@ public class EngineWheels : KartBehavior
 		if(Grounded) { 
 			if(Airtime > 0.25f)
 				kartVisualsManager.SpawnLandEffect(transform);
+			if(Airtime > 0)
+				KartLandedEvent?.Invoke();
 
 			Airtime = 0;
 		} else { 
@@ -110,7 +118,7 @@ public class EngineWheels : KartBehavior
 		if(Drifting && IsHopping && Math.Abs(kartCtrl.TurnInput.x) >= EngineSteeringWheel.INPUT_DEADZONE) 
 			DriftDirection = (int)Mathf.Sign(kartCtrl.TurnInput.x);
 
-        bool exitDriftState = (Grounded && EngineSteeringWheel.SteeringWheelDirection == 0 && DriftTimeElapsed >= 0.15f) || !CanDriftEngage;
+        bool exitDriftState = (Grounded && EngineSteeringWheel.SteeringWheelDirection == 0 && DriftTimeElapsed >= 0.15f) || !CanDriftEngage || ActivelyBoosting;
         if(Drifting && exitDriftState) {
             SetDrifting(false);
         }
@@ -127,17 +135,28 @@ public class EngineWheels : KartBehavior
 		} else
 			Momentum = 0;
 
-		UpdateStates();
+		UpdateLinearVelocityState();
 
         /* Variables */
         float throttleInput = kartCtrl.ThrottleInput;
+		float processedThrottleInput = EngineBoost.ActivelyBoosting ? 1f : throttleInput;
+		float processedAccelerationInput = Settings.acceleration;
+		if(EngineBoost.ActivelyBoosting)
+			processedAccelerationInput *= 5f;
+		else if(LinearVelocityState == LinearVelocityState.BRAKING_DECELERATION)
+			processedAccelerationInput *= 2.5f;
 
         /* Forward/backward velocity */
+		BLog.Highlight("Linear velocity state: " + LinearVelocityState);
 		switch(LinearVelocityState) {
 			case LinearVelocityState.NORMAL_ACCELERATION:
-				Vector3 throttleForce = (EngineBoost.ActivelyBoosting ? 1f : throttleInput) * (EngineBoost.ActivelyBoosting ? Settings.acceleration*5f : Settings.acceleration) * transform.forward;
+				Vector3 throttleForce = processedThrottleInput * processedAccelerationInput * transform.forward;
 				rb.AddForce(throttleForce, ForceMode.Acceleration);	
 				KartVectorDrawer.DrawVector(throttleForce, Color.yellow);
+				break;
+			case LinearVelocityState.BRAKING_DECELERATION:
+				Vector3 throttleForce = processedThrottleInput * processedAccelerationInput * transform.forward;
+				rb.AddForce(throttleForce, ForceMode.Acceleration);	
 				break;
 			case LinearVelocityState.VELOCITY_DECAY:
 				rb.AddForce(-kartCtrl.RemoveUpComponent(rb.velocity.normalized)*(velocityDecay*Time.deltaTime), ForceMode.VelocityChange);
@@ -185,26 +204,33 @@ public class EngineWheels : KartBehavior
 		}
     }
 
-	private void UpdateStates() 
+	private void UpdateLinearVelocityState() 
 	{
 		float throttleInput = kartCtrl.ThrottleInput;
 		bool throttleInputValid = Mathf.Abs(throttleInput) > EngineSteeringWheel.INPUT_DEADZONE;
-		bool shouldApplyNormalAcceleration = EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed || Mathf.Sign(throttleInput) != Momentum;
+		bool shouldApplyNormalAcceleration = EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed && Mathf.Sign(throttleInput) == Momentum;
+		bool shouldApplyBreakingDeceleration = EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed && Mathf.Sign(throttleInput) != Momentum;
 		bool normalAcceleration = throttleInputValid && shouldApplyNormalAcceleration;
 
-		bool trackSppedAboveThreshold = EngineBase.TrackSpeed > 0.1f;
+		bool trackSpeedAboveThreshold = EngineBase.TrackSpeed > 0.1f;
 
 		if(normalAcceleration) {
 			LinearVelocityState = LinearVelocityState.NORMAL_ACCELERATION;
-		} else if(trackSppedAboveThreshold) {
+		} else if(trackSpeedAboveThreshold) {
 			LinearVelocityState = LinearVelocityState.VELOCITY_DECAY;
 		} else {
 			LinearVelocityState = LinearVelocityState.STOPPED;
 		}
 	}
 
+	private void EngineWheels_KartLanded()
+    {
+		if(CanDriftEngage)
+			SetDrifting(true, true);
+    }
+
     /// <summary>Attempt to engage drift, has the possibility of failing due to missed conditions.</summary>
-    public void SetDrifting(bool drifting) 
+    public void SetDrifting(bool drifting, bool skipHop = false) 
     {
 		if(IsHopping)
 			return;
@@ -214,7 +240,8 @@ public class EngineWheels : KartBehavior
 		DriftDirection = 0;
 		if(drifting && CanMove) {
 			Drifting = true;
-			DriftTimeElapsed = 0;
+			DriftDirection = (int)Mathf.Sign(kartCtrl.TurnInput.x);
+			DriftTimeElapsed = skipHop ? driftEngageDuration : 0;
 		} else {
 			Drifting = false;
 			DriftTimeElapsed = -1;
@@ -252,6 +279,7 @@ public class EngineWheels : KartBehavior
 
 public enum LinearVelocityState {
 	NORMAL_ACCELERATION,
+	BRAKING_DECELERATION,
 	VELOCITY_DECAY,
 	STOPPED
 }
