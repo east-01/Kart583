@@ -24,6 +24,8 @@ public class OptionsMenuController : MenuController
     
     public void SaveOptions() 
     {
+        if(!AreSubmenusCached)
+            return;
         subMenus.ForEach(sm => (GetSubMenu(sm.id) as OptionsSubMenu).SaveOptions());
         PlayerPrefs.Save();
     }
@@ -52,6 +54,10 @@ public abstract class OptionsSubMenu : MenuController {
     {
         base.Closed();
         tabButton.enabled = true;
+    }
+    protected override void SendMenuBack()
+    {
+        parentMenu.SendMenuBackPublic();
     }
 }
 

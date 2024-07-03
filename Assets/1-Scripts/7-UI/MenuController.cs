@@ -28,7 +28,7 @@ public abstract class MenuController : MonoBehaviour
         else if(parentMenu != null) {
             return parentMenu.InputSystemUIInputModule;
         } else {
-            return null;
+            return CoreManager.InputSystemUIInputModule;
         }
     } }
 
@@ -44,7 +44,7 @@ public abstract class MenuController : MonoBehaviour
         else if(parentMenu != null) {
             return parentMenu.EventSystem;
         } else {
-            return null;
+            return CoreManager.EventSystem;
         }
     } }
 
@@ -122,11 +122,11 @@ public abstract class MenuController : MonoBehaviour
                 BLog.Log($"{this}: Maintaining focus on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
                 return;
             } else {
-                BLog.Log($"{this}:Removing focus from {focusedPlayer.PlayerIndex} and placing it on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
+                BLog.Log($"{this}: Removing focus from {focusedPlayer.PlayerIndex} and placing it on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
                 RemoveFocus();
             }
         } else {
-            BLog.Log($"{this}:No focus existing, placing focus on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
+            BLog.Log($"{this}: No focus existing, placing focus on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
         }
 
         focusedPlayer = playerObj;
@@ -176,7 +176,9 @@ public abstract class MenuController : MonoBehaviour
     {
         if(!allowInputEvents)
             return;
-        BLog.Log($"MenuController \"{this}\" (focus: \"{(focusedPlayer != null ? focusedPlayer.PlayerIndex : "-")}\") recieved input event \"{context.action.name}\"", LogChannel.MenuController, 5);
+            
+        if(context.action.name != "Point")
+            BLog.Log($"MenuController \"{this}\" (focus: \"{(focusedPlayer != null ? focusedPlayer.PlayerIndex : "-")}\") recieved input event \"{context.action.name}\"", LogChannel.MenuController, 5);
         if(context.performed && context.action.name == controlsReference.UI.Cancel.name) {
             BLog.Highlight("sending " + this.GetType() + " back");
             SendMenuBack();
@@ -263,6 +265,8 @@ public abstract class MenuController : MonoBehaviour
             parentMenu.Open();
     }
 
+    public void SendMenuBackPublic() { SendMenuBack(); } // how to never get hired
+
     public void OpenSubMenu(string id, PlayerObject focus = null) 
     {
         MenuController subMenu = GetSubMenu(id);
@@ -289,6 +293,7 @@ public abstract class MenuController : MonoBehaviour
     /// Cache the submenus by ID for easy reference with GetSubMenu
     /// </summary>
     private Dictionary<string, SubMenuData> cachedSubmenus;
+    public bool AreSubmenusCached { get; private set; } = false;
 
     /// <summary>
     /// Disables all sub-menu GameObjects and sets their parent MenuController to this
@@ -317,6 +322,8 @@ public abstract class MenuController : MonoBehaviour
             subMenu.SetParentMenuController(this);
             subMenu.Close();
         }
+
+        AreSubmenusCached = true;
     }
 
     public void SetParentMenuController(MenuController parent) { this.parentMenu = parent; }

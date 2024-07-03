@@ -6,6 +6,8 @@ using FishNet.Connection;
 using FishNet.Managing;
 using GameKit.Utilities;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SocialPlatforms;
 
 /// <summary>
@@ -28,6 +30,8 @@ public class CoreManager : MonoBehaviour
 
     /* Child component references */
     public static OptionsMenuController OptionsMenuController => Instance.optionsMenuController;
+    public static EventSystem EventSystem => Instance.eventSystem;
+    public static InputSystemUIInputModule InputSystemUIInputModule => Instance.inputSystemUIInputModule;
 
     /* Atlas prefab access*/
     public static LevelAtlas LevelAtlas { get { return Instance.atlasesPrefab.GetComponent<LevelAtlas>(); } }
@@ -56,6 +60,8 @@ public class CoreManager : MonoBehaviour
     private LobbyCommunicator lobbyCommunicator;
     private TransitionManager transitionManager;
     private BLog bLog;
+    private EventSystem eventSystem;
+    private InputSystemUIInputModule inputSystemUIInputModule;
 
     [SerializeField] private OptionsMenuController optionsMenuController;
 
@@ -81,6 +87,8 @@ public class CoreManager : MonoBehaviour
         lobbyCommunicator = GetComponent<LobbyCommunicator>();
         transitionManager = GetComponent<TransitionManager>();
         bLog = GetComponent<BLog>();
+        eventSystem = GetComponentInChildren<EventSystem>();
+        inputSystemUIInputModule = GetComponentInChildren<InputSystemUIInputModule>();
 
         CheckNetworkManager();
         CheckSceneController();

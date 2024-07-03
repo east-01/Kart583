@@ -108,7 +108,7 @@ public class PlayerPanelController : MenuController
 
     public void SetPanelColor(string color) 
     {
-        GetComponent<Image>().color = color == null || color.Length == 0 ? HexToColor(color) : origPanelColor;
+        GetComponent<Image>().color = color == null || color.Length == 0 ? origPanelColor : HexToColor(color);
     }
 
     public Color HexToColor(string hex)
