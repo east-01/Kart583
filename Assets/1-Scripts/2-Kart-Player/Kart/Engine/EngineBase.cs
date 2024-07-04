@@ -9,7 +9,7 @@ using UnityEngine;
 ///  - Simulating RPM
 ///  - Generating torque for tires
 /// </summary>
-public class EngineBase : KartBehavior
+public class EngineBase : KartBehavior, GameplayManagerBehavior
 {
 
 #region Configuration fields
@@ -17,6 +17,8 @@ public class EngineBase : KartBehavior
 #endregion
 
 #region Runtime fields
+    private GameplayManager gameplayManager;
+
     /// <summary>The up vector that the kart follows. Will always be normalized.</summary>
     public new Vector3 Up { get; private set; } = new(0, 1, 0);
     public new Vector3 TrackVelocity { get; private set; }
@@ -49,7 +51,12 @@ public class EngineBase : KartBehavior
     protected new void Awake() 
     {
         base.Awake();
-        
+        CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
     }
 
     private void Update() 
@@ -64,6 +71,9 @@ public class EngineBase : KartBehavior
 
     private void FixedUpdate() 
     {
+        if(gameplayManager == null)
+            return;
+
         /* Track velocity*/
         TrackVelocity = kartCtrl.RemoveUpComponent(rb.velocity);
         float oldTrackSpeed = TrackSpeed;
@@ -75,10 +85,16 @@ public class EngineBase : KartBehavior
 		Quaternion zToUp = Quaternion.LookRotation(Up, -transform.forward);
 		Quaternion yToz = Quaternion.Euler(90, 0, 0);
 		transform.rotation = zToUp * yToz;
+    
+        BLog.Highlight($"Grounded: {Grounded}");
 
 		/* Apply gravity */
-		if(!Grounded) 
-			rb.AddForce(-Up.normalized*Physics.gravity.magnitude);
+		if(!Grounded) {
+            RacePhase phase = gameplayManager.RaceManager.Phase;
+            float gravityForce = Physics.gravity.magnitude*
+                                 ((phase == RacePhase.COUNTDOWN || phase == RacePhase.WAITING_FOR_PLAYERS) ? 10f : 1f);
+			rb.AddForce(-Up.normalized*gravityForce, ForceMode.Acceleration);
+        }
 
 		/* Check if player is stuck in ground*/
 		if(Grounded && EngineWheels.DistanceFromGround < EngineWheels.RideHeight-0.015f && EngineWheels.DistanceFromGround != -1)
@@ -97,7 +113,6 @@ public class EngineBase : KartBehavior
         StallType = type;
         EngineStallEvent?.Invoke(stallTime, type);
     }
-
 }
 
 // Order elements by strength, later entries get higher priority

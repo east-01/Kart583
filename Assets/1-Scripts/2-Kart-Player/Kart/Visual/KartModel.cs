@@ -36,6 +36,8 @@ public class KartModel : MonoBehaviour
 #endregion
 
 #region Runtime fields
+    private float lifetime;
+
     private Vector3 lastTrackedPosition;
 
     private bool showingDriftParticles;
@@ -78,7 +80,10 @@ public class KartModel : MonoBehaviour
 
     private void Update() 
     {
-        if(KartCtrl == null) return;
+        lifetime += Time.deltaTime;
+
+        if(KartCtrl == null) 
+            return;
 
         UpdateParticles();
         UpdateTires();
@@ -111,7 +116,13 @@ public class KartModel : MonoBehaviour
 
     private void UpdateTires() 
     {
-        float turnTheta = EngineWheels.TurnForce*tireTurnAngle;
+        // Turn theta should match EngineWheels#TurnForce very closely
+        float turnTheta = EngineSteeringWheel.SteeringWheelDirection*
+					      EngineWheels.SpeedRatioTurnResponse.Evaluate(EngineBase.SpeedRatio)*
+					      EngineBase.Settings.turnSpeed*
+					      EngineWheels.DriftTurnMultiplier*
+                          tireTurnAngle;
+
         frontTireTurners.ForEach(frontTireTurner => {
             Vector3 lea = frontTireTurner.transform.localEulerAngles;
             lea.y = Mathf.Rad2Deg*turnTheta;

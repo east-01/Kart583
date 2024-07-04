@@ -28,7 +28,7 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 	public Transform kartModelTransform;
 	public KartSettings settings;
 
-	public GameplayManager GameplayManager => gameplayManager;
+	public float Lifetime { get; private set;}
 
 	new protected void Awake() 
 	{
@@ -39,6 +39,11 @@ public class KartController : KartBehavior, GameplayManagerBehavior
 	public void GameplayManagerLoaded(GameplayManager gameplayManager) 
 	{
 		this.gameplayManager = gameplayManager;
+	}
+
+	private void Update() 
+	{
+		Lifetime += Time.deltaTime;
 	}
 
 	public void OnCollisionEnter(Collision collision)
@@ -157,5 +162,6 @@ public struct KartSettings
 	public float maxBoost;
 	public float maxBoostSpeed;
 	public float acceleration;
+	public float brakingAcceleration;
 	public float turnSpeed;
 }

@@ -112,6 +112,7 @@ MonoBehaviour:
       maxBoost: 0
       maxBoostSpeed: 0
       acceleration: 0
+      brakingAcceleration: 0
       turnSpeed: 0
   - name: The Stang
     model: {fileID: 112918798818135259, guid: e06d4f75d3d102f4c99a2bad7b15807d, type: 3}
@@ -121,7 +122,8 @@ MonoBehaviour:
       maxBoost: 3
       maxBoostSpeed: 42.5
       acceleration: 7.5
-      turnSpeed: 1.25
+      brakingAcceleration: 21
+      turnSpeed: 1.5
   - name: The Jambori
     model: {fileID: 112918798818135259, guid: 8589472832489834a8244a615fe4d112, type: 3}
     image: {fileID: 21300000, guid: d80e94f73aa862348b8ec40c6487ee6a, type: 3}
@@ -130,7 +132,8 @@ MonoBehaviour:
       maxBoost: 2
       maxBoostSpeed: 50
       acceleration: 10
-      turnSpeed: 1.1
+      brakingAcceleration: 30
+      turnSpeed: 1.35
 --- !u!114 &2218995662452777491
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -26,6 +26,9 @@ public class EngineWheels : KartBehavior
 	[SerializeField] private Vector2 turnMultiplierRangeDriftMatch = new(1.5f, 2f);
     /// <summary>Turn decrease for drift that doesn't match joystick</summary>
 	[SerializeField] private Vector2 turnMultiplierRangeDriftDiffer = new(-0.2f, 0.35f);
+	/// <summary>Using EngineBase#SpeedRatio as the x value, the curve shows how sharp the turn will be with 1 being tightest possible turn.</summary>
+	[SerializeField] private AnimationCurve speedRatioTurnReponse;
+	public AnimationCurve SpeedRatioTurnResponse => speedRatioTurnReponse;
 
     /* Drift configuration */
     /// <summary>The time (in seconds) it takes for a drift to reach its age</summary>
@@ -89,8 +92,15 @@ public class EngineWheels : KartBehavior
 
     }
 
-	private void OnEnable() { KartLandedEvent += EngineWheels_KartLanded; }
-	private void OnDisable() { KartLandedEvent -= EngineWheels_KartLanded; }
+	private void OnEnable() 
+	{ 
+		KartLandedEvent += EngineWheels_KartLanded; 
+	}
+
+    private void OnDisable() 
+	{ 
+		KartLandedEvent -= EngineWheels_KartLanded; 
+	}
 
     private void Update() 
     {
@@ -98,10 +108,12 @@ public class EngineWheels : KartBehavior
 		bool lastFrameGrounded = this.Grounded;
 		Grounded = CheckGrounded();
 		if(Grounded) { 
-			if(Airtime > 0.25f)
-				kartVisualsManager.SpawnLandEffect(transform);
-			if(Airtime > 0)
-				KartLandedEvent?.Invoke();
+			if(!lastFrameGrounded) {
+				if(Airtime > 0.25f || kartCtrl.Lifetime < 0.25f)
+					kartVisualsManager.SpawnLandEffect(transform);
+				if(Airtime > 0)
+					KartLandedEvent?.Invoke();
+			}
 
 			Airtime = 0;
 		} else { 
@@ -139,15 +151,20 @@ public class EngineWheels : KartBehavior
 
         /* Variables */
         float throttleInput = kartCtrl.ThrottleInput;
-		float processedThrottleInput = EngineBoost.ActivelyBoosting ? 1f : throttleInput;
+		float processedThrottleInput = throttleInput;
+		if(EngineBoost.ActivelyBoosting) {
+			processedThrottleInput = 1f;
+		}
+
 		float processedAccelerationInput = Settings.acceleration;
-		if(EngineBoost.ActivelyBoosting)
+		if(EngineBoost.ActivelyBoosting) {
 			processedAccelerationInput *= 5f;
-		else if(LinearVelocityState == LinearVelocityState.BRAKING_DECELERATION)
-			processedAccelerationInput *= 2.5f;
+		} else if(LinearVelocityState == LinearVelocityState.BRAKING_DECELERATION)
+			processedAccelerationInput = Settings.brakingAcceleration;
+
+		BLog.Highlight("Linear Velocity state="+LinearVelocityState);
 
         /* Forward/backward velocity */
-		BLog.Highlight("Linear velocity state: " + LinearVelocityState);
 		switch(LinearVelocityState) {
 			case LinearVelocityState.NORMAL_ACCELERATION:
 				Vector3 throttleForce = processedThrottleInput * processedAccelerationInput * transform.forward;
@@ -167,15 +184,19 @@ public class EngineWheels : KartBehavior
 		}
 
 		TurnForce = EngineSteeringWheel.SteeringWheelDirection*
+					speedRatioTurnReponse.Evaluate(EngineBase.SpeedRatio)*
 					Settings.turnSpeed*
 					DriftTurnMultiplier*
-					(Grounded ? 1 : 0.25f)*
-					(Momentum != -1 ? 1 : -1);
+					(IsHopping ? 0.25f : 1f)*
+					(Grounded ? 1f : 0.25f)*
+					(Momentum != -1 ? 1f : -1f);
 
 		// All values that could be 1 are set to 1
 		TurnForceMax = Mathf.Sign(EngineSteeringWheel.SteeringWheelDirection)*
 					   Settings.turnSpeed*
 					   DriftTurnMultiplier*
+					   (IsHopping ? 0.25f : 1f)* // IsHopping and Grounded calculations included since these TurnForceMax is visual
+					   (Grounded ? 1f : 0.25f)*
 					   (Momentum != -1 ? 1 : -1);
 
 		/* Turning: Each frame, we want to change transform.forward by a certain amount specified by the steeringWheelDirection. */
@@ -214,17 +235,18 @@ public class EngineWheels : KartBehavior
 		else
 			throttleMatchesMomentum = true;
 
-		BLog.Highlight($"sign ti: {Mathf.Sign(throttleInput)} == {Momentum} yields {throttleMatchesMomentum}");
 		bool canAccelerate = Momentum == 0 || EngineBase.TrackSpeed <= EngineBase.CurrentMaxSpeed;
-		BLog.Highlight($"can accelerate " + canAccelerate);
 		bool shouldApplyNormalAcceleration = canAccelerate && throttleMatchesMomentum;
-		bool shouldApplyBreakingDeceleration = canAccelerate && !throttleMatchesMomentum;
+		bool shouldApplyBrakingDeceleration = canAccelerate && !throttleMatchesMomentum;
 		bool normalAcceleration = throttleInputValid && shouldApplyNormalAcceleration;
+		bool brakingDeceleration = throttleInputValid && shouldApplyBrakingDeceleration;
 
 		bool trackSpeedAboveThreshold = EngineBase.TrackSpeed > 0.1f;
 
 		if(normalAcceleration) {
 			LinearVelocityState = LinearVelocityState.NORMAL_ACCELERATION;
+		} else if(brakingDeceleration) {
+			LinearVelocityState = LinearVelocityState.BRAKING_DECELERATION;
 		} else if(trackSpeedAboveThreshold) {
 			LinearVelocityState = LinearVelocityState.VELOCITY_DECAY;
 		} else {

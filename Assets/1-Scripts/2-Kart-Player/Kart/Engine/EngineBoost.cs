@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -10,7 +11,7 @@ using UnityEngine;
 ///  - Responds to drift time to generate boost
 ///  - Puts engine in the proper state for player to go max speed
 /// </summary>
-public class EngineBoost : KartBehavior
+public class EngineBoost : KartBehavior, GameplayManagerBehavior
 {
 
 #region Configuration fields
@@ -33,6 +34,8 @@ public class EngineBoost : KartBehavior
 #endregion
 
 #region Runtime fields
+    private GameplayManager gameplayManager;
+
     public bool Boosting { get; private set; }
     public new float BoostAmount { get; private set; }
     /// <summary>Time counting how long its been for the boost to drain</summary>
@@ -50,7 +53,25 @@ public class EngineBoost : KartBehavior
     protected new void Awake() 
     {
         base.Awake();
-        
+        CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+    }
+
+    public void GameplayManagerLoaded(GameplayManager gameplayManager)
+    {
+        this.gameplayManager = gameplayManager;
+        this.gameplayManager.RaceManager.RacePhaseChanged += RaceManager_RacePhaseChanged;
+    }
+
+    private void OnEnable() 
+    {
+        if(gameplayManager != null) 
+            gameplayManager.RaceManager.RacePhaseChanged += RaceManager_RacePhaseChanged;            
+    }
+
+    private void OnDisable() 
+    {
+        if(gameplayManager != null) 
+            gameplayManager.RaceManager.RacePhaseChanged -= RaceManager_RacePhaseChanged;            
     }
 
     private void Update() 
@@ -75,9 +96,8 @@ public class EngineBoost : KartBehavior
             ChangeBoostValue(-decayFactor*decayCurve*Time.deltaTime);
         }
 
-		if(kartCtrl.GameplayManager.RaceManager.RaceTime <= 0) {
-			BoostAmount = kartCtrl.GameplayManager.RaceManager.settings.startBoostPercent*Settings.maxBoost;
-		}
+        if(Boosting && BoostAmount <= 0.01)
+            SetBoosting(false);
     }
 
     private void FixedUpdate() 
@@ -98,6 +118,14 @@ public class EngineBoost : KartBehavior
         Boosting = boosting;
         if(!boosting)
             BoostDecayTime = 0;
+    }
+
+    private void RaceManager_RacePhaseChanged(RacePhase previousPhase, RacePhase currentPhase)
+    {
+        drainBoostNatural = currentPhase == RacePhase.RACING || currentPhase == RacePhase.FINISHED;
+
+        if(currentPhase == RacePhase.COUNTDOWN)
+            BoostAmount = gameplayManager.RaceManager.settings.startBoostPercent*Settings.maxBoost;
     }
 
     public float SetBoostDecayTime(float boostDecayTime) => this.BoostDecayTime = boostDecayTime;
