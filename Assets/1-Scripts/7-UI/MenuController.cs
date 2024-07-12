@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -141,9 +142,10 @@ public abstract class MenuController : MonoBehaviour
         tooltips.ForEach(tt => tt.SetObservedInput(focusedPlayer.input));
 
         if(ShouldSelect && firstSelect != null) {
-            if(EventSystem != null)
+            if(EventSystem != null) {
+                BLog.Highlight($"Using event system: " + EventSystem.gameObject.name);
                 EventSystem.SetSelectedGameObject(firstSelect.gameObject);
-            else
+            } else
                 Debug.LogWarning($"MenuController \"{this}\" failed to find an EventSystem. This may be a misconfiguration, ensure that an EventSystem is assigned on this script or in a parent MenuController.");
         }
     }
