@@ -8,7 +8,7 @@
   "Enable": true,
   "OverridePlayerLimit": false,
   "PlayerLimit": -1,
-  "LoadMode": 2,
+  "LoadMode": 0,
   "OverrideMapPick": true,
   "Map": 0,
   "EnableWarpPoint": false,
