@@ -82,6 +82,8 @@ public class PlayerObjectManager : MonoBehaviour
 
         playerObjects.Add(obj);
         PlayerObjectJoinedEvent?.Invoke(obj);
+
+        PlayerOne.input.neverAutoSwitchControlSchemes = PlayerObjectCount > 1;
     }
 
     public void PlayerLeft(PlayerInput input) 

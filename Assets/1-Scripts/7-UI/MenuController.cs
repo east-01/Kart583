@@ -24,14 +24,18 @@ public abstract class MenuController : MonoBehaviour
     ///   search happens recursively until we reach an existing one on a parent.
     /// </summary>
     public InputSystemUIInputModule InputSystemUIInputModule { get { 
-        if(inputSystemUIInputModule != null)
+        if(inputSystemUIInputModule != null) {
+            usedISUIM = "On self: " + inputSystemUIInputModule.GetInstanceID();
             return inputSystemUIInputModule;
-        else if(parentMenu != null) {
+        } else if(parentMenu != null) {
+            usedISUIM = "On parent->" + parentMenu.usedISUIM;
             return parentMenu.InputSystemUIInputModule;
         } else {
+            usedISUIM = "Core: " + CoreManager.InputSystemUIInputModule.GetInstanceID();
             return CoreManager.InputSystemUIInputModule;
         }
     } }
+    public string usedISUIM = "";
 
     [SerializeField]
     private EventSystem eventSystem;
@@ -89,8 +93,6 @@ public abstract class MenuController : MonoBehaviour
     protected void OnEnable() 
     {
         PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoined;
-        if(autoFocusOnPlayerOne && focusedPlayer == null && PlayerObjectManager.Instance.PlayerOne != null)
-            SetFocus(PlayerObjectManager.Instance.PlayerOne);
     }
 
     protected void OnDestroy() 
@@ -118,6 +120,7 @@ public abstract class MenuController : MonoBehaviour
 #region Focus
     public void SetFocus(PlayerObject playerObj) 
     {
+        /* Passing focus */
         if(focusedPlayer != null) {
             if(focusedPlayer.data.uuid == playerObj.data.uuid) {
                 BLog.Log($"{this}: Maintaining focus on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
@@ -130,20 +133,37 @@ public abstract class MenuController : MonoBehaviour
             BLog.Log($"{this}: No focus existing, placing focus on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
         }
 
+        /* Assign focus */
         focusedPlayer = playerObj;
         focusedPlayer.input.onActionTriggered += PlayerInput_ActionTriggered;
+
         focusedPlayerInitialActionMap = focusedPlayer.input.currentActionMap.name;
 
-        focusedPlayer.input.SwitchCurrentActionMap("UI");
+        // The key is that the player should never be assigned to a InputSystemUIInputModule when they're not in ui action map
+        if(focusedPlayer.input.currentActionMap.name != "UI")
+            focusedPlayer.input.SwitchCurrentActionMap("UI");
+        
         focusedPlayer.input.uiInputModule = InputSystemUIInputModule;
-        if(focusedPlayer.input.uiInputModule == null)
-            Debug.LogWarning($"MenuController \"{this}\" failed to assign UIInputModule to new focus. This may be a misconfiguration, ensure that a UIInputModule is assigned on this script or in a parent MenuController.");
+        /* REVIEW: We have to use default actions here. (fuck new input system for real, if you're going to make something as convolouted as possible why wouldn't you print warnings for stuff like this.)
+        The problem: Whenever we try to change focus the InputSystemUIInputModule
+          decides to lose all its bindings to the UI input actions and the reference
+          to the PlayerControls file gets messed up.
+        There are no warning messages why this happens and why it happens isn't clear.
+        If we can somehow maintain our bindings when switching focus then the problem
+          will be fixed.
+        */
+        InputSystemUIInputModule.AssignDefaultActions();
+
+        // BLog.Highlight($"##### SETTING FOCUS FOR PLAYER {focusedPlayer.PlayerIndex} on {this.GetType()} #####");
+        // BLog.Highlight($"UIInModule: {InputSystemUIInputModule.GetInstanceID()} EventSystem: {EventSystem.GetInstanceID()}");
+        // BLog.Highlight($"Used: {usedISUIM}");
+        // BLog.Highlight($"Action map: {focusedPlayer.input.currentActionMap.name} prev AM: {focusedPlayerInitialActionMap}");
+        // BLog.Highlight($"Actions asset: {InputSystemUIInputModule.actionsAsset.actionMaps}");
 
         tooltips.ForEach(tt => tt.SetObservedInput(focusedPlayer.input));
 
         if(ShouldSelect && firstSelect != null) {
             if(EventSystem != null) {
-                BLog.Highlight($"Using event system: " + EventSystem.gameObject.name);
                 EventSystem.SetSelectedGameObject(firstSelect.gameObject);
             } else
                 Debug.LogWarning($"MenuController \"{this}\" failed to find an EventSystem. This may be a misconfiguration, ensure that an EventSystem is assigned on this script or in a parent MenuController.");
@@ -155,8 +175,13 @@ public abstract class MenuController : MonoBehaviour
         if(focusedPlayer == null)
             return;
 
-        if(focusedPlayer.input != null && focusedPlayer.input.enabled)
-            focusedPlayer.input.SwitchCurrentActionMap(focusedPlayerInitialActionMap);
+        if(focusedPlayer.input != null) {
+            focusedPlayer.input.uiInputModule = null;
+            if(focusedPlayer.input.enabled)
+                focusedPlayer.input.SwitchCurrentActionMap(focusedPlayerInitialActionMap);
+        }
+
+        // BLog.Highlight($"##### REMOVED FOCUS FOR PLAYER {focusedPlayer.PlayerIndex} #####");
 
         focusedPlayer.input.onActionTriggered -= PlayerInput_ActionTriggered;
         focusedPlayer = null;
@@ -223,6 +248,9 @@ public abstract class MenuController : MonoBehaviour
         else
             RemoveFocus();
 
+        if(EventSystem != null)
+            EventSystem.SetSelectedGameObject(null);
+
         BLog.Log($"MenuController \"{this}\" opened with {(focusedPlayer != null ? $"focus \"{focusedPlayer.PlayerIndex}\"" : "no focus")}", LogChannel.MenuController, 0);
         Opened();
     }
@@ -245,6 +273,9 @@ public abstract class MenuController : MonoBehaviour
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
         }
+
+        if(EventSystem != null)
+            EventSystem.SetSelectedGameObject(null);
     }
 
     /// <summary>
