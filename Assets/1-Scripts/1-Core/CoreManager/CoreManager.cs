@@ -7,6 +7,7 @@ using FishNet.Managing;
 using GameKit.Utilities;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SocialPlatforms;
 
@@ -32,6 +33,7 @@ public class CoreManager : MonoBehaviour
     public static OptionsMenuController OptionsMenuController => Instance.optionsMenuController;
     public static EventSystem EventSystem => Instance.eventSystem;
     public static InputSystemUIInputModule InputSystemUIInputModule => Instance.inputSystemUIInputModule;
+    public static InputActionAsset UIInputActionAsset => Instance.uiInputActionAsset;
 
     /* Atlas prefab access*/
     public static LevelAtlas LevelAtlas { get { return Instance.atlasesPrefab.GetComponent<LevelAtlas>(); } }
@@ -62,6 +64,7 @@ public class CoreManager : MonoBehaviour
     private BLog bLog;
     private EventSystem eventSystem;
     private InputSystemUIInputModule inputSystemUIInputModule;
+    [SerializeField] private InputActionAsset uiInputActionAsset;
 
     [SerializeField] private OptionsMenuController optionsMenuController;
 

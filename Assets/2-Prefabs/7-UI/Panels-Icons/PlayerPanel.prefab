@@ -2041,7 +2041,7 @@ GameObject:
   - component: {fileID: 7647222965741015441}
   - component: {fileID: 7647222965741015440}
   - component: {fileID: 5045390293594500655}
-  - component: {fileID: 5074952646490026815}
+  - component: {fileID: 7514705256876460485}
   - component: {fileID: 724362351667310058}
   - component: {fileID: 1272329920572989692}
   m_Layer: 5
@@ -2131,7 +2131,7 @@ MonoBehaviour:
   m_sendNavigationEvents: 1
   m_DragThreshold: 10
   m_PlayerRoot: {fileID: 7647222965741015454}
---- !u!114 &5074952646490026815
+--- !u!114 &7514705256876460485
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2158,7 +2158,7 @@ MonoBehaviour:
   m_ScrollWheelAction: {fileID: 4502412055082496612, guid: e0395e7a7eb280a4589b6661c768073f, type: 3}
   m_TrackedDevicePositionAction: {fileID: -3051705594681644303, guid: e0395e7a7eb280a4589b6661c768073f, type: 3}
   m_TrackedDeviceOrientationAction: {fileID: -3429688273715978331, guid: e0395e7a7eb280a4589b6661c768073f, type: 3}
-  m_DeselectOnBackgroundClick: 0
+  m_DeselectOnBackgroundClick: 1
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
 --- !u!114 &724362351667310058
@@ -2174,7 +2174,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   openCloseType: 0
-  inputSystemUIInputModule: {fileID: 5074952646490026815}
+  inputSystemUIInputModule: {fileID: 7514705256876460485}
   eventSystem: {fileID: 5045390293594500655}
   firstSelect: {fileID: 0}
   autoFocusOnPlayerOne: 0
