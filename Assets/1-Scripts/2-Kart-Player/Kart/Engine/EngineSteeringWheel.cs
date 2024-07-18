@@ -14,6 +14,7 @@ public class EngineSteeringWheel : KartBehavior
 #region Runtime fields
     /// <summary>A [-1, 1] range float indicating the amount the steering wheel is turned and the direction.</summary>
 	public float SteeringWheelDirection { get; private set; }
+    public float StraightSteeringWheelTime { get; private set; }
 #endregion
 
 #region Utility fields
@@ -42,6 +43,12 @@ public class EngineSteeringWheel : KartBehavior
 			if(Mathf.Abs(SteeringWheelDirection) <= INPUT_DEADZONE) 
 				SteeringWheelDirection = 0;
 		}
+
+        if(Mathf.Abs(SteeringWheelDirection) < INPUT_DEADZONE) {
+            StraightSteeringWheelTime += Time.deltaTime;
+        } else {
+            StraightSteeringWheelTime = 0;
+        }
     }
 
     private void FixedUpdate() 

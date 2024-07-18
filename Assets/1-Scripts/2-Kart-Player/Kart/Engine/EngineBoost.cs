@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Steamworks;
 using UnityEngine;
 
@@ -96,7 +97,8 @@ public class EngineBoost : KartBehavior, GameplayManagerBehavior
             ChangeBoostValue(-decayFactor*decayCurve*Time.deltaTime);
         }
 
-        if(Boosting && BoostAmount <= 0.01)
+        bool shouldExitBoost = BoostAmount <= 0.01;
+        if(Boosting && shouldExitBoost)
             SetBoosting(false);
     }
 

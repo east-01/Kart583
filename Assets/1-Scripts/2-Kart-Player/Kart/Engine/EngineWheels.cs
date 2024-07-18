@@ -130,7 +130,7 @@ public class EngineWheels : KartBehavior
 		if(Drifting && IsHopping && Math.Abs(kartCtrl.TurnInput.x) >= EngineSteeringWheel.INPUT_DEADZONE) 
 			DriftDirection = (int)Mathf.Sign(kartCtrl.TurnInput.x);
 
-        bool exitDriftState = (Grounded && EngineSteeringWheel.SteeringWheelDirection == 0 && DriftTimeElapsed >= 0.15f) || !CanDriftEngage || ActivelyBoosting;
+        bool exitDriftState = (Grounded && EngineSteeringWheel.StraightSteeringWheelTime > 0.25f && DriftTimeElapsed >= 0.15f) || !CanDriftEngage || ActivelyBoosting;
         if(Drifting && exitDriftState) {
             SetDrifting(false);
         }
@@ -161,8 +161,6 @@ public class EngineWheels : KartBehavior
 			processedAccelerationInput *= 5f;
 		} else if(LinearVelocityState == LinearVelocityState.BRAKING_DECELERATION)
 			processedAccelerationInput = Settings.brakingAcceleration;
-
-		BLog.Highlight("Linear Velocity state="+LinearVelocityState);
 
         /* Forward/backward velocity */
 		switch(LinearVelocityState) {

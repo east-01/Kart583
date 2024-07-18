@@ -86,8 +86,6 @@ public class EngineBase : KartBehavior, GameplayManagerBehavior
 		Quaternion yToz = Quaternion.Euler(90, 0, 0);
 		transform.rotation = zToUp * yToz;
     
-        BLog.Highlight($"Grounded: {Grounded}");
-
 		/* Apply gravity */
 		if(!Grounded) {
             RacePhase phase = gameplayManager.RaceManager.Phase;
