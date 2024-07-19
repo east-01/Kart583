@@ -45,16 +45,19 @@ public class KartAudioManager : KartBehavior
         engineNoiseSource.outputAudioMixerGroup = kartAudioMixerGroup;
         engineNoiseSource.volume = kartAudioVolume;
         engineNoiseSource.loop = true;
+        AudioManager.ProcessAudioSource(engineNoiseSource, true);
 
         driftNoiseSource = kartManager.AddComponent<AudioSource>();
         driftNoiseSource.outputAudioMixerGroup = kartAudioMixerGroup;
         driftNoiseSource.volume = kartAudioVolume;
         driftNoiseSource.loop = true;
         driftNoiseSource.clip = drift;
+        AudioManager.ProcessAudioSource(driftNoiseSource, true);
 
         boostNoiseSource = kartManager.AddComponent<AudioSource>();
         boostNoiseSource.outputAudioMixerGroup = kartAudioMixerGroup;
         boostNoiseSource.volume = kartAudioVolume;
+        AudioManager.ProcessAudioSource(boostNoiseSource, true);
     }
 
     public void Update() 

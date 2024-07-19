@@ -76,7 +76,7 @@ public class AudioAtlas : MonoBehaviour
     public List<PrefixAudioMixerGroup> prefixAudioMixerGroups;
 
     [Header("NOTE: AudioClips are sorted based off of the AudioFile enum")]
-    public AudioClip[] clips;
+    public AudioClipPackage[] clips;
 }
 
 public enum AudioFile {
@@ -103,7 +103,15 @@ public enum AudioFile {
 }
 
 [Serializable]
-public struct PrefixAudioMixerGroup {
+public struct AudioClipPackage 
+{
+    public AudioClip audioClip;
+    public float spatialBlend; // 0 for 2d - 1 for 3d
+}
+
+[Serializable]
+public struct PrefixAudioMixerGroup 
+{
     public string group;
     public AudioMixerGroup audioMixerGroup;
 }

@@ -63,9 +63,12 @@ public class AudioManager : MonoBehaviour
             Debug.LogError($"Can't play sound, failed to get AudioSource on object \"{name}\"");
             return null;
         }
+
+        AudioClipPackage acp = CoreManager.AudioClipPackage(audioFile);
         src.loop = loop;
-        src.clip = CoreManager.AudioClip(audioFile);
         src.volume = volume;
+        src.clip = acp.audioClip;
+        src.spatialBlend = acp.spatialBlend;
         if(CoreManager.AudioAtlas.AudioMixerGroups.ContainsKey(audioFile))
             src.outputAudioMixerGroup = CoreManager.AudioAtlas.AudioMixerGroups[audioFile];
  
@@ -132,9 +135,19 @@ public class AudioManager : MonoBehaviour
 
         // Create new source
         AudioSource newSrc = gameObject.AddComponent<AudioSource>();
+        ProcessAudioSource(newSrc);
+
         sources.Add(newSrc);
         return newSrc;
     }
 #endregion
+
+    public static void ProcessAudioSource(AudioSource src, bool isKart = false) 
+    {
+        src.rolloffMode = isKart ? AudioRolloffMode.Linear : AudioRolloffMode.Logarithmic;
+        src.dopplerLevel = 0.2f;
+        src.minDistance = 1f;
+        src.maxDistance = isKart ? 1f : 100f;
+    }
 
 }

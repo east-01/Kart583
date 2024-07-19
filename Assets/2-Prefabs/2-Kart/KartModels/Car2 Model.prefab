@@ -63,7 +63,7 @@ MonoBehaviour:
   - {fileID: 4950453928392634437}
   - {fileID: 1314004347658376200}
   tireTurnAngle: 0.3
-  tireYOffset: 0.35
+  tireYOffset: 0.45
   driftParticles:
   - {fileID: 7831632659034104775}
   - {fileID: 1762058524178086083}
@@ -73,6 +73,7 @@ MonoBehaviour:
   verticalOffsetInterpolationFactor: 20
   driftHopHeight: 0.4
   damageStateSpinSpeed: 5
+  bodyRoll: 1.75
 --- !u!1 &6153892123563630205
 GameObject:
   m_ObjectHideFlags: 0

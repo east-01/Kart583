@@ -101,7 +101,7 @@ MonoBehaviour:
   - {fileID: 5484240064591888099}
   - {fileID: 496718595104470459}
   tireTurnAngle: 0.3
-  tireYOffset: 0.385
+  tireYOffset: 0.475
   driftParticles:
   - {fileID: 7831632659034104775}
   - {fileID: 1762058524178086083}

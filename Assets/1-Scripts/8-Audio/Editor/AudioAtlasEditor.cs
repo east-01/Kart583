@@ -18,12 +18,12 @@ public class AudioAtlasEditor : Editor
         AudioAtlas targ = (AudioAtlas) target;
         
         if(targ.clips == null) {
-            targ.clips = new AudioClip[Enum.GetValues(typeof(AudioFile)).Length];
+            targ.clips = new AudioClipPackage[Enum.GetValues(typeof(AudioFile)).Length];
         }
 
         // Handle new enum values being added
         if(targ.clips.Length != Enum.GetValues(typeof(AudioFile)).Length) {
-            AudioClip[] newClips = new AudioClip[Enum.GetValues(typeof(AudioFile)).Length];
+            AudioClipPackage[] newClips = new AudioClipPackage[Enum.GetValues(typeof(AudioFile)).Length];
             for(int i = 0; i < targ.clips.Length; i++) {
                 newClips[i] = targ.clips[i];
             }
@@ -37,10 +37,21 @@ public class AudioAtlasEditor : Editor
             innerScrollPos = EditorGUILayout.BeginScrollView(innerScrollPos);
             EditorGUILayout.BeginVertical();
             
+            GUILayout.Label("SP - Spatial blend, 0-1 where higher values use spatial sound");
+
             foreach(AudioFile file in Enum.GetValues(typeof(AudioFile))) {
                 if(file == AudioFile.NONE)
                     continue;
-                targ.clips[(int)file] = (AudioClip) EditorGUILayout.ObjectField(file.ToString(), targ.clips[(int)file], typeof(AudioClip), false);
+                AudioClipPackage acp = targ.clips[(int)file];
+
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label(file.ToString(), new GUILayoutOption[] {GUILayout.Width(200)});
+                acp.audioClip = (AudioClip) EditorGUILayout.ObjectField(acp.audioClip, typeof(AudioClip), false, new GUILayoutOption[] {GUILayout.Width(150)});
+                GUILayout.Label("SP:", new GUILayoutOption[] {GUILayout.Width(25)});
+                acp.spatialBlend = EditorGUILayout.FloatField(acp.spatialBlend, new GUILayoutOption[] {GUILayout.Width(30)});
+                EditorGUILayout.EndHorizontal();
+
+                targ.clips[(int)file] = acp;
             }
 
             EditorGUILayout.EndVertical();
@@ -58,8 +69,9 @@ public class AudioAtlasEditor : Editor
             EditorGUILayout.BeginHorizontal();
 
             PrefixAudioMixerGroup pamg = targ.prefixAudioMixerGroups[i];
-            pamg.group = EditorGUILayout.TextField("Group", pamg.group);
-            pamg.audioMixerGroup = (AudioMixerGroup) EditorGUILayout.ObjectField("Audio Mixer Group", pamg.audioMixerGroup, typeof(AudioMixerGroup), false);
+            GUILayout.Label("Group:", new GUILayoutOption[] {GUILayout.Width(50)});
+            pamg.group = EditorGUILayout.TextField(pamg.group, new GUILayoutOption[] {GUILayout.Width(100)});
+            pamg.audioMixerGroup = (AudioMixerGroup) EditorGUILayout.ObjectField("Audio Mixer Group:", pamg.audioMixerGroup, typeof(AudioMixerGroup), false);
             
             targ.prefixAudioMixerGroups[i] = pamg;
             EditorGUILayout.EndHorizontal();

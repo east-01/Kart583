@@ -10,7 +10,7 @@
   "PlayerLimit": -1,
   "LoadMode": 0,
   "OverrideMapPick": false,
-  "Map": 1,
+  "Map": 0,
   "EnableWarpPoint": false,
   "HaveStandalonePlayerRunAsServer": false,
   "ManualLobbyPlayerWaitSwitch": false,

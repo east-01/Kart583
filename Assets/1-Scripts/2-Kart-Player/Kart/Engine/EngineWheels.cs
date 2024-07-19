@@ -74,7 +74,7 @@ public class EngineWheels : KartBehavior
 #endregion
 
 #region Utility fields
-	public bool CanDriftEngage => kartCtrl.CanMove && kartCtrl.RawDriftInput && Grounded && EngineBase.SpeedRatio >= driftEngageSpeedPercent && Momentum == 1 && !EngineBoost.ActivelyBoosting;
+	public bool CanDriftEngage => kartCtrl.CanMove && Grounded && EngineBase.SpeedRatio >= driftEngageSpeedPercent && Momentum == 1 && !EngineBoost.ActivelyBoosting;
 	public bool IsHopping => DriftTimeElapsed >= 0 && DriftTimeElapsed < DriftEngageDuration;
 #endregion
 
@@ -130,7 +130,8 @@ public class EngineWheels : KartBehavior
 		if(Drifting && IsHopping && Math.Abs(kartCtrl.TurnInput.x) >= EngineSteeringWheel.INPUT_DEADZONE) 
 			DriftDirection = (int)Mathf.Sign(kartCtrl.TurnInput.x);
 
-        bool exitDriftState = (Grounded && EngineSteeringWheel.StraightSteeringWheelTime > 0.25f && DriftTimeElapsed >= 0.15f) || !CanDriftEngage || ActivelyBoosting;
+		bool noInteraction = EngineSteeringWheel.StraightSteeringWheelTime > 0.25f && DriftTimeElapsed >= 0.15f;
+        bool exitDriftState = !Grounded || noInteraction || !CanDriftEngage || ActivelyBoosting || !kartCtrl.RawDriftInput;
         if(Drifting && exitDriftState) {
             SetDrifting(false);
         }
@@ -263,7 +264,7 @@ public class EngineWheels : KartBehavior
     {
 		if(IsHopping)
 			return;
-		if(EngineBase.SpeedRatio < driftEngageSpeedPercent)
+		if(drifting && EngineBase.SpeedRatio < driftEngageSpeedPercent)
 			return;
 
 		DriftDirection = 0;
