@@ -45,16 +45,6 @@ public class GameLobby
     /* Scene related */
     private SceneLookupData mapSceneData;
 
-    /// <summary>
-    /// The time of the last lobby request, used to request a new lobby every 5 seconds if we're missing one.
-    /// </summary>
-    private float lastLobbyRequestTime;    
-    /// <summary>
-    /// A list of connections waiting to join lobby, used for when the first player 
-    ///   creates lobby and the lobby scene isn't created yet.
-    /// </summary>
-    private List<NetworkConnection> lobbyJoinQueue = new();
-
     /* Game related */
     private KartLevel? level;
     private bool CanAutoSelectLevel { get { return CoreManager.IsMultiplayer && !DevSettings.Settings.ManualLobbyPlayerWaitSwitch; } }

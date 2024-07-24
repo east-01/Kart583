@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
+using System.Linq;
 
 /// <summary>
 /// The LobbyManager acts as the server side for the lobby system. It orchestrates lobbies, 
@@ -26,6 +26,7 @@ public class LobbyManager : NetworkBehaviour
     ///   in the LobbyCommunicator.
     /// </summary>
     private Dictionary<string, GameLobby> lobbies = new();
+    public List<GameLobby> lobbyObjects => lobbies.Values.ToList();
     /// <summary>
     /// Synchronized between client and server, has a NetworkConnection and the string lobbyID
     ///   that the client is connected to.
