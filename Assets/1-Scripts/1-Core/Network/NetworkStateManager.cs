@@ -1,3 +1,4 @@
+using FishNet;
 using FishNet.Managing;
 using FishNet.Managing.Transporting;
 using FishNet.Transporting;
@@ -35,6 +36,20 @@ public class NetworkStateManager : MonoBehaviour
     [SerializeField]
     private TMP_Text serverStatusText;
 
+    /// <summary>
+    /// Used for communcation started/ended events, the update method checks if the connected 
+    /// </summary>
+    private bool trackedConnectionStatus = false;
+    /// <summary>
+    /// Is the client connected
+    /// </summary>
+    public bool IsConnected => ClientConnectionState == LocalConnectionState.Started && CoreManager.HasLocalConnection;
+
+    public delegate void CommuncationStartedHandler();
+    public event CommuncationStartedHandler CommunicationStartedEvent;
+    public delegate void CommunicationEndedHandler();
+    public event CommunicationEndedHandler CommunicationEndedEvent;
+
     void Start() 
     {
         _networkManager = GetComponent<NetworkManager>();
@@ -66,6 +81,14 @@ public class NetworkStateManager : MonoBehaviour
                 StopServer();
             else
                 StartServer(true);
+        }
+
+        if(trackedConnectionStatus == false && IsConnected) {
+            trackedConnectionStatus = true;
+            CommunicationStartedEvent?.Invoke();
+        } else if(trackedConnectionStatus == true && !IsConnected) {
+            trackedConnectionStatus = false;
+            CommunicationEndedEvent?.Invoke();
         }
     }
 

@@ -91,7 +91,7 @@ public class KartsIRManager : NetworkBehaviour
 			return;
 
 		print("client added to map scene, spawning player objects");
-		PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
+		PlayerObjectManager.Instance.PlayerObjects.ForEach(po => SpawnPlayer(po));
     }
 
 	private void PlayerObjectManager_PlayerObjectJoined(PlayerObject newObject) 

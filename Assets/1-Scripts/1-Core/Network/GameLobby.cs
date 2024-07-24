@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FishNet;
 using FishNet.Connection;
+using FishNet.Demo.AdditiveScenes;
 using FishNet.Managing.Scened;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -82,7 +83,7 @@ public class GameLobby
 
     public void Delete() 
     {
-        BLog.Log($"Deleting lobby \"{id}\"", LogChannel.GameLobby, 0);
+        BLog.Log($"{MessagePrefix}Deleting self...", LogChannel.GameLobby, 0);
 
         SceneController.Instance.SceneRegisteredEvent -= SceneDelegate_SceneRegistered;
         SceneController.Instance.SceneWillDeregisterEvent -= SceneDelegate_SceneWillDeregister;
@@ -106,6 +107,10 @@ public class GameLobby
         if(Input.GetKeyDown(FORCE_MAP_PICK_KEY))
             forceMapPick = true;
 
+        if(PlayerCount == 0) {
+            NetSceneController.LobbyManager.DeleteLobby(ID);
+        }
+
         CheckState();
     }  
 
@@ -116,7 +121,6 @@ public class GameLobby
     /// </summary>
     public void CheckState() 
     {
-
         switch(state) {
             case LobbyState.WAITING_FOR_PLAYERS:
                 bool timePassed = CanAutoSelectLevel && timeInState >= PLAYER_WAIT_TIME;
@@ -178,19 +182,41 @@ public class GameLobby
 #endregion
 
 #region Player Management
-    public void AddPlayer(NetworkConnection conn, PlayerData data) 
+    /// <summary>
+    /// Add a player to this GameLobby, the players' lobby ID and other elements are NOT changed
+    ///   by this method, so it is important that all of that is in order before this method is
+    ///   called. The lobbyID is changed in LobbyManager#AddToLobby.
+    /// </summary>
+    /// <param name="conn">The connection that is going to be added to this lobby.</param>
+    /// <param name="data">The data that this individual player has</param>
+    /// <returns>Success status</returns>
+    public bool AddPlayer(NetworkConnection conn, PlayerData data) 
     {
-        if(NetSceneController.LobbyManager.GetLobbyID(conn) == null)
-            NetSceneController.LobbyManager.SetClientsLobby(conn, ID);
-        // players.Add(conn, data);
+        string currentLobbyID = NetSceneController.LobbyManager.GetLobbyID(conn);
+        if(currentLobbyID != null && currentLobbyID != ID) {
+            BLog.Log($"{MessagePrefix} Failed to add player {data.Summary} to lobby \"{id}\" thir lobby id doesn't match!", LogChannel.GameLobby, 0);
+            return false;
+        }
+
         data.connection = conn;
         players.Add(data);
-        manager.UpdateLobby(id, LobbyUpdateReason.PLAYER_JOIN);
         BLog.Log($"{MessagePrefix}Added player {data.Summary} to lobby \"{id}\"", LogChannel.GameLobby, 0);
+        return true;
     }
 
-    public void AddPlayers(NetworkConnection conn, List<PlayerData> players) {
-        players.ForEach(pd => AddPlayer(conn, pd));
+    /// <summary>
+    /// Add a list of players to the lobby along with a single connection, this is used for
+    ///   local splitscreen players connecting to a multiplayer lobby.
+    /// </summary>
+    /// <param name="conn">The connection that is going to be added to this lobby.</param>
+    /// <param name="players">The list of player's data that will be added to the lobby.</param>
+    /// <returns>Success status</returns>
+    public bool AddPlayers(NetworkConnection conn, List<PlayerData> players) {
+        foreach(PlayerData pd in players) {
+            if(!AddPlayer(conn, pd))
+                return false;
+        }
+        return true;
     }
 
     public void RemovePlayer(PlayerData data) 
@@ -199,17 +225,14 @@ public class GameLobby
             Debug.LogError($"Can't remove playerdata \"{data}\" from lobby \"{ID}\", they're not in it.");
             return;
         }
-        BLog.Log($"{MessagePrefix}Player {data.Summary} to lobby \"{id}\"", LogChannel.GameLobby, 0);
-        NetSceneController.LobbyManager.RemoveClientsLobby(data.connection);
+        BLog.Log($"{MessagePrefix}Removed player {data.Summary} from lobby \"{id}\"", LogChannel.GameLobby, 0);
         players.Remove(data);
-        manager.UpdateLobby(id, LobbyUpdateReason.PLAYER_LEAVE);
-        if(PlayerCount == 0) {
-            NetSceneController.LobbyManager.DeleteLobby(ID);
-        }
     }
 
-    public void RemoveClientsPlayers(NetworkConnection client) {
-        GetClientsPlayers(client).ForEach(pd => RemovePlayer(pd));
+    public void RemoveClientsPlayers(NetworkConnection client, out bool yieldsEmptyLobby) {
+        List<PlayerData> clientsPlayers = GetClientsPlayers(client);
+        yieldsEmptyLobby = PlayerCount-clientsPlayers.Count == 0;
+        clientsPlayers.ForEach(pd => RemovePlayer(pd));
     }
 
     /// <summary>

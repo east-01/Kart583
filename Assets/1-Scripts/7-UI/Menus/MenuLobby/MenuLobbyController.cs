@@ -65,7 +65,7 @@ public class MenuLobbyController : MenuController
         }
 
         if(DevSettings.IsDevelopment() && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
-            NetSceneController.LobbyManager.RequestForceMapPick();
+            NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, CoreManager.LocalConnection, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_FORCE_MAP_PICK);
     }
 
     private IEnumerator ConnectionRetryTimer() {
@@ -99,7 +99,8 @@ public class MenuLobbyController : MenuController
 
     protected override void SendMenuBack()
     {
-        networkStateManager.StopClient();
+        BLog.Highlight("Menu lobby controller send menyu back");
+        CoreManager.LobbyCommunicator.StopCommunication();
         CoreManager.TransitionManager.LoadScene(SceneNames.MENU_TITLE);
     }
 

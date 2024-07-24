@@ -148,7 +148,7 @@ public class RaceManager : NetworkBehaviour
         // Call phase change event
         RacePhaseChanged?.Invoke(prev, current);
 
-        PlayerInputManager pim = PlayerObjectManager.Instance.GetPlayerInputManager();
+        PlayerInputManager pim = PlayerObjectManager.Instance.PlayerInputManager;
 
         switch(current) {
             case RacePhase.LATE_JOIN:
@@ -235,7 +235,7 @@ public class RaceManager : NetworkBehaviour
         BLog.Log("Preparing race", LogChannel.GameplayManager, 3);
 
         // Enable player cameras and splitscreen, ensure we're on Gameplay control map
-        PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => {
+        PlayerObjectManager.Instance.PlayerObjects.ForEach(po => {
             po.input.enabled = true;
             po.input.SwitchCurrentActionMap("Gameplay");
             if(po.input.camera != null) {
@@ -245,7 +245,7 @@ public class RaceManager : NetworkBehaviour
             }
         });
 
-        PlayerObjectManager.Instance.GetPlayerInputManager().splitScreen = true;
+        PlayerObjectManager.Instance.PlayerInputManager.splitScreen = true;
 
         // Disable main camera audio listener so we get player 0's camera audio
         CoreManager.Instance.GetComponent<AudioListener>().enabled = false;

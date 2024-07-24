@@ -20,8 +20,7 @@ public class TransitionManager : MonoBehaviour
         child.SetActive(true);
 
         /* Wake up animation */
-        if(precedingScene != null && !precedingScene.StartsWith("Menu") ||
-           precedingScene == SceneNames.MENU_MAP) {
+        if(precedingScene != null && !precedingScene.StartsWith("Menu")) {
             transition.SetTrigger("FadeFromBlack");
         }
 

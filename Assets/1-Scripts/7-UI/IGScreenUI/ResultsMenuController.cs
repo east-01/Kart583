@@ -47,10 +47,16 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
 		if(gameplayManager == null)
 			return;
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
-			if(gameplayManager.HasLobby) {
-				NetSceneController.LobbyManager.RequestLobbyMove();
+			if(!gameplayManager.HasLobby) {
+                Debug.LogError("GameplayManager doesn't have lobby, so we can't send them back to it.");
+                CoreManager.LobbyCommunicator.StopCommunication();
+                SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
+                return;
+            }
+            if(CoreManager.IsMultiplayer) {
+                NetSceneController.LobbyManager.ServerRpcSendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, CoreManager.LocalConnection, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE);
 			} else {
-				CoreManager.TransitionManager.LoadScene(SceneNames.MENU_MAP);
+                NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, CoreManager.LocalConnection, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE);
 			}
         }
 	}

@@ -34,54 +34,68 @@ public class PlayerPanelController : MenuController
         origPanelColor = GetComponent<Image>().color;
     }
 
-    // private void Update() { BLog.Highlight("Am i focused: " + focusedPlayer); }
-
-    /** Shortcut for UpdateBuildPhase() & UpdateVisuals(). UpdateBuildPhase is called first. */
-    // public void UpdateBuildPhase() { UpdateBuildPhase(); UpdateVisuals(); }
-
     /** Update the current selection so it reflects what stage we're at in player construction. 
         The order is: Name -> Color -> Kart -> Ready */
     public void UpdateBuildPhase() 
     {
         // Get the sub menus current focus, if its null (this happens when the menu is first opened) set the current focus as this menus focus
         PlayerObject currentFocus = FocusedPlayerIncludingChildren;
-        BLog.Highlight($"Current focus: \"{currentFocus}\"");
         if(currentFocus == null)
             currentFocus = FocusedPlayer;
 
         // Check player data and enable the corresponding phase
         if(currentFocus.data.name.Length == 0) {
+            BLog.Highlight("A");
             phase = PlayerBuildPhase.NAME_SELECT;
         } else if(currentFocus.data.hexColor == null) {
+            BLog.Highlight("B");
             phase = PlayerBuildPhase.COLOR_SELECT;
         } else if(currentFocus.data.kartType == KartType.NONE) {
+            BLog.Highlight("C");
             phase = PlayerBuildPhase.VEHICLE_SELECT;
         } else if(!currentFocus.data.ready) {
+            BLog.Highlight("D");
             phase = PlayerBuildPhase.WAITING_FOR_READY;
         } else {
+            BLog.Highlight("E");
             phase = PlayerBuildPhase.READY;
         }
-        BLog.Highlight("Opening sub menu " + phase + " with " + currentFocus.PlayerIndex);
         OpenSubMenu(phaseSubMenu[phase], currentFocus);
     }
 
     public void RegressBuildPhase() 
     {
         PlayerObject focus = FocusedPlayerIncludingChildren;
-        BLog.Highlight($" focus: \"{focus}\"");
-        if(focus.data.ready) {
-            focus.data.ready = false;
-        } else if(focus.data.kartType != KartType.NONE) {
-            focus.data.kartType = KartType.NONE;
-        } else if(focus.data.hexColor != null) {
-            focus.data.hexColor = null;
-        } else if(focus.data.name.Length > 0) {
-            focus.data.name = "";
-        } else if(focus.data.name == "") {
+
+        void RemoveSelf() 
+        {
             MenuPlayerController mpc = FindObjectOfType<MenuPlayerController>();
             mpc.RemovePanel(focus, focus.PlayerIndex != 0);
+        }
+
+        if(focus.data.ready) {
+            BLog.Highlight("1");
+            focus.data.ready = false;
+        } else if(focus.data.kartType != KartType.NONE) {
+            BLog.Highlight("2");
+            focus.data.kartType = KartType.NONE;
+        } else if(focus.data.hexColor != null) {
+            BLog.Highlight("3");
+            focus.data.hexColor = null;
+        } else if(focus.data.name.Length > 0) {
+            BLog.Highlight("4");
+            if(focus.input.currentControlScheme == "Gamepad") {
+                RemoveSelf();
+                return;
+            }
+
+            focus.data.name = "";
+        } else if(focus.data.name == "") {
+            BLog.Highlight("5");
+            RemoveSelf();
             return;
         }
+        BLog.Highlight("6");
         UpdateBuildPhase();
     }
 

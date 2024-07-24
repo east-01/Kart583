@@ -1,25 +1,38 @@
+using System;
 using System.Collections.Generic;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 
 /// <summary>
-/// The LobbyManager is the SERVER SIDE of the lobby system, it takes in player connections 
-///   and distributes them (using the scene manager) into games.
+/// The LobbyManager acts as the server side for the lobby system. It orchestrates lobbies, 
+///   keeps track of all existing lobbies on the server and the clients that are connected 
+///   to them. It is also responsible for accepting client connections and distributing them 
+///   into lobbies.
+/// The LobbyManager will issue events to the client via the LobbyCommunicator. The reason
+///   why the events are in the LobbyCommunicator and not here is because the LobbyCommunicator
+///   is a core script that always persists. Since the LobbyManager is a NetworkBehaviour
+///   we won't have access to it when the server/client isn't enabled.
 /// </summary>
 public class LobbyManager : NetworkBehaviour
 {
-    [SyncObject]
-    private readonly SyncDictionary<NetworkConnection, string> connectionLobbyPair = new();
 
+#region Server side fields
     /// <summary>
-    /// Server side ONLY, clients should access data via lobbyData SyncDictionary
+    /// Server side ONLY, holds a string lobbyID and the GameLobby object.
+    /// Clients should access lobby information through the LobbyData struct, this is handled 
+    ///   in the LobbyCommunicator.
     /// </summary>
     private Dictionary<string, GameLobby> lobbies = new();
-
-    public delegate void LobbyUpdateHandler(LobbyData newData, LobbyUpdateReason reason);
-    public event LobbyUpdateHandler LobbyUpdated;
+    /// <summary>
+    /// Synchronized between client and server, has a NetworkConnection and the string lobbyID
+    ///   that the client is connected to.
+    /// </summary>
+    [SyncObject]
+    private readonly SyncDictionary<NetworkConnection, string> connectionLobbyPair = new();
+#endregion
 
     private void Awake() 
     {
@@ -27,8 +40,14 @@ public class LobbyManager : NetworkBehaviour
             Debug.LogWarning("GameLobby's PLAYER_WAIT_TIME is <= 0, this is not recommended.");
     }
 
-    private void OnEnable() { CoreManager.LobbyCommunicator.RegisterLobbyManager(); }
-    private void OnDisable() { CoreManager.LobbyCommunicator.DeregisterLobbyManager(); }
+    private void OnEnable() { CoreManager.LobbyCommunicator.LobbyMessageEvent += LobbyCommunicator_LobbyMessageEvent; }
+    private void OnDisable() {  CoreManager.LobbyCommunicator.LobbyMessageEvent -= LobbyCommunicator_LobbyMessageEvent; }
+
+    public override void OnStartClient() 
+    {
+        base.OnStartClient();
+        AddToLobby(LocalConnection, PlayerObjectManager.Instance.Players);
+    }
 
     private void Update () 
     {
@@ -65,37 +84,111 @@ public class LobbyManager : NetworkBehaviour
         BLog.Log($"Lobby \"{lobbyID}\" deleted.", LogChannel.LobbyManager, 0);
     }
 
-    public void SetClientsLobby(NetworkConnection client, string lobbyID) 
-    {
-        if(connectionLobbyPair.ContainsKey(client)) {
-            Debug.LogError($"Can't set client \"{client}\" to new lobby, they are already in lobby \"{lobbyID}\"");
-            return;
-        }
-        connectionLobbyPair.Add(client, lobbyID);
-    }
-    
-    public void RemoveClientsLobby(NetworkConnection client) 
-    {
-        if(!connectionLobbyPair.ContainsKey(client)) {
-            Debug.LogError($"Can't remove client \"{client}\" lobby, they are not in one.");
-            return;
-        }
-        connectionLobbyPair.Remove(client);
-    }
-
-#region Client Movement
-    public void JoinLobby(NetworkConnection newClient, List<PlayerData> data) 
+#region Client add/remove
+    /// <summary>
+    /// Add a client to a lobby. If the lobby add attempt fails, the client will be disconnected and
+    ///   told to retry.
+    /// </summary>
+    /// <param name="client">The new client to be added to the lobby</param>
+    /// <param name="players">The players connecting with the client</param>
+    public void AddToLobby(NetworkConnection client, List<PlayerData> players) 
     {
         if(!base.IsServer) {
-            ServerRpcJoinLobby(newClient, data);
-            return;
-        }
-        if(connectionLobbyPair.ContainsKey(newClient)) {
-            Debug.LogWarning("Already in a lobby");
+            ServerRpcAddToLobby(client, players);
             return;
         }
 
-        BLog.Log($"Searching for a lobby for client {newClient}:", LogChannel.LobbyManager, 2);
+        void AbortJoin(string reason) 
+        {
+            SendLobbyMessage(null, null, LobbyMessageType.ACTION, LME_CMD_FORCE_DISCONNECT + reason, new() { client });
+            BLog.Log($"Aborted adding client {client} to lobby. Reason: {reason}");
+            connectionLobbyPair.Remove(client);
+        }
+
+        if(connectionLobbyPair.ContainsKey(client)) {
+            AbortJoin("Already in a lobby.");
+            return;
+        }
+
+        BLog.Log($"Searching for a lobby for client {client}:", LogChannel.LobbyManager, 2);
+        GameLobby lobbyToJoin = GetBestFitLobby(client, players);        
+
+        connectionLobbyPair.Add(client, lobbyToJoin.ID);
+
+        if(!lobbyToJoin.AddPlayers(client, players)) {
+            AbortJoin("Failed to join lobby.");
+            return;
+        }
+
+        if(IsServer && !IsHost)
+            TargetRpcAddedToLobby(client, lobbyToJoin.ID, lobbyToJoin.Data);
+        else if(IsHost)
+            CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyJoinedEvent(lobbyToJoin.ID, lobbyToJoin.Data);
+
+        UpdateLobby(lobbyToJoin.ID, LobbyUpdateReason.PLAYER_JOIN);
+        BLog.Log($"Added client {client} to lobby \"{lobbyToJoin.ID}\"", LogChannel.LobbyManager, 0);
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcAddToLobby(NetworkConnection newClient, List<PlayerData> players) => AddToLobby(newClient, players);
+    /// <summary> Used to issue LobbyJoinedEvent to the client's LobbyCommunicator. </summary>
+    [TargetRpc]
+    public void TargetRpcAddedToLobby(NetworkConnection client, string lobbyID, LobbyData initialData) => CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyJoinedEvent(lobbyID, initialData);
+
+    /// <summary>
+    /// Remove a client from a lobby with the option to provide a reason.
+    /// </summary>
+    /// <param name="client">The client to remove from their lobby</param>
+    /// <param name="reason">The reason why the client is being removed.</param>
+    public void RemoveFromLobby(NetworkConnection client, string reason = "") 
+    {
+        if(!base.IsServer) {
+            ServerRpcRemoveFromLobby(client);
+            return;
+        }
+
+        if(!connectionLobbyPair.ContainsKey(client)) {
+            Debug.LogError($"Can't remove client \"{client}\" from lobby, they're not in one.");
+            return;
+        }
+
+        GameLobby lobbyToLeave = GetLobby(client);
+        lobbyToLeave.RemoveClientsPlayers(client, out bool yieldsEmptyLobby);
+
+        connectionLobbyPair.Remove(client);
+
+        
+        if(IsServer && !IsHost)
+            TargetRpcRemovedFromLobby(client, lobbyToLeave.ID, reason);
+        else if(IsHost)
+            CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyLeftEvent(lobbyToLeave.ID, reason);
+
+        if(!yieldsEmptyLobby)
+            UpdateLobby(lobbyToLeave.ID, LobbyUpdateReason.PLAYER_LEAVE);
+
+        BLog.Log($"Removed client {client} from lobby \"{lobbyToLeave.ID}\" for reason \"{reason}\"", LogChannel.LobbyManager, 0);
+
+        if(lobbyToLeave.PlayerCount == 0) {
+            DeleteLobby(lobbyToLeave.ID);
+        }
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcRemoveFromLobby(NetworkConnection client) => RemoveFromLobby(client);
+    /// <summary> Used to issue LobbyLeftEvent to the client's LobbyCommunicator. </summary>
+    [TargetRpc]
+    public void TargetRpcRemovedFromLobby(NetworkConnection client, string lobbyID, string reason) => CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyLeftEvent(lobbyID, reason); 
+#endregion
+
+#region Matchmaking
+    public GameLobby GetBestFitLobby(NetworkConnection client, List<PlayerData> players) 
+    {
+        List<string> lobbiesToJoin = GetProspectiveLobbies(client, players);
+        // TODO: Select from prospective lobbies by certain conditions? Like ping or region?
+        return GetLobby(lobbiesToJoin[0]);
+    }
+
+    // TODO: Better lobby search algorithm, maybe make an HTTPS request to the server for matchmaking
+    public List<string> GetProspectiveLobbies(NetworkConnection client, List<PlayerData> players) 
+    {
         GameLobby lobbyToJoin = null;
         foreach(string id in lobbies.Keys) {
             GameLobby lobby = lobbies[id];
@@ -112,62 +205,19 @@ public class LobbyManager : NetworkBehaviour
         if(lobbyToJoin == null)
             lobbyToJoin = CreateLobby();
 
-        lobbyToJoin.AddPlayers(newClient, data);
+        return new List<string>() { lobbyToJoin.ID };
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcJoinLobby(NetworkConnection newClient, List<PlayerData> data) { JoinLobby(newClient, data); }
-
-    public void LeaveLobby(NetworkConnection client) 
-    {
-        if(!base.IsServer) {
-            ServerRpcLeaveLobby(client);
-            return;
-        }
-        if(!connectionLobbyPair.ContainsKey(client)) {
-            Debug.LogError($"Client \"{client}\" can't leave lobby, they're not in one.");
-            return;
-        }
-
-        GameLobby lobbyToLeave = GetLobby(client);
-        lobbyToLeave.RemoveClientsPlayers(client);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcLeaveLobby(NetworkConnection newClient) { LeaveLobby(newClient); }
-
-    /// <summary>
-    /// Request that the server moves the provided client NetworkConnection to the lobby scene
-    /// </summary>
-    [Client]
-    public void RequestLobbyMove() 
-    {
-        BLog.Log("Requesting lobby move.", LogChannel.LobbyManager, 0);
-        ServerRpcRequestLobbyMove(base.LocalConnection);
-    }
-
-    /// <summary>
-    /// Request that the server moves the provided client NetworkConnection to the lobby scene
-    /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcRequestLobbyMove(NetworkConnection client) 
-    {
-        MoveClientToLobby(client);
-    }
-
-    /// <summary>
-    /// Move the specified client to their lobby scene.
-    /// </summary>
     [Server]
-    public void MoveClientToLobby(NetworkConnection client) 
+    private string GenerateLobbyID() 
     {
-        GameLobby lobby = GetLobby(client);
-        if(lobby == null) {
-            Debug.LogError("Can't move client to lobby, they are not in one.");
-            return;
-        }
-        BLog.Log($"Client \"{client}\" requested to move to lobby", LogChannel.LobbyManager, 0);
-        SceneController.Instance.LoadScene(new(SceneNames.MENU_LOBBY), false);
+		for(int attempt = 0; attempt < KartsIRManager.rlBotNames.Length; attempt++) {
+			string selection = KartsIRManager.rlBotNames[UnityEngine.Random.Range(0, KartsIRManager.rlBotNames.Length)];
+			if(GetLobby(selection) == null)
+				return selection;
+		}
+        Debug.LogWarning("Ran out of new lobby ids!");
+		return "Lobby";
     }
 #endregion
 
@@ -190,51 +240,68 @@ public class LobbyManager : NetworkBehaviour
         LobbyData lobbyData = lobby.Data;
 
         // Invoke event on server
-        LobbyUpdated?.Invoke(lobbyData, reason);
+        CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyUpdatedEvent(lobbyID, lobbyData, reason);
 
         // Invoke event for clients to said lobby
         foreach(NetworkConnection client in lobby.Connections) {
             if(!Observers.Contains(client))
                 continue;
-            TargetRpcLobbyUpdatedEvent(client, lobbyData, reason);
+            TargetRpcLobbyUpdatedEvent(client, lobbyID, lobbyData, reason);
         }
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcUpdateLobby(string lobbyID) 
-    {
-        UpdateLobby(lobbyID, LobbyUpdateReason.NONE);
-    }
-
-    [Client]
-    public void RequestLobbyUpdate() 
-    {
-        print("Requesting lobby update and is client: " + base.IsClient);
-        if(GetLobbyID() == null) {
-            Debug.LogWarning("Can't request lobby update since current lobby id is null.");
-            return;
-        }
-        ServerRpcUpdateLobby(GetLobbyID());
     }
 
     [TargetRpc]
-    public void TargetRpcLobbyUpdatedEvent(NetworkConnection conn, LobbyData lobbyData, LobbyUpdateReason reason) {
-        LobbyUpdated?.Invoke(lobbyData, reason);
+    public void TargetRpcLobbyUpdatedEvent(NetworkConnection conn, string lobbyID, LobbyData lobbyData, LobbyUpdateReason reason) => CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyUpdatedEvent(lobbyID, lobbyData, reason);
+#endregion
+
+#region Lobby Messages
+    /// <summary>
+    /// Send a lobby message. This will go to each recipient and invoke LobbyCommunicator#LobbyMessageEvent with the following paramenters.
+    /// The lobbyID isn't required for this method to work, as long as you provide a recipients list.
+    /// </summary>
+    /// <param name="lobbyID">The messaged lobby id</param>
+    /// <param name="type">The type of message</param>
+    /// <param name="message">The message itself</param>
+    /// <param name="recipients">The recipients for the message, if left null the message will go to everyone in the lobby. When populated
+    ///                            the message will only go to those connections.</param>
+    [Server]
+    public void SendLobbyMessage(string lobbyID, NetworkConnection sender, LobbyMessageType type, string message, List<NetworkConnection> recipients = null) 
+    {
+        recipients ??= new(GetLobby(lobbyID).Connections);
+        recipients.ForEach(recipient => TargetRpcRecievedLobbyMessage(recipient, lobbyID, sender, type, message));
     }
+
+    [ServerRpc]
+    public void ServerRpcSendLobbyMessage(string lobbyID, NetworkConnection sender, LobbyMessageType type, string message, List<NetworkConnection> recipients = null) 
+    {
+        if(sender == null || !sender.IsValid) {
+            Debug.LogError("Can't pass on LobbyMessage, sender is invalid.");
+            SendLobbyMessage(null, null, LobbyMessageType.ACTION, LME_CMD_FORCE_DISCONNECT + "Invalid message sent, sender is invalid.");
+            return;
+        }
+        // TODO: Enforce permissions (i.e. clients aren't allowed to issue action commands)
+        SendLobbyMessage(lobbyID, sender, type, message, recipients);
+    }
+    /* 
+    TODO:
+    - Convert all one-off methods to message actions:
+      - Force map pick
+      - Request lobby move
+    */
+
+    [TargetRpc]
+    public void TargetRpcRecievedLobbyMessage(NetworkConnection client, string lobbyID, NetworkConnection sender, LobbyMessageType type, string message) => CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyMessageEvent(lobbyID, sender, type, message);
 #endregion
 
 #region Getters
-    public bool HasLobby(string lobbyID) 
-    {
-        return lobbies.ContainsKey(lobbyID);
-    }
+    public bool HasLobby(string lobbyID) => lobbies.ContainsKey(lobbyID);
 
     /// <summary>
     /// Gets the lobby id for the LocalConnection. Is a shortcut for:
-    /// </summary>
     /// <code> GetLobbyID(base.LocalConnection) </code>
+    /// </summary>
     [Client]
-    public string GetLobbyID() { return GetLobbyID(base.LocalConnection); }
+    public string GetLobbyID() => GetLobbyID(base.LocalConnection);
 
     /// <summary>
     /// Gets the lobby id for a specified NetworkConnection
@@ -270,49 +337,51 @@ public class LobbyManager : NetworkBehaviour
     }
 #endregion
 
+#region Messages and Message handling
+    public const string LME_CMD_REQUEST_FORCE_MAP_PICK = "#LOBBY_COMMAND#REQUEST_FORCE_MAP_PICK#";
+    public const string LME_CMD_REQUEST_LOBBY_MOVE = "#LOBBY_COMMAND#REQUEST_LOBBY_MOVE";
+    public const string LME_CMD_FORCE_DISCONNECT = "#LOBBY_COMMAND#FORCE_DISCONNECT#";
     /// <summary>
-    /// Is the same thing as the server instance pressing GameLobby#FORCE_MAP_PICK_KEY.
-    /// Only works for development builds.
+    /// Recieve commands from clients via the LobbyMessage system
     /// </summary>
-    [Client]
-    public void RequestForceMapPick() 
+    /// <param name="lobbyID"></param>
+    /// <param name="type"></param>
+    /// <param name="message"></param>
+    public void LobbyCommunicator_LobbyMessageEvent(string lobbyID, NetworkConnection sender, LobbyMessageType type, string message) 
     {
-        ServerRpcRequestForceMapPick(base.LocalConnection);        
-    }
+        if(type == LobbyMessageType.ACTION) {
+            switch(message) {
+                case LME_CMD_REQUEST_FORCE_MAP_PICK:
+                    if(!DevSettings.IsDevelopment()) {
+                        Debug.LogWarning("Can't force map pick. We're not in a development build.");
+                        return;
+                    }
+                    GameLobby lobby = GetLobby(sender);
+                    if(lobby == null) {
+                        Debug.LogError("Can't force map pick, client is not in a lobby.");
+                        return;
+                    }
 
-    /// <summary>
-    /// Is the same thing as the server instance pressing GameLobby#FORCE_MAP_PICK_KEY.
-    /// Only works for development builds.
-    /// </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcRequestForceMapPick(NetworkConnection client) 
-    {
-        if(!DevSettings.IsDevelopment()) {
-            Debug.LogWarning("Can't force map pick. We're not in a development build.");
-            return;
+                    lobby.state = LobbyState.MAP_SELECTION;
+                    lobby.forceMapPick = true;
+                    break;
+                case LME_CMD_REQUEST_LOBBY_MOVE:
+                    lobby = GetLobby(sender);
+                    if(lobby == null) {
+                        Debug.LogError("Can't move client to lobby, they are not in one.");
+                        return;
+                    }
+                    BLog.Log($"Client \"{sender}\" requested to move to lobby", LogChannel.LobbyManager, 0);
+                    SceneController.Instance.LoadScene(new(SceneNames.MENU_LOBBY), false);
+                    break;
+            }
         }
-        GameLobby lobby = GetLobby(client);
-        if(lobby == null) {
-            Debug.LogError("Can't force map pick, client is not in a lobby.");
-            return;
-        }
-
-        lobby.state = LobbyState.MAP_SELECTION;
-        lobby.forceMapPick = true;
     }
-
-    [Server]
-    private string GenerateLobbyID() 
-    {
-		for(int attempt = 0; attempt < KartsIRManager.rlBotNames.Length; attempt++) {
-			string selection = KartsIRManager.rlBotNames[UnityEngine.Random.Range(0, KartsIRManager.rlBotNames.Length)];
-			if(GetLobby(selection) == null)
-				return selection;
-		}
-        Debug.LogWarning("Ran out of new lobby ids!");
-		return "Lobby";
-    }
+#endregion
 
     public int LobbyCount { get { return lobbies.Count; } }
 
 }
+
+[Serializable]
+public enum LobbyMessageType { PLAINTEXT, ACTION }

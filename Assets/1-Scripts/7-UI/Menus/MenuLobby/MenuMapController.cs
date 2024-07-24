@@ -22,14 +22,17 @@ public class MenuMapController : MenuController
 
     public void ClickedMapIcon(KartLevel level) 
     {   
-        LobbyManager lm = NetSceneController.LobbyManager;
-        GameLobby localLobby = lm.GetLobby(lm.GetLobbyID());
-        localLobby.SetLevel(level);
+        if(CoreManager.IsLocal) {
+            GameLobby localLobby = NetSceneController.LobbyManager.GetLobby(CoreManager.LobbyCommunicator.LobbyID);
+            localLobby.SetLevel(level);
+        } else {
+            // TODO: Map voting
+        }
     }
 
     protected override void SendMenuBack()
     {
-        CoreManager.TransitionManager.LoadScene(SceneNames.MENU_PLAYER);
+        parentMenu.SendMenuBackPublic();
     }
 
 }

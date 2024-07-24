@@ -136,6 +136,7 @@ public abstract class MenuController : MonoBehaviour
         /* Assign focus */
         focusedPlayer = playerObj;
         focusedPlayer.input.onActionTriggered += PlayerInput_ActionTriggered;
+        focusedPlayer.input.onControlsChanged += PlayerInput_OnControlsChanged;
 
         focusedPlayerInitialActionMap = focusedPlayer.input.currentActionMap.name;
 
@@ -207,11 +208,15 @@ public abstract class MenuController : MonoBehaviour
         if(context.action.name != "Point")
             BLog.Log($"MenuController \"{this}\" (focus: \"{(focusedPlayer != null ? focusedPlayer.PlayerIndex : "-")}\") recieved input event \"{context.action.name}\"", LogChannel.MenuController, 5);
         if(context.performed && context.action.name == controlsReference.UI.Cancel.name) {
-            BLog.Highlight("sending " + this.GetType() + " back");
             SendMenuBack();
         }
 
         Child_PlayerInput_ActionTriggered(context);
+    }
+
+    private void PlayerInput_OnControlsChanged(PlayerInput input)
+    {
+        
     }
 
     /// <summary>
@@ -386,9 +391,9 @@ public abstract class MenuController : MonoBehaviour
     } }
 
     public bool IsOpen { get { 
-        if(openCloseType == OpenCloseType.GAME_OBJECT_ENABLE_DISABLE)
+        if(openCloseType == OpenCloseType.GAME_OBJECT_ENABLE_DISABLE) {
             return gameObject.activeSelf;
-        else if(openCloseType == OpenCloseType.CANVAS_GROUP)
+        } else if(openCloseType == OpenCloseType.CANVAS_GROUP)
             return canvasGroup.interactable && canvasGroup.alpha == 1; 
         else
             return false;
@@ -401,7 +406,7 @@ public abstract class MenuController : MonoBehaviour
 
     public PlayerObject FocusedPlayer => focusedPlayer; 
     /// <summary> Utility to get the focused player (if it exists) or a focusedPlayer in child MenuControllers. </summary>
-    protected PlayerObject FocusedPlayerIncludingChildren { get {
+    public PlayerObject FocusedPlayerIncludingChildren { get {
         if(focusedPlayer != null)
             return focusedPlayer;
         foreach(MenuController subMenu in SubMenus) {

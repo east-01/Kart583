@@ -28,7 +28,7 @@ public class KartVisualsManager : KartBehavior
 
         if(!isNameplateLoaded && 
            base.IsClient && kartManager.POIGDelegate == null && // Should load nameplate?
-           pom != null && pom.PlayerObjectCount > 0 && pom.GetPlayerObjects()[0].poigDelegate != null && pom.GetPlayerObjects()[0].poigDelegate.Camera != null)
+           pom != null && pom.PlayerObjectCount > 0 && pom.PlayerObjects[0].poigDelegate != null && pom.PlayerObjects[0].poigDelegate.Camera != null)
             LoadNameplate();
 
         // Unload nameplate since this is the player's own kart
@@ -69,7 +69,7 @@ public class KartVisualsManager : KartBehavior
         Billboard npb = nameplate.GetComponentInChildren<Billboard>();
 
         npt.text = kartManager.GetPlayerData().name;
-        npb.focusCamera = PlayerObjectManager.Instance.GetPlayerObjects()[0].poigDelegate.Camera;
+        npb.focusCamera = PlayerObjectManager.Instance.PlayerObjects[0].poigDelegate.Camera;
 
         isNameplateLoaded = true;
     }

@@ -15,7 +15,6 @@ public class MenuLobbyViewController : MonoBehaviour
 {
 
     private MenuLobbyController _controller;
-    private LobbyManager _lobbyManager;
 
     [SerializeField]
     private GameObject disconnectedViewContainer;
@@ -46,23 +45,16 @@ public class MenuLobbyViewController : MonoBehaviour
         UpdateView();
     }
 
-    private void OnDisable() 
+    private void OnEnable() 
     {
-        if(_lobbyManager != null)
-            _lobbyManager.LobbyUpdated -= LobbyManager_LobbyUpdated;
+        CoreManager.LobbyCommunicator.LobbyUpdatedEvent += LobbyCommunicator_LobbyUpdatedEvent; 
+        UpdateView();
     }
+
+    private void OnDisable() => CoreManager.LobbyCommunicator.LobbyUpdatedEvent -= LobbyCommunicator_LobbyUpdatedEvent;
 
     private void Update() 
     {
-        // Waiting for SceneDelegate/LobbyManager to spawn
-        if(_lobbyManager == null && SceneController.Instance != null && NetSceneController.IsReady && NetSceneController.LobbyManager != null) {
-            _lobbyManager = NetSceneController.LobbyManager;
-            NetSceneController.LobbyManager.LobbyUpdated += LobbyManager_LobbyUpdated;    
-            UpdateView();
-
-            BLog.Log("MenuLobbyViewController#Update: Attached lobby manager", LogChannel.SceneDelegate, 0); 
-        }
-
         if(!CoreManager.LobbyCommunicator.LobbyData.HasValue)
             return;
 
@@ -84,11 +76,11 @@ public class MenuLobbyViewController : MonoBehaviour
 #region Updating view
     public void UpdateView() 
     {
-        if(_controller.ConnectedNetworkManager == null)
+        if(_controller == null || _controller.ConnectedNetworkManager == null)
             return;
 
         NetworkStateManager nsm = _controller.ConnectedNetworkManager.GetComponent<NetworkStateManager>();
-        bool isConnected = _lobbyManager != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started;
+        bool isConnected = NetSceneController.LobbyManager != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started && CoreManager.LobbyCommunicator.LobbyData.HasValue;
         if(isConnected)
             UpdateConnectedView(nsm);
         else
@@ -148,6 +140,8 @@ public class MenuLobbyViewController : MonoBehaviour
         // Status text
         if(nsm == null)
             disconnectedStatusText.text = "Initializing";
+        else if(!CoreManager.LobbyCommunicator.LobbyData.HasValue)
+            disconnectedStatusText.text = "No lobby data";
         else
             switch(nsm.ClientConnectionState) {
                 case LocalConnectionState.Stopped:
@@ -163,7 +157,7 @@ public class MenuLobbyViewController : MonoBehaviour
     }
 #endregion
 
-    public void LobbyManager_LobbyUpdated(LobbyData newData, LobbyUpdateReason reason) 
+    public void LobbyCommunicator_LobbyUpdatedEvent(string lobbyID, LobbyData newData, LobbyUpdateReason reason) 
     {
         BLog.Log("MenuLobbyViewController#LobbyManager_LobbyUpdated: Recieved update event", LogChannel.SceneDelegate, 0); 
 

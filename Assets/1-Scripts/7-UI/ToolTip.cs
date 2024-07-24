@@ -31,7 +31,7 @@ public class ToolTip : MonoBehaviour
          to problems when I tried it. If efficiency really becomes an issue I'll look into it again. */
     void Update() 
     {
-        if(observedInput == null) return;
+        if(observedInput == null || observedInput.devices.Count == 0) return;
 
         childImage.sprite = observedInput.devices[0] is Gamepad ? gamepadImage : keyboardMouseImage;
 
