@@ -20,9 +20,9 @@ public class MenuLobbyController : MenuController
 
     public int retryTimer;
 
-    private void Start() 
+    protected new void Start() 
     {
-
+        base.Start();
         _viewController = GetComponent<MenuLobbyViewController>();
 
         networkManager = InstanceFinder.NetworkManager;

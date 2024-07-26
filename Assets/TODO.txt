@@ -1,6 +1,3 @@
 TODO:
-- Sometimes gamepad players don't get auto select buttons (start playerselectmenu then back out)
-- Standalone server testing for lobby leaving/rejoining
-- Ensure missing devices popup functionality
 - Finish LobbyMessagePopup
-- No audio listeners in the scene after leaving a local play lobby
+- Make server/client status text appear on f3 menu

@@ -17,8 +17,10 @@ public class MenuPlayerController : MenuController
 
     private bool shouldAllowJoining;
 
-    void Start() 
+    protected new void Start() 
     {
+        base.Start();
+        
         allowInputEvents = false;
         shouldAllowJoining = true;
         maxPlayers = CoreManager.IsMultiplayer ? 1 : 4;

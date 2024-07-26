@@ -12,6 +12,8 @@ using UnityEngine.UI;
 public abstract class MenuController : MonoBehaviour
 {
 
+    
+
     protected PlayerControls controlsReference;
 
     [SerializeField]
@@ -65,6 +67,13 @@ public abstract class MenuController : MonoBehaviour
     private bool hidesParent = true;
     [SerializeField]
     private bool hidesSiblings = true;
+    /// <summary>
+    /// This field is for MenuControllers who are sitting open in a scene, think a TitleScreen
+    ///   MenuController that is the first thing you see when you start the game.
+    /// If this field is set to true we will call Open for this instance on Start
+    /// </summary>
+    [SerializeField]
+    private bool autoOpen = false;
 
     [SerializeField]
     protected List<SubMenuData> subMenus;
@@ -90,6 +99,12 @@ public abstract class MenuController : MonoBehaviour
         menuControllerLoadedProperly = true;
     }
 
+    protected void Start() 
+    {
+        if(autoOpen)
+            Open();
+    }
+
     protected void OnEnable() 
     {
         PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoined;
@@ -110,6 +125,9 @@ public abstract class MenuController : MonoBehaviour
 
     protected void LateUpdate() 
     {
+        if(focusedPlayer == null && autoFocusOnPlayerOne && PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.PlayerOne != null)
+            SetFocus(PlayerObjectManager.Instance.PlayerOne);
+
         if(focusedPlayer != null && EventSystem.currentSelectedGameObject == null && firstSelect != null && focusedPlayer.input.currentControlScheme != "KeyboardMouse")
             EventSystem.SetSelectedGameObject(firstSelect.gameObject);
 

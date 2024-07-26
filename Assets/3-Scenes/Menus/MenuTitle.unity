@@ -1013,11 +1013,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   openCloseType: 1
   inputSystemUIInputModule: {fileID: 0}
+  usedISUIM: 
   eventSystem: {fileID: 0}
   firstSelect: {fileID: 1306794275}
   autoFocusOnPlayerOne: 1
   hidesParent: 1
   hidesSiblings: 1
+  autoOpen: 1
   subMenus: []
   tooltips: []
   titleShip: {fileID: 1718099842}

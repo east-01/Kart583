@@ -35,7 +35,7 @@
     },
     "MenuController": {
       "$id": "9",
-      "enable": false,
+      "enable": true,
       "color": "C2A0FF"
     },
     "NetworkManager": {

@@ -175,6 +175,8 @@ public class PlayerObjectManager : MonoBehaviour
 
     private void PlayerInput_DeviceLost(PlayerInput input)
     {
+        BLog.Highlight("Device lost for " + input.playerIndex);
+
         PlayerObject obj = FindPlayerObject(input);
         if(!playerObjectsMissingDevices.Contains(obj))
             playerObjectsMissingDevices.Add(obj);
@@ -194,8 +196,10 @@ public class PlayerObjectManager : MonoBehaviour
     public void UpdateMissingDevicesPrompt() 
     {
         string nameList = "";
-        playerObjectsMissingDevices.ForEach(obj => nameList += obj.PlayerName + ", ");
-        nameList = nameList[..^2];
+        if(playerObjectsMissingDevices.Count > 0) {
+            playerObjectsMissingDevices.ForEach(obj => nameList += obj.PlayerName + ", ");
+            nameList = nameList[..^2];
+        }
 
         deviceMissingPanel.GetComponent<TMP_Text>().text = $"Missing input: {nameList}";
         deviceMissingPanel.SetActive(playerObjectsMissingDevices.Count > 0);

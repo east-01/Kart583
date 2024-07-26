@@ -45,19 +45,14 @@ public class PlayerPanelController : MenuController
 
         // Check player data and enable the corresponding phase
         if(currentFocus.data.name.Length == 0) {
-            BLog.Highlight("A");
             phase = PlayerBuildPhase.NAME_SELECT;
         } else if(currentFocus.data.hexColor == null) {
-            BLog.Highlight("B");
             phase = PlayerBuildPhase.COLOR_SELECT;
         } else if(currentFocus.data.kartType == KartType.NONE) {
-            BLog.Highlight("C");
             phase = PlayerBuildPhase.VEHICLE_SELECT;
         } else if(!currentFocus.data.ready) {
-            BLog.Highlight("D");
             phase = PlayerBuildPhase.WAITING_FOR_READY;
         } else {
-            BLog.Highlight("E");
             phase = PlayerBuildPhase.READY;
         }
         OpenSubMenu(phaseSubMenu[phase], currentFocus);
@@ -74,16 +69,12 @@ public class PlayerPanelController : MenuController
         }
 
         if(focus.data.ready) {
-            BLog.Highlight("1");
             focus.data.ready = false;
         } else if(focus.data.kartType != KartType.NONE) {
-            BLog.Highlight("2");
             focus.data.kartType = KartType.NONE;
         } else if(focus.data.hexColor != null) {
-            BLog.Highlight("3");
             focus.data.hexColor = null;
         } else if(focus.data.name.Length > 0) {
-            BLog.Highlight("4");
             if(focus.input.currentControlScheme == "Gamepad") {
                 RemoveSelf();
                 return;
@@ -91,11 +82,9 @@ public class PlayerPanelController : MenuController
 
             focus.data.name = "";
         } else if(focus.data.name == "") {
-            BLog.Highlight("5");
             RemoveSelf();
             return;
         }
-        BLog.Highlight("6");
         UpdateBuildPhase();
     }
 
@@ -160,7 +149,6 @@ public class PlayerPanelControllerSubMenu : MenuController
 
     protected override void SendMenuBack()
     {
-        BLog.Highlight("ppcsm override");
         PlayerPanelController.RegressBuildPhase();
         uiElementSounds.PlayBackSound();
         if(PlayerPanelController.PlayerBuildPhase != PlayerBuildPhase.WAITING_FOR_READY)

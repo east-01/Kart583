@@ -44,5 +44,9 @@ public class PersistentAudioWatchdog : MonoBehaviour
             audioSource.Stop();
             audioSource = null;
         }
+
+        if(SceneNames.IsMenuScene(scene.name)) {
+            CoreManager.Instance.GetComponent<AudioListener>().enabled = true;
+        }
     }
 }
