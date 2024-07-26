@@ -34,7 +34,7 @@ public class ServerDashboardController : MenuController
 
         AddLine($"Clients: {lm.ClientManager.Clients.Count}");
         AddLine($"Lobbies: {lm.LobbyCount}");
-        foreach(GameLobby lobby in lm.lobbyObjects) {
+        foreach(GameLobby lobby in lm.LobbyObjects) {
             AddLine($"Lobby \"{lobby.ID}\"");
             AddLine($"  Players: {lobby.PlayerCount}");
             foreach(PlayerData pd in lobby.Players) {

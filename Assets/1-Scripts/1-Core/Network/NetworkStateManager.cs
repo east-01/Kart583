@@ -1,4 +1,6 @@
+using System;
 using FishNet;
+using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Transporting;
 using FishNet.Transporting;
@@ -102,18 +104,14 @@ public class NetworkStateManager : MonoBehaviour
     }
 
 #region TransportSelection
-    public bool IsUsingLocalTransport { get {
-        return transportManager.Transport = tugboat;
-    } }
-
     public void UseLocalTransport() { 
         transportManager.Transport = tugboat; 
         tugboat.SetServerBindAddress("", IPAddressType.IPv4);
         tugboat.SetClientAddress("localhost");
         tugboat.SetPort(5000);
     }
+
     public void UseGlobalTransport() { 
-        // transportManager.Transport = fishyUnityTransport; 
         transportManager.Transport = tugboat; 
         tugboat.SetServerBindAddress("0.0.0.0", IPAddressType.IPv4);
         tugboat.SetClientAddress("99.120.146.136");
@@ -124,15 +122,11 @@ public class NetworkStateManager : MonoBehaviour
 #region Server/Client Start and Stop
     public void StartClient() 
     {
-        // if(ServerConnectionState != LocalConnectionState.Stopped) {
-        //     Debug.LogError("Can't start client when server is active.");
-        //     return;
-        // }
-
         if(ClientConnectionState != LocalConnectionState.Stopped) {
             Debug.LogWarning("Ignoring StartClient call. Client is already started.");
             return;            
         }
+        
         BLog.Log("Starting client connection", LogChannel.NetworkManager);
         _networkManager.ClientManager.StartConnection();
     }

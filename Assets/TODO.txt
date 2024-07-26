@@ -1,5 +1,6 @@
 TODO:
-- Ensure missing devices popup functionality
 - Sometimes gamepad players don't get auto select buttons (start playerselectmenu then back out)
 - Standalone server testing for lobby leaving/rejoining
+- Ensure missing devices popup functionality
 - Finish LobbyMessagePopup
+- No audio listeners in the scene after leaving a local play lobby

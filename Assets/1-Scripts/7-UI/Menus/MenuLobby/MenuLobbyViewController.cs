@@ -80,7 +80,7 @@ public class MenuLobbyViewController : MonoBehaviour
             return;
 
         NetworkStateManager nsm = _controller.ConnectedNetworkManager.GetComponent<NetworkStateManager>();
-        bool isConnected = NetSceneController.LobbyManager != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started && CoreManager.LobbyCommunicator.LobbyData.HasValue;
+        bool isConnected = NetSceneController.Instance != null && NetSceneController.LobbyManager != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started && CoreManager.LobbyCommunicator.LobbyData.HasValue;
         if(isConnected)
             UpdateConnectedView(nsm);
         else
@@ -140,8 +140,6 @@ public class MenuLobbyViewController : MonoBehaviour
         // Status text
         if(nsm == null)
             disconnectedStatusText.text = "Initializing";
-        else if(!CoreManager.LobbyCommunicator.LobbyData.HasValue)
-            disconnectedStatusText.text = "No lobby data";
         else
             switch(nsm.ClientConnectionState) {
                 case LocalConnectionState.Stopped:

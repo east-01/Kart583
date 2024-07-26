@@ -39,6 +39,8 @@ public class MenuLobbyController : MenuController
 
         if(CoreManager.IsLocal)
             OpenSubMenu(SUB_MENU_MAP_SELECT);
+        else
+            SetFocus(PlayerObjectManager.Instance.PlayerOne);
     }
 
     private void Update() {
@@ -65,7 +67,7 @@ public class MenuLobbyController : MenuController
         }
 
         if(DevSettings.IsDevelopment() && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
-            NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, CoreManager.LocalConnection, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_FORCE_MAP_PICK);
+            NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_FORCE_MAP_PICK);
     }
 
     private IEnumerator ConnectionRetryTimer() {

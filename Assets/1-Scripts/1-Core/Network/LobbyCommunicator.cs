@@ -5,6 +5,7 @@ using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Transporting;
+using Steamworks;
 using UnityEngine;
 
 /// <summary>
@@ -17,7 +18,6 @@ using UnityEngine;
 public class LobbyCommunicator : MonoBehaviour
 {
 
-    private bool waitingToStartCommunication = false;
     private bool retryUntilConnected = false;
 
     public string LobbyID { get; private set; }
@@ -67,6 +67,9 @@ public class LobbyCommunicator : MonoBehaviour
         LobbyLeftEvent += LobbyCommunicator_LobbyLeftEvent;
         LobbyMessageEvent += LobbyCommunicator_LobbyMessageEvent;
         LobbyUpdatedEvent += LobbyCommunicator_LobbyUpdatedEvent;
+
+        InstanceFinder.ClientManager.OnRemoteConnectionState += ClientManager_OnClientRemoteConnectionState;
+        InstanceFinder.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
     }
 
     private void OnDisable() 
@@ -75,29 +78,15 @@ public class LobbyCommunicator : MonoBehaviour
         LobbyLeftEvent -= LobbyCommunicator_LobbyLeftEvent;
         LobbyMessageEvent -= LobbyCommunicator_LobbyMessageEvent;
         LobbyUpdatedEvent -= LobbyCommunicator_LobbyUpdatedEvent;
-    }
 
-    private void Update() 
-    {
-        if(!NetSceneController.IsReady)
-            return;
-        if(!CoreManager.HasLocalConnection)
-            return;
-
-        if(waitingToStartCommunication) {
-            waitingToStartCommunication = false;
-            StartCommunication(retryUntilConnected);
-        }
+        InstanceFinder.ClientManager.OnRemoteConnectionState -= ClientManager_OnClientRemoteConnectionState;
+        InstanceFinder.ClientManager.OnClientConnectionState -= ClientManager_OnClientConnectionState;
     }
 
 #region Start/Stop communication
     public void StartCommunication(bool retryUntilConnected = true) 
     {
-        if(SceneController.Instance == null) {
-            waitingToStartCommunication = true;
-            this.retryUntilConnected = retryUntilConnected;
-            return;
-        }
+        this.retryUntilConnected = retryUntilConnected;
 
         BLog.Log("Starting communication.", LogChannel.LobbyCommunicator);
 
@@ -110,7 +99,6 @@ public class LobbyCommunicator : MonoBehaviour
         else
             CoreManager.NetworkStateManager.UseGlobalTransport();
 
-        InstanceFinder.ClientManager.OnRemoteConnectionState += ClientManager_OnClientRemoteConnectionState;
 
         if(CoreManager.IsLocal)
             CoreManager.NetworkStateManager.StartHost();
@@ -118,16 +106,30 @@ public class LobbyCommunicator : MonoBehaviour
             CoreManager.NetworkStateManager.StartClient();
     }
 
+    public void StartCommunicationDelayed(bool retryUntilConnected = true, float delay = 0.1f) => StartCoroutine(StartCommunicationDelayedCoroutine(retryUntilConnected, delay));
+    private IEnumerator StartCommunicationDelayedCoroutine(bool retryUntilConnected, float delay) 
+    {
+        yield return new WaitForSeconds(delay);
+        StartCommunication(retryUntilConnected);
+    }
+
+    /// <summary>
+    /// Stop communication with the lobby. If we are in a lobby when this method is executed we
+    ///   will request that we're removed from the lobby and then the lobby will tell us to stop
+    ///   communication.
+    /// This means the method gets called twice for a full disconnect handshake, the first time
+    ///   tells the lobby that we're disconnecting. Once we recieve the LobbyLeftEvent we will
+    ///   call StopCommunication again.
+    /// </summary>
     public void StopCommunication() 
     {
-        BLog.Log("Stopping communication.", LogChannel.LobbyCommunicator);
-        if(CoreManager.LobbyCommunicator.LobbyID != null)
+        // First pass
+        if(LobbyID != null) {
             NetSceneController.LobbyManager.RemoveFromLobby(CoreManager.LocalConnection, "Client stopped communication.");
-        else
-            Debug.LogWarning("Stopping communication without a local connection. This shouldn't happen.");
+            return;
+        }
 
-        InstanceFinder.ClientManager.OnRemoteConnectionState -= ClientManager_OnClientRemoteConnectionState;
-
+        // Second pass
         if(CoreManager.IsLocal)
             CoreManager.NetworkStateManager.StopHost();
         else
@@ -158,9 +160,7 @@ public class LobbyCommunicator : MonoBehaviour
             return;
         }
 
-        LobbyID = null;
-        LobbyData = null;
-        BLog.Log($"Left lobby \"{lobbyID}\"", LogChannel.LobbyCommunicator, 0);
+        ClearLobby(reason);
     }
 
     private void LobbyCommunicator_LobbyMessageEvent(string lobbyID, NetworkConnection sender, LobbyMessageType type, string message) 
@@ -182,12 +182,30 @@ public class LobbyCommunicator : MonoBehaviour
 
     private void ClientManager_OnClientRemoteConnectionState(RemoteConnectionStateArgs args) 
     {
-        if(args.ConnectionState == RemoteConnectionState.Started) {
-        } else if(args.ConnectionState == RemoteConnectionState.Stopped) {
+        if(!InstanceFinder.IsServerOnly && args.ConnectionState == RemoteConnectionState.Stopped) {
             StopCommunication();
         }
     }
+
+    private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args) 
+    {
+        if(args.ConnectionState == LocalConnectionState.Stopped && retryUntilConnected) {
+            StartCommunicationDelayed(retryUntilConnected);
+        } else if(args.ConnectionState == LocalConnectionState.Started) {
+            retryUntilConnected = false;
+        }
+    }
 #endregion
+
+    public void ClearLobby(string reason) 
+    {
+        BLog.Log($"Left lobby \"{LobbyID}\"", LogChannel.LobbyCommunicator, 0);
+
+        LobbyID = null;
+        LobbyData = null;
+
+        StopCommunication();
+    }
 
     public bool InLobby { get { return LobbyID != null && LobbyData.HasValue; } }
 

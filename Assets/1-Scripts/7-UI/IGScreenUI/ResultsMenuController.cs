@@ -53,11 +53,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
                 SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
                 return;
             }
-            if(CoreManager.IsMultiplayer) {
-                NetSceneController.LobbyManager.ServerRpcSendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, CoreManager.LocalConnection, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE);
-			} else {
-                NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, CoreManager.LocalConnection, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE);
-			}
+            NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE);
         }
 	}
 

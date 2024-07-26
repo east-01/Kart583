@@ -64,7 +64,7 @@ public class GameplayManager : NetworkBehaviour
         if(DevSettings.Settings.LoadMode != LoadMode.NONE && !DevSettings.Settings.hasProcessedLoadMode)
             return;
 
-        if(!CoreManager.LobbyCommunicator.InLobby) {
+        if(!CoreManager.LobbyCommunicator.InLobby && CoreManager.IsLocal) {
             SpawnStep = LateLobbySpawnStep.STARTING_CONNECTION;
         }
 

@@ -25,12 +25,12 @@
     },
     "DevSettings": {
       "$id": "7",
-      "enable": false,
+      "enable": true,
       "color": "FDFF40"
     },
     "KartManager": {
       "$id": "8",
-      "enable": false,
+      "enable": true,
       "color": "64EAFF"
     },
     "MenuController": {
@@ -42,6 +42,11 @@
       "$id": "10",
       "enable": false,
       "color": "00AD33"
+    },
+    "LobbyCommunicator": {
+      "$id": "11",
+      "enable": true,
+      "color": "FFFFFF"
     }
   }
 }
