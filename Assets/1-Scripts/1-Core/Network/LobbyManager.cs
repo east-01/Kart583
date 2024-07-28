@@ -37,6 +37,7 @@ public class LobbyManager : NetworkBehaviour
     public int LobbyCount => lobbies.Count;
 #endregion
 
+#region Initializers
     private void Awake() 
     {
         if(GameLobby.PLAYER_WAIT_TIME <= 0)
@@ -84,6 +85,7 @@ public class LobbyManager : NetworkBehaviour
             SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
         }
     }
+#endregion
 
     private void Update() 
     {
@@ -180,6 +182,7 @@ public class LobbyManager : NetworkBehaviour
         BLog.Highlight("RemoveFromLobbyCalled");
         if(!base.IsServer) {
             ServerRpcRemoveFromLobby(client);
+            ServerRpcRemoveFromLobby(client);
             return;
         }
 
@@ -189,7 +192,7 @@ public class LobbyManager : NetworkBehaviour
             Debug.LogError($"Can't remove client \"{client}\" from lobby, they're not in one.");
             return;
         }
-
+        BLog.Highlight("Player leaving lobby");
         GameLobby lobbyToLeave = GetLobby(client);
         lobbyToLeave.RemoveClientsPlayers(client, out bool yieldsEmptyLobby);
 
