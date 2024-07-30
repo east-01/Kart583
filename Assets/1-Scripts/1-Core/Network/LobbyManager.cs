@@ -81,7 +81,7 @@ public class LobbyManager : NetworkBehaviour
         //   the client to perform disconnected actions.
         // The "server side view" is in LobbyManager#ServerManager_OnRemoteConnectionState
         if(CoreManager.LobbyCommunicator.InLobby) {
-            CoreManager.LobbyCommunicator.ClearLobby("Lost connection.");
+            CoreManager.LobbyCommunicator.StopCommunication("Lost connection with server.", true);
             SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
         }
     }
@@ -182,7 +182,6 @@ public class LobbyManager : NetworkBehaviour
         BLog.Highlight("RemoveFromLobbyCalled");
         if(!base.IsServer) {
             ServerRpcRemoveFromLobby(client);
-            ServerRpcRemoveFromLobby(client);
             return;
         }
 
@@ -198,9 +197,10 @@ public class LobbyManager : NetworkBehaviour
 
         connectionLobbyPair.Remove(client);
         
-        if(IsServer && !IsHost)
+        if(IsServer && !IsHost) {
             TargetRpcRemovedFromLobby(client, lobbyToLeave.ID, reason);
-        else if(IsHost)
+            BLog.Highlight("called target removed from lobby");
+        } else if(IsHost)
             CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyLeftEvent(lobbyToLeave.ID, reason);
 
         if(!yieldsEmptyLobby)
@@ -275,31 +275,35 @@ public class LobbyManager : NetworkBehaviour
     /// <param name="message">The message itself</param>
     /// <param name="recipients">The recipients for the message, if left null the message will go to everyone in the lobby. When populated
     ///                            the message will only go to those connections.</param>
-    public void SendLobbyMessage(string lobbyID, LobbyMessageType type, string message, NetworkConnection sender = null, List<NetworkConnection> recipients = null) 
+    public void SendLobbyMessage(string lobbyID, LobbyMessageType type, string message, NetworkConnection sender = null, List<NetworkConnection> recipients = null, bool sendOnlyToServer = false) 
     {
         if(!base.IsServer) {
             ServerRpcSendLobbyMessage(lobbyID, base.LocalConnection, type, message, recipients);
             return;
         }
 
+        BLog.Highlight("Sending message " + message);
+
         // Issue message to server
         CoreManager.LobbyCommunicator.DoNotUse_InvokeLobbyMessageEvent(lobbyID, sender, type, message);
 
         // Issue message to recipients
-        recipients ??= new(GetLobby(lobbyID).Connections);
-        recipients.ForEach(recipient => TargetRpcRecievedLobbyMessage(recipient, lobbyID, base.LocalConnection, type, message));
+        if(!sendOnlyToServer) {
+            recipients ??= new(GetLobby(lobbyID).Connections);
+            recipients.ForEach(recipient => TargetRpcRecievedLobbyMessage(recipient, lobbyID, base.LocalConnection, type, message));
+        }
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void ServerRpcSendLobbyMessage(string lobbyID, NetworkConnection sender, LobbyMessageType type, string message, List<NetworkConnection> recipients = null) 
+    private void ServerRpcSendLobbyMessage(string lobbyID, NetworkConnection sender, LobbyMessageType type, string message, List<NetworkConnection> recipients = null, bool sendOnlyToServer = false) 
     {
         if(sender == null || !sender.IsValid) {
             Debug.LogError("Can't pass on LobbyMessage, sender is invalid.");
-            SendLobbyMessage(null, LobbyMessageType.ACTION, LME_CMD_FORCE_DISCONNECT + "Invalid message sent, sender is invalid.");
+            SendLobbyMessage(null, LobbyMessageType.ACTION, LME_CMD_FORCE_DISCONNECT + "Invalid message sent, sender is invalid.", sender);
             return;
         }
         // TODO: Enforce permissions (i.e. clients aren't allowed to issue action commands)
-        SendLobbyMessage(lobbyID, type, message, sender: sender, recipients: recipients);
+        SendLobbyMessage(lobbyID, type, message, sender: sender, recipients: recipients, sendOnlyToServer);
     }
 
     [TargetRpc]
@@ -356,9 +360,6 @@ public class LobbyManager : NetworkBehaviour
     /// <summary>
     /// Recieve commands from clients via the LobbyMessage system
     /// </summary>
-    /// <param name="lobbyID"></param>
-    /// <param name="type"></param>
-    /// <param name="message"></param>
     public void LobbyCommunicator_LobbyMessageEvent(string lobbyID, NetworkConnection sender, LobbyMessageType type, string message) 
     {
         BLog.Highlight("Recieved message: " + message);
@@ -385,13 +386,22 @@ public class LobbyManager : NetworkBehaviour
                     if(!base.IsServer)
                         return;
 
+                    if(sender == null) {
+                        Debug.LogError("Can't handle request lobby move, sender is null.");
+                        return;
+                    }
+
                     lobby = GetLobby(sender);
                     if(lobby == null) {
                         Debug.LogError("Can't move client to lobby, they are not in one.");
                         return;
                     }
                     BLog.Log($"Client \"{sender}\" requested to move to lobby", LogChannel.LobbyManager, 0);
-                    SceneController.Instance.LoadScene(new(SceneNames.MENU_LOBBY), false);
+                    if(base.IsHost)
+                        SceneController.Instance.LoadScene(new(SceneNames.MENU_LOBBY), false);
+                    else
+                        NetSceneController.Instance.TargetRpcLoadScene(sender, new(SceneNames.MENU_LOBBY), false);
+
                     break;
             }
         }

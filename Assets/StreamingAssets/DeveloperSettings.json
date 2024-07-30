@@ -14,10 +14,10 @@
   "EnableWarpPoint": false,
   "HaveStandalonePlayerRunAsServer": false,
   "ManualLobbyPlayerWaitSwitch": false,
-  "OverrideRaceProgressAtStart": false,
-  "RaceProgress": 0.0,
-  "OverrideLapCount": false,
-  "LapCount": 20,
-  "OverrideBots": false,
+  "OverrideRaceProgressAtStart": true,
+  "RaceProgress": 0.9,
+  "OverrideLapCount": true,
+  "LapCount": 1,
+  "OverrideBots": true,
   "Bots": false
 }

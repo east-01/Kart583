@@ -143,7 +143,7 @@ public class MenuLobbyViewController : MonoBehaviour
         else
             switch(nsm.ClientConnectionState) {
                 case LocalConnectionState.Stopped:
-                    disconnectedStatusText.text = $"No connection. Retrying in {_controller.retryTimer}s";
+                    disconnectedStatusText.text = $"No connection.";
                     break;
                 case LocalConnectionState.Starting:
                     disconnectedStatusText.text = "Starting connection";

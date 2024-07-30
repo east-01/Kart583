@@ -59,6 +59,9 @@ public class LobbyCommunicator : MonoBehaviour
     public delegate void LobbyUpdateHandler(string lobbyID, LobbyData newData, LobbyUpdateReason reason);
     public event LobbyUpdateHandler LobbyUpdatedEvent;
     public void DoNotUse_InvokeLobbyUpdatedEvent(string lobbyID, LobbyData newData, LobbyUpdateReason reason) => LobbyUpdatedEvent?.Invoke(lobbyID, newData, reason);
+
+    public delegate void CommunicationEndedHandler(string lobbyID, string reason);
+    public event CommunicationEndedHandler CommunicationEndedEvent;
 #endregion
 
     private void OnEnable() 
@@ -120,13 +123,19 @@ public class LobbyCommunicator : MonoBehaviour
     /// This means the method gets called twice for a full disconnect handshake, the first time
     ///   tells the lobby that we're disconnecting. Once we recieve the LobbyLeftEvent we will
     ///   call StopCommunication again.
+    /// <param name="reason">The reason for stopping communication.</param>
+    /// <param name="forceStop">Force stop host/client and clear LobbyID and LobbyData. This is
+    ///   primarily used for when we've lost connection with the server, as we won't necessarily
+    ///   get back the end of the RemoveFromLobby handshake.</param>
     /// </summary>
-    public void StopCommunication() 
+    public void StopCommunication(string reason = "", bool forceStop = false) 
     {
+        BLog.Highlight($"Communication ended for reason \"{reason}\" lobby id: \"{LobbyID}\"");
         // First pass
         if(LobbyID != null) {
-            NetSceneController.LobbyManager.RemoveFromLobby(CoreManager.LocalConnection, "Client stopped communication.");
-            return;
+            NetSceneController.LobbyManager.RemoveFromLobby(CoreManager.LocalConnection, reason);
+            if(!forceStop)
+                return;
         }
 
         // Second pass
@@ -135,8 +144,14 @@ public class LobbyCommunicator : MonoBehaviour
         else
             CoreManager.NetworkStateManager.StopClient();
 
+        BLog.Log($"Left lobby \"{LobbyID}\"", LogChannel.LobbyCommunicator, 0);
+        
         LobbyID = null;
-        LobbyData = null;
+        LobbyData = null;                
+
+        BLog.Highlight($"Communication ended for reason \"{reason}\"");
+
+        CommunicationEndedEvent?.Invoke(LobbyID, reason);
     }
 #endregion
 
@@ -160,14 +175,17 @@ public class LobbyCommunicator : MonoBehaviour
             return;
         }
 
-        ClearLobby(reason);
+        LobbyID = null;
+        LobbyData = null;
+
+        StopCommunication(reason);
     }
 
     private void LobbyCommunicator_LobbyMessageEvent(string lobbyID, NetworkConnection sender, LobbyMessageType type, string message) 
     {
         // We don't check if ID matches here because LME_CMD_FORCE_DISCONNECT messages do not contain lobbyID or sender.
         if(type == LobbyMessageType.ACTION && message.StartsWith(LobbyManager.LME_CMD_FORCE_DISCONNECT)) {
-            StopCommunication();
+            StopCommunication(message.Replace(LobbyManager.LME_CMD_FORCE_DISCONNECT, ""));
         }
     }
 
@@ -183,7 +201,7 @@ public class LobbyCommunicator : MonoBehaviour
     private void ClientManager_OnClientRemoteConnectionState(RemoteConnectionStateArgs args) 
     {
         if(!InstanceFinder.IsServerOnly && args.ConnectionState == RemoteConnectionState.Stopped) {
-            StopCommunication();
+            StopCommunication("Client stopped.");
         }
     }
 
@@ -196,16 +214,6 @@ public class LobbyCommunicator : MonoBehaviour
         }
     }
 #endregion
-
-    public void ClearLobby(string reason) 
-    {
-        BLog.Log($"Left lobby \"{LobbyID}\"", LogChannel.LobbyCommunicator, 0);
-
-        LobbyID = null;
-        LobbyData = null;
-
-        StopCommunication();
-    }
 
     public bool InLobby { get { return LobbyID != null && LobbyData.HasValue; } }
 

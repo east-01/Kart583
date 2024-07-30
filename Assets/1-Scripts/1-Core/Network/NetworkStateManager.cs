@@ -85,6 +85,10 @@ public class NetworkStateManager : MonoBehaviour
                 StartServer(true);
         }
 
+        if(Input.GetKeyDown(KeyCode.F3)) {
+            debugCanvas.SetActive(!debugCanvas.activeSelf);
+        }
+
         if(trackedConnectionStatus == false && IsConnected) {
             trackedConnectionStatus = true;
             CommunicationStartedEvent?.Invoke();

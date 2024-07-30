@@ -49,11 +49,11 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
 			if(!gameplayManager.HasLobby) {
                 Debug.LogError("GameplayManager doesn't have lobby, so we can't send them back to it.");
-                CoreManager.LobbyCommunicator.StopCommunication();
+                CoreManager.LobbyCommunicator.StopCommunication("Lost connection with lobby.");
                 SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
                 return;
             }
-            NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE);
+            NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE, sender: CoreManager.LocalConnection, sendOnlyToServer: true);
         }
 	}
 

@@ -61,6 +61,7 @@ public class PopupMenuController : MenuController
         DontDestroyOnLoad(this);
 
         Close();
+        GetComponentInParent<Canvas>().enabled = true;
     }
 
     protected override void Opened()
