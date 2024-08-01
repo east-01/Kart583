@@ -65,6 +65,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
 
         SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
         for(int position = 0; position < gameplayManager.PlayerManager.KartCount; position++) {
+            BLog.Highlight($"Calculating position {position}");
             string playerUUID = null;
             // Find playerUUID from position
             foreach(string testUUID in placements.Keys) {
