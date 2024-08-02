@@ -86,9 +86,9 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
         } else if(advancedLapCompleted) {
             lapNumber += 1;
 
-            if(lapNumber < gameplayManager.RaceManager.settings.Laps-1) {
+            if(lapNumber < gameplayManager.RaceManager.Settings.Laps-1) {
                 CoreManager.AudioManager.PlaySound(AudioFile.FX_LAP_COMPLETE_NORMAL, 1f);
-            } else if(lapNumber == gameplayManager.RaceManager.settings.Laps-1) {
+            } else if(lapNumber == gameplayManager.RaceManager.Settings.Laps-1) {
                 CoreManager.AudioManager.PlaySound(AudioFile.FX_LAP_COMPLETE_LAST_LAP, 1f);            
             } else {
                 CoreManager.AudioManager.PlaySound(AudioFile.FX_RACE_COMPLETE, 1f);
@@ -120,7 +120,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
         hasStartedRace = raceProgress > 0;
         hasFinishedRace = raceProgress == 1;
 
-        lapNumber = (int)(raceProgress*gameplayManager.RaceManager.settings.Laps);
+        lapNumber = (int)(raceProgress*gameplayManager.RaceManager.Settings.Laps);
         waypointIndex = (int)(raceProgress*Waypoints.Count);
 
         Vector3 hereToNextVec = GetNextWaypoint().position-GetCurrentWaypoint().position;
@@ -205,7 +205,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     public float GetRaceCompletion() 
     {
         RaceManager rm = gameplayManager.RaceManager;
-        return Mathf.Lerp((float)lapNumber/rm.settings.Laps, Mathf.Clamp01((float)(lapNumber+1)/rm.settings.Laps), lapCompletion);
+        return Mathf.Lerp((float)lapNumber/rm.Settings.Laps, Mathf.Clamp01((float)(lapNumber+1)/rm.Settings.Laps), lapCompletion);
     }
 
     public int CompareTo(PositionTracker other)

@@ -14,26 +14,37 @@ public class RaceManager : NetworkBehaviour
     public static float RACE_TIME = 60*60*30;
 
     /* ----- Settings fields ---- */
-    public RaceSettings settings;
+    
 
     /* ----- Runtime fields ----- */
     private GameplayManager gameplayManager;
     private KartLevelManager kartLevelManager;
 
-    [Header("Runtime Fields"), SerializeField, SyncVar(OnChange = nameof(RacePhaseChange), SendRate = 0f)] 
+    [SyncVar(OnChange = nameof(RacePhaseChange), SendRate = 0f)] 
     private RacePhase phase; 
-    public delegate void RacePhaseChangeHandler(RacePhase previousPhase, RacePhase currentPhase);
-    public event RacePhaseChangeHandler RacePhaseChanged;
 
     [SyncObject]
     private readonly SyncTimer raceTime = new();
     public float RaceTime => raceTime.Remaining;
     public float RaceTimeElapsed => raceTime.Elapsed;
-    [SerializeField]
-    private float raceTimeReadout;
-    private float simulatedTimer;
 
     private int countdownSecond;
+
+#region Runtime fields
+    private RaceSettings settings;
+    /// <summary>
+    /// The settings for the race, can be an editor field or set by code.
+    /// </summary>
+    public RaceSettings Settings => settings;
+#endregion
+
+#region Events
+    public delegate void RacePhaseChangeHandler(RacePhase previousPhase, RacePhase currentPhase);
+    /// <summary>
+    /// Event call for when the race phase is changed. Called 
+    /// </summary>
+    public event RacePhaseChangeHandler RacePhaseChanged;
+#endregion
 
     /// <summary>
     /// Stores raceFinishTime first in RaceCompleted(), then gets position and point data in PopulatePlacements()
@@ -100,7 +111,7 @@ public class RaceManager : NetworkBehaviour
                 KartsIRManager playerManager = gameplayManager.PlayerManager;
                 bool allPlayersReady = playerManager.AllPlayersReady && playerManager.HumanPlayerCount == gameplayManager.GameLobby.PlayerCount;
                 bool allBotsReady = gameplayManager.PlayerManager.BotPlayerCount == gameplayManager.PlayerManager.BotsToSpawn;
-                bool needToSpawnBots = gameplayManager.RaceManager.settings.Bots && playerManager.BotPlayerCount == 0 && playerManager.BotsToSpawn > 0;
+                bool needToSpawnBots = gameplayManager.RaceManager.Settings.Bots && playerManager.BotPlayerCount == 0 && playerManager.BotsToSpawn > 0;
                 // Two tracks if we're spawning bots or not
                 if(needToSpawnBots) {
                     if(allPlayersReady) {
@@ -164,7 +175,7 @@ public class RaceManager : NetworkBehaviour
                     if(DevSettings.Settings.OverrideRaceProgressAtStart)
                         phase = RacePhase.RACING;
                     else
-                        raceTime.StartTimer(settings.startDelay, true);
+                        raceTime.StartTimer(Settings.startDelay, true);
                         
                     placements.Clear();
 
@@ -252,15 +263,19 @@ public class RaceManager : NetworkBehaviour
         // kartLevelManager.RaceCamera.GetComponent<AudioListener>().enabled = false;
     }
 
-    /// <summary> Server RPC calling RaceManager#CompletedRace </summary>
-    [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcCompletedRace(PlayerData data, float raceCompletion) { CompletedRace(data, raceCompletion); }
     /// <summary>
     /// Notify the server that this player has completed the race
     /// </summary>
     [Server]
     public void CompletedRace(PlayerData data, float raceCompletion) 
     {
+        if(base.IsClientOnly) {
+            ServerRpcCompletedRace(data, raceCompletion);
+            return;
+        }
+
+        
+
         if(placements.ContainsKey(data.uuid))
             return;
 
@@ -275,6 +290,9 @@ public class RaceManager : NetworkBehaviour
 
         placements.Add(data.uuid, rpd);
     }
+    /// <summary> Server RPC calling RaceManager#CompletedRace </summary>
+    [ServerRpc(RequireOwnership = false)]
+    public void ServerRpcCompletedRace(PlayerData data, float raceCompletion) { CompletedRace(data, raceCompletion); }
 
     [Server]
     public void FinalizePlacements() 

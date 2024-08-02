@@ -32,6 +32,8 @@ public struct PlayerData {
 	public string hexColor;
     public int points;
 
+    public float? raceFinishTime;
+
     public readonly string Summary { get { return $"[PlayerData{{{uuid[..3]}}} name: \"{name}\" type: {kartType} ready: {ready}]"; } }
 
     public static string PLAYER_1_DATA = "PLAYER_1_DATA";

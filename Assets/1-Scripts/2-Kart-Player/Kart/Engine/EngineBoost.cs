@@ -127,7 +127,7 @@ public class EngineBoost : KartBehavior, GameplayManagerBehavior
         drainBoostNatural = currentPhase == RacePhase.RACING || currentPhase == RacePhase.FINISHED;
 
         if(currentPhase == RacePhase.COUNTDOWN)
-            BoostAmount = gameplayManager.RaceManager.settings.startBoostPercent*Settings.maxBoost;
+            BoostAmount = gameplayManager.RaceManager.Settings.startBoostPercent*Settings.maxBoost;
     }
 
     public float SetBoostDecayTime(float boostDecayTime) => this.BoostDecayTime = boostDecayTime;

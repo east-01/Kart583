@@ -275,7 +275,7 @@ public class KartsIRManager : NetworkBehaviour
 	[Server]
     public void SpawnBots() 
     {
-		RaceSettings settings = gameplayManager.RaceManager.settings;
+		RaceSettings settings = gameplayManager.RaceManager.Settings;
         if(settings.Bots) {
             for(int i = 0; i < BotsToSpawn; i++) {
                 SpawnBot();
@@ -357,6 +357,6 @@ public class KartsIRManager : NetworkBehaviour
 		return counter;
 	 } }
 	public int BotPlayerCount { get { return KartCount-HumanPlayerCount; } }
-	public int BotsToSpawn => Math.Min(gameplayManager.RaceManager.settings.botLimit, CoreManager.Instance.PlayerLimit-KartCount);
+	public int BotsToSpawn => Math.Min(gameplayManager.RaceManager.Settings.botLimit, CoreManager.Instance.PlayerLimit-KartCount);
 
 }

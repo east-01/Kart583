@@ -1,3 +1,4 @@
 TODO:
 - Mutliple players doesn't work with results screen
 - Use popup menu to confirm leaving lobby
+- Double check if map pick actually works after the first map

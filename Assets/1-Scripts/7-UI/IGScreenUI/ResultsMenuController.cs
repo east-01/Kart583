@@ -64,6 +64,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
         menuElements = new List<GameObject>();
 
         SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
+        BLog.Highlight("Placements size: " + placements.Count);
         for(int position = 0; position < gameplayManager.PlayerManager.KartCount; position++) {
             BLog.Highlight($"Calculating position {position}");
             string playerUUID = null;
