@@ -13,6 +13,7 @@ using UnityEngine.SceneManagement;
 /// The GameLobby resides on the server and will delegate what to do with the players.
 /// Clients will get information about the lobby via the LobbyData struct.
 /// </summary>
+[Serializable]
 public class GameLobby 
 {
 

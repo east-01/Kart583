@@ -8,10 +8,10 @@ using System.Linq;
 using FishNet.Transporting;
 
 /// <summary>
-/// The LobbyManager acts as the server side for the lobby system. It orchestrates lobbies, 
-///   keeps track of all existing lobbies on the server and the clients that are connected 
-///   to them. It is also responsible for accepting client connections and distributing them 
-///   into lobbies.
+/// The LobbyManager acts mainly as the server side for the lobby system, some client side features
+///   provided. It orchestrates lobbies, keeps track of all existing lobbies on the server and the 
+///   clients that are connected to them. It is also responsible for accepting client connections 
+///   and distributing them into lobbies.
 /// The LobbyManager will issue events to the client via the LobbyCommunicator. The reason
 ///   why the events are in the LobbyCommunicator and not here is because the LobbyCommunicator
 ///   is a core script that always persists. Since the LobbyManager is a NetworkBehaviour
@@ -26,7 +26,8 @@ public class LobbyManager : NetworkBehaviour
     /// Clients should access lobby information through the LobbyData struct, this is handled 
     ///   in the LobbyCommunicator.
     /// </summary>
-    private Dictionary<string, GameLobby> lobbies = new();
+    [SyncObject]
+    private readonly SyncDictionary<string, GameLobby> lobbies = new();
     public List<GameLobby> LobbyObjects => lobbies.Values.ToList();
     /// <summary>
     /// Synchronized between client and server, has a NetworkConnection and the string lobbyID
@@ -90,6 +91,10 @@ public class LobbyManager : NetworkBehaviour
     private void Update() 
     {
         LobbyObjects.ForEach(lobby => lobby.Update());
+
+        if(Input.GetKeyDown(KeyCode.I)) {
+            BLog.Highlight(ServerDashboardController.GetDashboardText());
+        }
     }
 
     /// <summary>

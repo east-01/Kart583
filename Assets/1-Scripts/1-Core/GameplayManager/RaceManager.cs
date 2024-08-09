@@ -132,7 +132,7 @@ public class RaceManager : NetworkBehaviour
                     KartManager km = KartBehavior.LocateManager(kartObj);
                     if(!km.IsHuman)
                         continue;
-                    if(km.GetPositionTracker().RaceCompletion < 1 || !placements.ContainsKey(km.GetPlayerData().uuid)) {
+                    if(km.GetPositionTracker().RaceCompletion < 1 || !placements.ContainsKey(km.PlayerData.uuid)) {
                         allHumanPlayersFinished = false;
                         break;
                     }
@@ -187,9 +187,6 @@ public class RaceManager : NetworkBehaviour
                     raceTime.StartTimer(RACE_TIME, true);
                 break;
             case RacePhase.FINISHED:
-                IGScreenMenuController sm = kartLevelManager.ScreenManager;
-                sm.OpenSubMenu(IGScreenMenuController.RESULTS_MENU_ID);
-                sm.ResultsMenuController.waitingForPlacements = true;
                 break;
         }
 
@@ -208,8 +205,8 @@ public class RaceManager : NetworkBehaviour
                 FinalizePlacements();
                 phase = RacePhase.FINISHED;
             }
-        } else if(op == SyncTimerOperation.Start)
-            simulatedTimer = next;
+        } //else if(op == SyncTimerOperation.Start)
+            // simulatedTimer = next;
     }
 
     public override void OnStartClient() 
@@ -266,18 +263,12 @@ public class RaceManager : NetworkBehaviour
     /// <summary>
     /// Notify the server that this player has completed the race
     /// </summary>
-    [Server]
     public void CompletedRace(PlayerData data, float raceCompletion) 
     {
         if(base.IsClientOnly) {
             ServerRpcCompletedRace(data, raceCompletion);
             return;
         }
-
-        
-
-        if(placements.ContainsKey(data.uuid))
-            return;
 
         float raceFinishTime = RaceTimeElapsed;
         if(raceCompletion < 1)
@@ -288,7 +279,13 @@ public class RaceManager : NetworkBehaviour
             raceCompletion = raceCompletion
         };
 
-        placements.Add(data.uuid, rpd);
+        // Add to placements
+        if(!placements.ContainsKey(data.uuid))
+            placements.Add(data.uuid, rpd);
+
+        // Overwrite the official PlayerData record on the Player's KartManager to correctly
+        //   transmit finish time.
+        gameplayManager.PlayerManager.SearchForKartManager(data).PlayerData = data;
     }
     /// <summary> Server RPC calling RaceManager#CompletedRace </summary>
     [ServerRpc(RequireOwnership = false)]
@@ -300,7 +297,7 @@ public class RaceManager : NetworkBehaviour
         // Ensure everyone is in the placements array
         foreach(GameObject kartObject in gameplayManager.PlayerManager.kartObjects) {
             KartManager kartManager = KartBehavior.LocateManager(kartObject);
-            CompletedRace(kartManager.GetPlayerData(), kartManager.GetPositionTracker().RaceCompletion);
+            CompletedRace(kartManager.PlayerData, kartManager.GetPositionTracker().RaceCompletion);
         }
 
         Dictionary<string, RacePlacementData> sortedPlacements = placements.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);

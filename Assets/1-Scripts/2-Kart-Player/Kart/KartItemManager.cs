@@ -73,7 +73,7 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 
 			// Make request to spawn item
 			gameplayManager.ItemManager.SpawnItem(new ItemSpawnData() {
-				ownerUUID = kartManager.GetPlayerData().uuid,
+				ownerUUID = kartManager.PlayerData.uuid,
 				itemType = heldItem,
 				stickDirection = kartCtrl.TurnInput
 			});

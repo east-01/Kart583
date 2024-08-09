@@ -25,6 +25,11 @@ public class ServerDashboardController : MenuController
             return;
         }
 
+        SetOutputText(GetDashboardText());
+    }
+
+    public static string GetDashboardText() 
+    {
         string text = "";
         void AddLine(string message) {
             text += message + "\n";
@@ -41,8 +46,7 @@ public class ServerDashboardController : MenuController
                 AddLine("    " + pd.Summary);
             }
         }
-
-        SetOutputText(text);
+        return text;
     }
 
 }

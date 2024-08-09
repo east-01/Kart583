@@ -11,6 +11,22 @@ public class IGScreenMenuController : MenuController
 	public static readonly string RESULTS_MENU_ID = "ResultsMenu";
 	public static readonly string PAUSE_MENU_ID = "PauseMenu";
 
+	private void Update() 
+	{
+		// bool shouldShowResultsMenu = PlayerObjectManager.Instance.Players.ForEach().Any(x => x.)
+		if(!CoreManager.LobbyCommunicator.InLobby)
+			return;
+
+		// TODO: This code only really needs to run when any of the local players' data changes.
+		// TODO: shouldShowResults menu should be based off of all local players completing race so we can see pending players.
+		bool shouldShowResultsMenu = CoreManager.LobbyCommunicator.LobbyData.Value.state == LobbyState.POST_RACE;
+		if(shouldShowResultsMenu && !ResultsMenuController.IsOpen) {
+			OpenSubMenu(RESULTS_MENU_ID);
+		} else if(!shouldShowResultsMenu && ResultsMenuController.IsOpen) {
+			ResultsMenuController.Close();
+		}
+	}
+
 	public void SetPauseOpen(bool open) 
 	{
 		if(open) {
@@ -19,12 +35,7 @@ public class IGScreenMenuController : MenuController
 			PauseMenuController.Close();
 	}
 
-	public ResultsMenuController ResultsMenuController { get {
-		return GetSubMenu(RESULTS_MENU_ID) as ResultsMenuController;
-	} }
-
-	public PauseMenuController PauseMenuController { get {
-		return GetSubMenu(PAUSE_MENU_ID) as PauseMenuController;
-	} }
+    public ResultsMenuController ResultsMenuController => GetSubMenu(RESULTS_MENU_ID) as ResultsMenuController;
+	public PauseMenuController PauseMenuController => GetSubMenu(PAUSE_MENU_ID) as PauseMenuController;
 
 }

@@ -174,7 +174,7 @@ public abstract class WorldItem : NetworkBehaviour, GameplayManagerBehavior
 				Debug.LogError("A collider with a \"Kart\" tag hit an item but it didn't have a KartManager!");
 				return;
 			}
-            ItemHit(otherKM.GetPlayerData().uuid);
+            ItemHit(otherKM.PlayerData.uuid);
 			Destroy();
         } else if(other.tag == "Item") {
             // Hit a different item, destroy both

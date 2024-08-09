@@ -8,18 +8,39 @@ using UnityEngine.InputSystem;
 /** Responsible for managing kart operations. */
 public class KartManager : KartBehavior, GameplayManagerBehavior 
 {
-
 	private GameplayManager gameplayManager;
 
 	[SerializeField] 
 	private POIGDelegate poigDelegate;
+	public POIGDelegate POIGDelegate { 
+		get => poigDelegate;
+		set => poigDelegate = value; 
+	}
+	public bool HasPOIGDelegate { get { return poigDelegate != null; } }
 
 	[SerializeField, SyncVar(OnChange = nameof(PlayerDataChanged))] 
 	private PlayerData data;
+	public PlayerData PlayerData { 
+		get => data;
+		set {
+			if(base.IsClientOnly) {
+				ServerRpcSetPlayerData(value);
+			} else {
+				this.data = value;
+			}
+		}
+	}
+	[ServerRpc(RequireOwnership = false)]
+	public void ServerRpcSetPlayerData(PlayerData value) => PlayerData = value;
+	[ServerRpc]
+	public void ServerRpcSetReady(bool readyStatus) => data.ready = readyStatus;
+
 	[SyncVar] 
 	private bool isHuman;
-
-	public bool ownershipChanged = false;
+	public bool IsHuman => isHuman;
+	public bool IsBot => !isHuman;
+	[ServerRpc]
+	public void ServerRpcSetIsHuman(bool isHuman) => this.isHuman = isHuman;	
 
 	new protected void Awake() 
 	{
@@ -34,8 +55,6 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 
     public override void OnOwnershipClient(NetworkConnection prevOwner)
     {
-		ownershipChanged = true;
-
 		// Sync enabled status with our ownership status
 		kartCtrl.enabled = base.IsOwner || base.IsServer;
 		// kartItemManager: Stays enabled so we can sync item wielding between players
@@ -47,7 +66,10 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 		GetComponent<Rigidbody>().isKinematic = !(base.IsOwner || base.IsServer);
     }
 
-	/** Connects the PlayerInput to the HumanDriver script in the kart's brain. */
+	/// <summary>
+	/// Connect the PlayerInput to the HumanDriver script in the kart's brain, the PlayerInput
+	///   field will be connected to the HumanDriver script for player control.
+	/// </summary>
 	public void UseHumanDriver(PlayerInput input) 
 	{
 		if(base.IsOwner || CoreManager.IsLocal) {
@@ -71,6 +93,9 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 			throw new InvalidOperationException("Tried to ready human driver without being a client.");
 	}
 
+	/// <summary>
+	/// Use the BotDriver script in the kart's brain, it will automatically race normally.
+	/// </summary>
 	public void UseBotDriver() 
 	{
 		botPath.enabled = true;
@@ -87,31 +112,17 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 		}
 	}
 
-	public void SetPlayerData(PlayerData data) 
-	{
-		this.data = data;
-	}
-
 	private void PlayerDataChanged(PlayerData prev, PlayerData current, bool asServer) 
 	{
 		gameObject.name = KartsIRManager.KartNamePrefix + data.name;
 	}
 
-	[ServerRpc]
-	public void ServerRpcSetReady(bool readyStatus) { data.ready = readyStatus; }
-	[ServerRpc]
-	public void ServerRpcSetIsHuman(bool isHuman) { this.isHuman = isHuman; }
-
-	public PlayerData GetPlayerData() { return data; }
-	public bool IsHuman { get { return isHuman; } }
-	public bool IsBot { get { return !isHuman; } }
-
-	public bool HasPOIGDelegate { get { return poigDelegate != null; } }
-	public POIGDelegate POIGDelegate { 
-		get { return poigDelegate; } 
-		set { poigDelegate = value; } 
-	}
-
+	/// <summary>
+	/// Check if a GameObject is a Kart GameObject, that being the object has a KartManager
+	///   component on it.
+	/// </summary>
+	/// <param name="obj">The object to check</param>
+	/// <returns>Success status- if the GameObject has a KartManager component</returns>
 	public static bool IsKartGameObject(GameObject obj) 
 	{
 		return obj.GetComponent<KartManager>() != null;

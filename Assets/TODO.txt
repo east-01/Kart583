@@ -1,4 +1,7 @@
 TODO:
-- Mutliple players doesn't work with results screen
+- NetworkPlayerDataManager should manage PlayerData for the server
+- Results screen
+  - Shows up when necessary, in IGScreenMenuController#Update the menu should show when all local players are finished.
+  - Results are populated correctly (unfinished players are sorted by name at the bottom).
 - Use popup menu to confirm leaving lobby
 - Double check if map pick actually works after the first map

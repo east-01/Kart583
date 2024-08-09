@@ -211,7 +211,7 @@ public class CoreManager : MonoBehaviour
                             Debug.LogError("Failed to get KartManager from kartObject");
                             continue;
                         }
-                        if(km.GetPlayerData().uuid == PlayerObjectManager.Instance.PlayerOne.data.uuid)
+                        if(km.PlayerData.uuid == PlayerObjectManager.Instance.PlayerOne.data.uuid)
                             return km;
                     }
                     return null;

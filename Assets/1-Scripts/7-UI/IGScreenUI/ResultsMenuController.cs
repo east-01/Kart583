@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FishNet;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -17,7 +18,10 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
     public RectTransform resultsContainer;
 
     private List<GameObject> menuElements;
-    public bool waitingForPlacements = false;
+    /// <summary>
+    /// The amount of menu elements that have players with finished races
+    /// </summary>
+    private int populatedMenuElements; 
 
     protected new void Awake() 
     {        
@@ -36,16 +40,22 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
         if(gameplayManager == null)
             return;
 
-        if(waitingForPlacements && gameplayManager.RaceManager.GetPlacements().Count == gameplayManager.PlayerManager.KartCount) {
-            waitingForPlacements = false;
+        if(gameplayManager.PlayerManager.kartObjects.All(obj => KartBehavior.LocateManager(obj).PlayerData.raceFinishTime.HasValue) && !ResultsShown) {
+            BLog.Highlight("Showing results cause all players finished");
             ShowResults();
         }
+
+        // if(waitingForPlacements && gameplayManager.RaceManager.GetPlacements().Count == gameplayManager.PlayerManager.KartCount) {
+        //     waitingForPlacements = false;
+        //     ShowResults();
+        // }
     }
 
 	protected override void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) 
 	{
 		if(gameplayManager == null)
 			return;
+            
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
 			if(!gameplayManager.HasLobby) {
                 Debug.LogError("GameplayManager doesn't have lobby, so we can't send them back to it.");
@@ -92,6 +102,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
             newObj.GetComponent<PlacementRow>().UpdateVisuals(manager, racePlacementData);
             menuElements.Add(newObj);
         }
+
     }
 
     public bool ResultsShown { get { return gameObject.activeSelf; } }

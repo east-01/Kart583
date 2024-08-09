@@ -145,7 +145,7 @@ public class KartsIRManager : NetworkBehaviour
         // PlayerData management
 		data.ready = false;
 
-		newKartManager.SetPlayerData(data);
+		newKartManager.PlayerData = data;
 
 		// Run event
 		ObserversRpcCallSpawnEvent(owner, data);
@@ -298,7 +298,7 @@ public class KartsIRManager : NetworkBehaviour
 	/// </summary>
 	public KartManager SearchForKartManager(string playerUUID) {
 		foreach(KartManager km in FindObjectsOfType<KartManager>()) {
-			if(km.GetPlayerData().uuid == playerUUID)
+			if(km.PlayerData.uuid == playerUUID)
 				return km;
 		}
 		return null;
@@ -309,7 +309,7 @@ public class KartsIRManager : NetworkBehaviour
 	/// </summary>
 	public bool IsNameUnique(string name) {
 		foreach(GameObject go in kartObjects) {
-			if(KartBehavior.LocateManager(go).GetPlayerData().name == name)
+			if(KartBehavior.LocateManager(go).PlayerData.name == name)
 				return false;		
 		}
 		return true;
@@ -340,7 +340,7 @@ public class KartsIRManager : NetworkBehaviour
     public bool AllPlayersReady { get {
 		bool allPlayersReady = true;
 		foreach(GameObject obj in gameplayManager.PlayerManager.kartObjects) {
-			if(!KartBehavior.LocateManager(obj).GetPlayerData().ready) {
+			if(!KartBehavior.LocateManager(obj).PlayerData.ready) {
 				allPlayersReady = false;
 				break;
 			}

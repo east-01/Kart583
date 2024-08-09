@@ -19,7 +19,7 @@ public class KartVisualsManager : KartBehavior
     
     private void Update() 
     {
-        PlayerData playerData = kartManager.GetPlayerData();
+        PlayerData playerData = kartManager.PlayerData;
         PlayerObjectManager pom = PlayerObjectManager.Instance;
 
         if(!isModelLoaded && 
@@ -39,7 +39,7 @@ public class KartVisualsManager : KartBehavior
 
     public void LoadKartModel() 
     {
-        KartDataPackage kdp = CoreManager.KartAtlas.RetrieveData(kartManager.GetPlayerData().kartType);
+        KartDataPackage kdp = CoreManager.KartAtlas.RetrieveData(kartManager.PlayerData.kartType);
 		kartCtrl.settings = kdp.settings;
 	
         /* New kart model */
@@ -68,7 +68,7 @@ public class KartVisualsManager : KartBehavior
         TMP_Text npt = nameplate.GetComponentInChildren<TMP_Text>();
         Billboard npb = nameplate.GetComponentInChildren<Billboard>();
 
-        npt.text = kartManager.GetPlayerData().name;
+        npt.text = kartManager.PlayerData.name;
         npb.focusCamera = PlayerObjectManager.Instance.PlayerObjects[0].poigDelegate.Camera;
 
         isNameplateLoaded = true;

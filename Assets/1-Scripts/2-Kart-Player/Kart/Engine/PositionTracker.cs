@@ -133,9 +133,9 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     private void RaceFinished() 
     {
         if(base.IsServer)
-            gameplayManager.RaceManager.CompletedRace(kartManager.GetPlayerData(), raceCompletion);
+            gameplayManager.RaceManager.CompletedRace(kartManager.PlayerData, raceCompletion);
         else if(base.IsClient && base.IsOwner)
-            gameplayManager.RaceManager.ServerRpcCompletedRace(kartManager.GetPlayerData(), raceCompletion);
+            gameplayManager.RaceManager.ServerRpcCompletedRace(kartManager.PlayerData, raceCompletion);
 
         if(kartManager.HasPOIGDelegate) {
             kartManager.POIGDelegate.HUD.enabled = false;
