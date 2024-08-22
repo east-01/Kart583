@@ -1,4 +1,7 @@
 TODO:
+- Package roundout:
+  - Core#Players
+  - 
 - NetworkPlayerDataManager should manage PlayerData for the server
 - Results screen
   - Shows up when necessary, in IGScreenMenuController#Update the menu should show when all local players are finished.

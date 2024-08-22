@@ -181,7 +181,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: IN SPACE, NO ONE CAN HEAR YOU DRIFT
+  m_text: Drift brothers
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 809cd1dedbc67114189a1ac32871ba6c, type: 2}
   m_sharedMaterial: {fileID: -3869891077811215889, guid: 809cd1dedbc67114189a1ac32871ba6c, type: 2}
