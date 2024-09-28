@@ -221,6 +221,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "net.emullen.bootstrapper": {
+      "version": "https://github.com/east-01/net.emullen.bootstrapper.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "6a5b0f8b0f74801ca1ad4eca692acd54e93a4877"
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
