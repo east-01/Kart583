@@ -8,7 +8,7 @@ using FishNet.Serializing;
 using FishNet.Transporting;
 using FishNet.Utility;
 using FishNet.Utility.Performance;
-using GameKit.Utilities;
+using GameKit.Dependencies.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,11 +24,11 @@ namespace FishNet.Managing.Server
         /// Cache filled with objects which observers are being updated.
         /// This is primarily used to invoke events after all observers are updated, rather than as each is updated.
         /// </summary>
-        private List<NetworkObject> _observerChangedObjectsCache = new List<NetworkObject>(100);
+        private List<NetworkObject> _observerChangedObjectsCache = new(100);
         /// <summary>
         /// NetworkObservers which require regularly iteration.
         /// </summary>
-        private List<NetworkObject> _timedNetworkObservers = new List<NetworkObject>();
+        private List<NetworkObject> _timedNetworkObservers = new();
         /// <summary>
         /// Index in TimedNetworkObservers to start on next cycle.
         /// </summary>
@@ -36,9 +36,8 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Used to write spawns for everyone. This writer will exclude owner only information.
         /// </summary>
-        private PooledWriter _writer = new PooledWriter();
+        private PooledWriter _writer = new();
         #endregion
-
 
         /// <summary>
         /// Called when MonoBehaviours call Update.
@@ -53,7 +52,7 @@ namespace FishNet.Managing.Server
         /// </summary>
         private void UpdateTimedObservers()
         {
-            if (!base.NetworkManager.IsServer)
+            if (!base.NetworkManager.IsServerStarted)
                 return;
             //No point in updating if the timemanager isn't going to tick this frame.
             if (!base.NetworkManager.TimeManager.FrameTicked)
@@ -64,13 +63,14 @@ namespace FishNet.Managing.Server
 
             /* Try to iterate all timed observers every half a second.
             * This value will increase as there's more observers or timed conditions. */
-            double timeMultiplier = 1d + (float)((base.NetworkManager.ServerManager.Clients.Count * 0.005d) + (_timedNetworkObservers.Count * 0.0005d));
-            double completionTime = (0.5d * timeMultiplier);
+            float timeMultiplier = 1f + (float)((base.NetworkManager.ServerManager.Clients.Count * 0.005f) + (_timedNetworkObservers.Count * 0.0005f));
+            //Check cap this way for readability.
+            float completionTime = Mathf.Min((0.5f * timeMultiplier), base.NetworkManager.ObserverManager.MaximumTimedObserversDuration);
             uint completionTicks = base.NetworkManager.TimeManager.TimeToTicks(completionTime, TickRounding.RoundUp);
             /* Iterations will be the number of objects
              * to iterate to be have completed all objects by
              * the end of completionTicks. */
-            int iterations = Mathf.CeilToInt((float)networkObserversCount / (float)completionTicks);
+            int iterations = Mathf.CeilToInt((float)networkObserversCount / completionTicks);
             if (iterations > _timedNetworkObservers.Count)
                 iterations = _timedNetworkObservers.Count;
 
@@ -117,7 +117,7 @@ namespace FishNet.Managing.Server
             List<NetworkConnection> cache = CollectionCaches<NetworkConnection>.RetrieveList();
             foreach (NetworkConnection item in NetworkManager.ServerManager.Clients.Values)
             {
-                if (item.Authenticated)
+                if (item.IsAuthenticated)
                     cache.Add(item);
             }
 
@@ -128,7 +128,7 @@ namespace FishNet.Managing.Server
         /// Gets all spawned objects with root objects first.
         /// </summary>
         /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         private List<NetworkObject> RetrieveOrderedSpawnedObjects()
         {
             List<NetworkObject> cache = CollectionCaches<NetworkObject>.RetrieveList();
@@ -211,7 +211,7 @@ namespace FishNet.Managing.Server
 
             void AddChildNetworkObjects(NetworkObject n, ref int index)
             {
-                foreach (NetworkObject childObject in n.ChildNetworkObjects)
+                foreach (NetworkObject childObject in n.InitializedNestedNetworkObjects)
                 {
                     cache.Insert(++index, childObject);
                     AddChildNetworkObjects(childObject, ref index);
@@ -243,7 +243,7 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Rebuilds observers on all NetworkObjects for all connections.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(bool timedOnly = false)
         {
             List<NetworkObject> nobCache = RetrieveOrderedSpawnedObjects();
@@ -259,7 +259,7 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Rebuilds observers for all connections for a NetworkObject.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(NetworkObject nob, bool timedOnly = false)
         {
             List<NetworkObject> nobCache = CollectionCaches<NetworkObject>.RetrieveList(nob);
@@ -273,7 +273,7 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Rebuilds observers on all NetworkObjects for a connection.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(NetworkConnection connection, bool timedOnly = false)
         {
             List<NetworkObject> nobCache = RetrieveOrderedSpawnedObjects();
@@ -285,98 +285,10 @@ namespace FishNet.Managing.Server
             CollectionCaches<NetworkConnection>.Store(connCache);
         }
 
-        #region Obsolete RebuildObservers.
         /// <summary>
         /// Rebuilds observers on NetworkObjects.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("Use RebuildObservers IList variant instead.")]
-        public void RebuildObservers(IEnumerable<NetworkObject> nobs, bool timedOnly = false)
-        {
-            List<NetworkConnection> conns = RetrieveAuthenticatedConnections();
-
-            RebuildObservers(nobs, conns, timedOnly);
-
-            CollectionCaches<NetworkConnection>.Store(conns);
-        }
-        /// <summary>
-        /// Rebuilds observers on all objects for connections.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("Use RebuildObservers IList variant instead.")]
-        public void RebuildObservers(IEnumerable<NetworkConnection> connections, bool timedOnly = false)
-        {
-            List<NetworkObject> nobCache = RetrieveOrderedSpawnedObjects();
-
-            RebuildObservers(nobCache, connections, timedOnly);
-
-            CollectionCaches<NetworkObject>.Store(nobCache);
-        }
-
-        /// <summary>
-        /// Rebuilds observers on NetworkObjects for connections.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("Use RebuildObservers IList variant instead.")]
-        public void RebuildObservers(IEnumerable<NetworkObject> nobs, NetworkConnection conn, bool timedOnly = false)
-        {
-            List<NetworkConnection> connCache = CollectionCaches<NetworkConnection>.RetrieveList(conn);
-
-            RebuildObservers(nobs, connCache, timedOnly);
-
-            CollectionCaches<NetworkConnection>.Store(connCache);
-        }
-
-        /// <summary>
-        /// Rebuilds observers for connections on NetworkObject.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("Use RebuildObservers IList variant instead.")]
-        public void RebuildObservers(NetworkObject networkObject, IEnumerable<NetworkConnection> connections, bool timedOnly = false)
-        {
-            List<NetworkObject> nobCache = CollectionCaches<NetworkObject>.RetrieveList(networkObject);
-
-            RebuildObservers(nobCache, connections, timedOnly);
-
-            CollectionCaches<NetworkObject>.Store(nobCache);
-        }
-
-        /// <summary>
-        /// Rebuilds observers on NetworkObjects for connections.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [Obsolete("Use RebuildObservers IList variant instead.")]
-        public void RebuildObservers(IEnumerable<NetworkObject> nobs, IEnumerable<NetworkConnection> conns, bool timedOnly = false)
-        {
-            List<NetworkObject> nobCache = CollectionCaches<NetworkObject>.RetrieveList();
-
-            foreach (NetworkConnection nc in conns)
-            {
-                _writer.Reset();
-                nobCache.Clear();
-
-                foreach (NetworkObject nob in nobs)
-                    RebuildObservers(nob, nc, nobCache, timedOnly);
-
-                //Send if change.
-                if (_writer.Length > 0)
-                {
-                    NetworkManager.TransportManager.SendToClient(
-                        (byte)Channel.Reliable, _writer.GetArraySegment(), nc);
-
-                    foreach (NetworkObject n in nobCache)
-                        n.OnSpawnServer(nc);
-                }
-            }
-
-            CollectionCaches<NetworkObject>.Store(nobCache);
-        }
-        #endregion
-
-        /// <summary>
-        /// Rebuilds observers on NetworkObjects.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(IList<NetworkObject> nobs, bool timedOnly = false)
         {
             List<NetworkConnection> conns = RetrieveAuthenticatedConnections();
@@ -388,7 +300,7 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Rebuilds observers on all objects for connections.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(IList<NetworkConnection> connections, bool timedOnly = false)
         {
             List<NetworkObject> nobCache = RetrieveOrderedSpawnedObjects();
@@ -401,7 +313,7 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Rebuilds observers on NetworkObjects for connections.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(IList<NetworkObject> nobs, NetworkConnection conn, bool timedOnly = false)
         {
             List<NetworkConnection> connCache = CollectionCaches<NetworkConnection>.RetrieveList(conn);
@@ -414,7 +326,7 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Rebuilds observers for connections on NetworkObject.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(NetworkObject networkObject, IList<NetworkConnection> connections, bool timedOnly = false)
         {
             List<NetworkObject> nobCache = CollectionCaches<NetworkObject>.RetrieveList(networkObject);
@@ -427,7 +339,7 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Rebuilds observers on NetworkObjects for connections.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(IList<NetworkObject> nobs, IList<NetworkConnection> conns, bool timedOnly = false)
         {
             List<NetworkObject> nobCache = CollectionCaches<NetworkObject>.RetrieveList();
@@ -436,7 +348,6 @@ namespace FishNet.Managing.Server
             int connsCount = conns.Count;
             for (int i = 0; i < connsCount; i++)
             {
-                _writer.Reset();
                 nobCache.Clear();
 
                 nc = conns[i];
@@ -449,6 +360,7 @@ namespace FishNet.Managing.Server
                 {
                     NetworkManager.TransportManager.SendToClient(
                         (byte)Channel.Reliable, _writer.GetArraySegment(), nc);
+                    _writer.Reset();
 
                     foreach (NetworkObject n in nobCache)
                         n.OnSpawnServer(nc);
@@ -462,35 +374,22 @@ namespace FishNet.Managing.Server
         /// <summary>
         /// Rebuilds observers for a connection on NetworkObject.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         public void RebuildObservers(NetworkObject nob, NetworkConnection conn, bool timedOnly = false)
         {
             if (ApplicationState.IsQuitting())
                 return;
             _writer.Reset();
 
-            /* When not using a timed rebuild such as this connections must have
-             * hashgrid data rebuilt immediately. */
-            //            if (!timedOnly)
             conn.UpdateHashGridPositions(!timedOnly);
-
             //If observer state changed then write changes.
             ObserverStateChange osc = nob.RebuildObservers(conn, timedOnly);
             if (osc == ObserverStateChange.Added)
-            {
-                base.WriteSpawn_Server(nob, conn, _writer);
-            }
+                WriteSpawn(nob, _writer, conn);
             else if (osc == ObserverStateChange.Removed)
-            {
-                if (conn.LevelOfDetails.TryGetValue(nob, out NetworkConnection.LevelOfDetailData lodData))
-                    ObjectCaches<NetworkConnection.LevelOfDetailData>.Store(lodData);
-                conn.LevelOfDetails.Remove(nob);
                 WriteDespawn(nob, nob.GetDefaultDespawnType(), _writer);
-            }
             else
-            {
                 return;
-            }
 
             NetworkManager.TransportManager.SendToClient(
                 (byte)Channel.Reliable,
@@ -502,19 +401,15 @@ namespace FishNet.Managing.Server
             if (osc == ObserverStateChange.Added)
                 nob.OnSpawnServer(conn);
 
-            /* If there is change then also rebuild on any runtime children.
-             * This is to ensure runtime children have visibility updated
-             * in relation to parent. 
-             *
-             * If here there is change. */
-            foreach (NetworkObject item in nob.RuntimeChildNetworkObjects)
-                RebuildObservers(item, conn, timedOnly);
+            /* If there is change then also rebuild recursive networkObjects. */
+            foreach (NetworkBehaviour item in nob.RuntimeChildNetworkBehaviours)
+                RebuildObservers(item.NetworkObject, conn, timedOnly);
         }
 
         /// <summary>
         /// Rebuilds observers for a connection on NetworkObject.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         internal void RebuildObservers(NetworkObject nob, NetworkConnection conn, List<NetworkObject> addedNobs, bool timedOnly = false)
         {
             if (ApplicationState.IsQuitting())
@@ -522,22 +417,17 @@ namespace FishNet.Managing.Server
 
             /* When not using a timed rebuild such as this connections must have
              * hashgrid data rebuilt immediately. */
-            //if (!timedOnly)
-            //conn.UpdateHashGridPositions(true);
             conn.UpdateHashGridPositions(!timedOnly);
 
             //If observer state changed then write changes.
             ObserverStateChange osc = nob.RebuildObservers(conn, timedOnly);
             if (osc == ObserverStateChange.Added)
             {
-                base.WriteSpawn_Server(nob, conn, _writer);
+                WriteSpawn(nob, _writer, conn);
                 addedNobs.Add(nob);
             }
             else if (osc == ObserverStateChange.Removed)
             {
-                if (conn.LevelOfDetails.TryGetValue(nob, out NetworkConnection.LevelOfDetailData lodData))
-                    ObjectCaches<NetworkConnection.LevelOfDetailData>.Store(lodData);
-                conn.LevelOfDetails.Remove(nob);
                 WriteDespawn(nob, nob.GetDefaultDespawnType(), _writer);
             }
             else
@@ -550,11 +440,9 @@ namespace FishNet.Managing.Server
              * in relation to parent. 
              *
              * If here there is change. */
-            foreach (NetworkObject item in nob.RuntimeChildNetworkObjects)
-                RebuildObservers(item, conn, addedNobs, timedOnly);
+            foreach (NetworkBehaviour item in nob.RuntimeChildNetworkBehaviours)
+                RebuildObservers(item.NetworkObject, conn, addedNobs, timedOnly);
         }
-
-
 
 
     }

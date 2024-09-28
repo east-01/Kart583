@@ -22,16 +22,18 @@ namespace FishNet.CodeGenerating.Helping
         //Names.
         internal string FullName;
         //Prediction.
-        public string ClearReplicateCache_MethodName = nameof(NetworkBehaviour.ClearReplicateCache_Virtual);
-        public MethodReference Replicate_NonOwner_MethodRef;
-        public MethodReference Replicate_Owner_MethodRef;
+
         public MethodReference Replicate_Reader_MethodRef;
-        public MethodReference Replicate_ExitEarly_A_MethodRef;
-        public MethodReference Reconcile_ExitEarly_A_MethodRef;
         public MethodReference Reconcile_Server_MethodRef;
-        public FieldReference UsesPrediction_FieldRef;
+        //public FieldReference UsesPrediction_FieldRef;
+        public MethodReference EmptyReplicatesQueueIntoHistory_Start_MethodRef;
+        public MethodReference EmptyReplicatesQueueIntoHistory_MethodRef;
+        public MethodReference Reconcile_Client_Start_MethodRef;
         public MethodReference Replicate_Replay_Start_MethodRef;
+        public MethodReference Replicate_NonAuthoritative_MethodRef;
+        public MethodReference Replicate_Authortative_MethodRef;
         public MethodReference Reconcile_Client_MethodRef;
+        public MethodReference Reconcile_Client_Local_MethodRef;
         public MethodReference Replicate_Replay_MethodRef;
         public MethodReference Reconcile_Reader_MethodRef;
         public MethodReference RegisterReplicateRpc_MethodRef;
@@ -43,7 +45,6 @@ namespace FishNet.CodeGenerating.Helping
         public MethodReference SendServerRpc_MethodRef;
         public MethodReference SendObserversRpc_MethodRef;
         public MethodReference SendTargetRpc_MethodRef;
-        public MethodReference DirtySyncType_MethodRef;
         public MethodReference RegisterServerRpc_MethodRef;
         public MethodReference RegisterObserversRpc_MethodRef;
         public MethodReference RegisterTargetRpc_MethodRef;
@@ -60,7 +61,6 @@ namespace FishNet.CodeGenerating.Helping
         public MethodReference OwnerMatches_MethodRef;
         public MethodReference LocalConnection_MethodRef;
         public MethodReference Owner_MethodRef;
-        public MethodReference RegisterSyncVarRead_MethodRef;
         public MethodReference NetworkInitializeIfDisabled_MethodRef;
         //TimeManager.
         public MethodReference TimeManager_MethodRef;
@@ -103,37 +103,42 @@ namespace FishNet.CodeGenerating.Helping
                 else if (mi.Name == nameof(NetworkBehaviour.RegisterReconcileRpc))
                     RegisterReconcileRpc_MethodRef = base.ImportReference(mi);
                 //SendRpcs.
-                else if (mi.Name == nameof(NetworkBehaviour.SendServerRpc)) 
+                else if (mi.Name == nameof(NetworkBehaviour.SendServerRpc))
                     SendServerRpc_MethodRef = base.ImportReference(mi);
                 else if (mi.Name == nameof(NetworkBehaviour.SendObserversRpc))
                     SendObserversRpc_MethodRef = base.ImportReference(mi);
                 else if (mi.Name == nameof(NetworkBehaviour.SendTargetRpc))
                     SendTargetRpc_MethodRef = base.ImportReference(mi);
-                //Prediction.
-                else if (mi.Name == nameof(NetworkBehaviour.Replicate_ExitEarly_A))
-                    Replicate_ExitEarly_A_MethodRef = base.ImportReference(mi);
-                else if (mi.Name == nameof(NetworkBehaviour.Replicate_NonOwner))
-                    Replicate_NonOwner_MethodRef = base.ImportReference(mi);
                 else if (mi.Name == nameof(NetworkBehaviour.Replicate_Reader))
                     Replicate_Reader_MethodRef = base.ImportReference(mi);
                 else if (mi.Name == nameof(NetworkBehaviour.Reconcile_Reader))
                     Reconcile_Reader_MethodRef = base.ImportReference(mi);
-                else if (mi.Name == nameof(NetworkBehaviour.Reconcile_ExitEarly_A))
-                    Reconcile_ExitEarly_A_MethodRef = base.ImportReference(mi);
                 else if (mi.Name == nameof(NetworkBehaviour.Reconcile_Server))
                     Reconcile_Server_MethodRef = base.ImportReference(mi);
-                else if (mi.Name == nameof(NetworkBehaviour.Replicate_Owner))
-                    Replicate_Owner_MethodRef = base.ImportReference(mi);
                 else if (mi.Name == nameof(NetworkBehaviour.Reconcile_Client))
                     Reconcile_Client_MethodRef = base.ImportReference(mi);
+                else if (mi.Name == nameof(NetworkBehaviour.Reconcile_Client_Local))
+                    Reconcile_Client_Local_MethodRef = base.ImportReference(mi);
+                //Misc.
                 else if (mi.Name == nameof(NetworkBehaviour.OwnerMatches))
                     OwnerMatches_MethodRef = base.ImportReference(mi);
-                else if (mi.Name == nameof(NetworkBehaviour.RegisterSyncVarRead))
-                    RegisterSyncVarRead_MethodRef = base.ImportReference(mi);
-                else if (mi.Name == nameof(NetworkBehaviour.DirtySyncType))
-                    DirtySyncType_MethodRef = base.ImportReference(mi);
                 else if (mi.Name == nameof(NetworkBehaviour.NetworkInitializeIfDisabled))
                     NetworkInitializeIfDisabled_MethodRef = base.ImportReference(mi);
+                //Prediction
+                else if (mi.Name == nameof(NetworkBehaviour.Replicate_Authoritative))
+                    Replicate_Authortative_MethodRef = base.ImportReference(mi);
+                else if (mi.Name == nameof(NetworkBehaviour.Replicate_Replay_Start))
+                    Replicate_Replay_Start_MethodRef = base.ImportReference(mi);
+                else if (mi.Name == nameof(NetworkBehaviour.EmptyReplicatesQueueIntoHistory))
+                    EmptyReplicatesQueueIntoHistory_MethodRef = base.ImportReference(mi);
+                else if (mi.Name == nameof(NetworkBehaviour.EmptyReplicatesQueueIntoHistory_Start))
+                    EmptyReplicatesQueueIntoHistory_Start_MethodRef = base.ImportReference(mi);
+                else if (mi.Name == nameof(NetworkBehaviour.Reconcile_Client_Start))
+                    Reconcile_Client_Start_MethodRef = base.ImportReference(mi);
+                else if (mi.Name == nameof(NetworkBehaviour.Replicate_Replay))
+                    Replicate_Replay_MethodRef = base.ImportReference(mi);
+                else if (mi.Name == nameof(NetworkBehaviour.Replicate_NonAuthoritative))
+                    Replicate_NonAuthoritative_MethodRef = base.ImportReference(mi);
             }
 
             foreach (PropertyInfo pi in networkBehaviourType.GetProperties((BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)))
@@ -143,7 +148,7 @@ namespace FishNet.CodeGenerating.Helping
                     IsClientInitialized_MethodRef = base.ImportReference(pi.GetMethod);
                 else if (pi.Name == nameof(NetworkBehaviour.IsServerInitialized))
                     IsServerInitialized_MethodRef = base.ImportReference(pi.GetMethod);
-                else if (pi.Name == nameof(NetworkBehaviour.IsHost))
+                else if (pi.Name == nameof(NetworkBehaviour.IsHostStarted))
                     IsHost_MethodRef = base.ImportReference(pi.GetMethod);
                 else if (pi.Name == nameof(NetworkBehaviour.IsOwner))
                     IsOwner_MethodRef = base.ImportReference(pi.GetMethod);
@@ -173,7 +178,6 @@ namespace FishNet.CodeGenerating.Helping
             return typeDef.GetMethod(AWAKE_METHOD_NAME);
         }
 
-
         /// <summary>
         /// Creates a replicate delegate.
         /// </summary>
@@ -186,7 +190,7 @@ namespace FishNet.CodeGenerating.Helping
             MethodDefinition methodDef = originalMethodDef.DeclaringType.GetMethod(NetworkBehaviourProcessor.NETWORKINITIALIZE_EARLY_INTERNAL_NAME);
             ILProcessor processor = methodDef.Body.GetILProcessor();
 
-            List<Instruction> insts = new List<Instruction>();
+            List<Instruction> insts = new();
             insts.Add(processor.Create(OpCodes.Ldarg_0));
 
             insts.Add(processor.Create(OpCodes.Ldc_I4, (int)methodHash));
@@ -199,8 +203,6 @@ namespace FishNet.CodeGenerating.Helping
              * initialize it's fields first. */
             processor.InsertLast(insts);
         }
-
-
 
         /// <summary>
         /// Creates a RPC delegate for rpcType.
@@ -216,7 +218,7 @@ namespace FishNet.CodeGenerating.Helping
             MethodDefinition methodDef = typeDef.GetMethod(NetworkBehaviourProcessor.NETWORKINITIALIZE_EARLY_INTERNAL_NAME);
             ILProcessor processor = methodDef.Body.GetILProcessor();
 
-            List<Instruction> insts = new List<Instruction>();
+            List<Instruction> insts = new();
             insts.Add(processor.Create(OpCodes.Ldarg_0));
             insts.Add(processor.Create(OpCodes.Ldc_I4, (int)methodHash));
 
@@ -254,7 +256,7 @@ namespace FishNet.CodeGenerating.Helping
         /// <returns>Returns Ret instruction.</returns>
         internal Instruction CreateLocalClientIsOwnerCheck(MethodDefinition methodDef, LoggingType loggingType, bool notifyMessageCanBeDisabled, bool retIfOwner, bool insertFirst)
         {
-            List<Instruction> instructions = new List<Instruction>();
+            List<Instruction> instructions = new();
             /* This is placed after the if check.
              * Should the if check pass then code
              * jumps to this instruction. */
@@ -272,9 +274,7 @@ namespace FishNet.CodeGenerating.Helping
             if (loggingType != LoggingType.Off)
             {
                 string disableLoggingText = (notifyMessageCanBeDisabled) ? DISABLE_LOGGING_TEXT : string.Empty;
-                string msg = (retIfOwner) ?
-                    $"Cannot complete action because you are the owner of this object. {disableLoggingText}." :
-                    $"Cannot complete action because you are not the owner of this object. {disableLoggingText}.";
+                string msg = (retIfOwner) ? $"Cannot complete action because you are the owner of this object. {disableLoggingText}." : $"Cannot complete action because you are not the owner of this object. {disableLoggingText}.";
 
                 instructions.AddRange(base.GetClass<GeneralHelper>().LogMessage(methodDef, msg, loggingType));
             }
@@ -335,7 +335,7 @@ namespace FishNet.CodeGenerating.Helping
             ILProcessor processor = methodDef.Body.GetILProcessor();
             Instruction endIf = processor.Create(OpCodes.Nop);
 
-            List<Instruction> instructions = new List<Instruction>();
+            List<Instruction> instructions = new();
 
             if (checkIsNetworked)
                 instructions.AddRange(CreateIsNetworkedCheck(methodDef, endIf));
@@ -349,7 +349,7 @@ namespace FishNet.CodeGenerating.Helping
             }
             //Checking instanceFinder.
             else
-            { 
+            {
                 instructions.Add(processor.Create(OpCodes.Call, base.GetClass<ObjectHelper>().InstanceFinder_IsClient_MethodRef));
             }
             instructions.Add(processor.Create(OpCodes.Brtrue, endIf));
@@ -382,12 +382,12 @@ namespace FishNet.CodeGenerating.Helping
         internal void CreateIsServerCheck(MethodDefinition methodDef, LoggingType loggingType, bool useStatic, bool insertFirst, bool checkIsNetworked)
         {
             /* This is placed after the if check.
-            * Should the if check pass then code
-            * jumps to this instruction. */
+             * Should the if check pass then code
+             * jumps to this instruction. */
             ILProcessor processor = methodDef.Body.GetILProcessor();
             Instruction endIf = processor.Create(OpCodes.Nop);
 
-            List<Instruction> instructions = new List<Instruction>();
+            List<Instruction> instructions = new();
 
             if (checkIsNetworked)
                 instructions.AddRange(CreateIsNetworkedCheck(methodDef, endIf));
@@ -431,7 +431,7 @@ namespace FishNet.CodeGenerating.Helping
         /// </summary>
         private List<Instruction> CreateIsNetworkedCheck(MethodDefinition methodDef, Instruction endIfInst)
         {
-            List<Instruction> insts = new List<Instruction>();
+            List<Instruction> insts = new();
             ILProcessor processor = methodDef.Body.GetILProcessor();
             insts.Add(processor.Create(OpCodes.Ldarg_0));
             insts.Add(processor.Create(OpCodes.Call, base.GetClass<NetworkBehaviourHelper>().IsNetworked_MethodRef));
@@ -439,7 +439,6 @@ namespace FishNet.CodeGenerating.Helping
 
             return insts;
         }
-
 
         /// <summary>
         /// Creates a return using the ReturnType for methodDef.
@@ -450,7 +449,7 @@ namespace FishNet.CodeGenerating.Helping
         public List<Instruction> CreateRetDefault(MethodDefinition methodDef, ModuleDefinition importReturnModule = null)
         {
             ILProcessor processor = methodDef.Body.GetILProcessor();
-            List<Instruction> instructions = new List<Instruction>();
+            List<Instruction> instructions = new();
             //If requires a value return.
             if (methodDef.ReturnType != methodDef.Module.TypeSystem.Void)
             {

@@ -1,11 +1,14 @@
-﻿using FishNet.Managing;
+﻿#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#define DEVELOPMENT
+#endif
+using FishNet.Managing;
 using FishNet.Managing.Predicting;
 using FishNet.Managing.Timing;
+using FishNet.Managing.Transporting;
 using FishNet.Serializing;
 using FishNet.Transporting;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace FishNet.Connection
 {
@@ -16,69 +19,103 @@ namespace FishNet.Connection
     public partial class NetworkConnection
     {
         /// <summary>
-        /// Average number of replicates in queue for the past x received replicates.
+        /// Approximate replicate tick on the server for this connection.
+        /// This also contains the last set value for local and remote.
         /// </summary>
-        private MovingAverage _replicateQueueAverage;
+        public EstimatedTick ReplicateTick { get; private set; } = new();
         /// <summary>
-        /// Last tick replicateQueueAverage was updated.
+        /// Writers for states.
         /// </summary>
-        private uint _lastAverageQueueAddTick;
+        internal List<PooledWriter> PredictionStateWriters = new();
 
-        internal void Prediction_Initialize(NetworkManager manager, bool asServer)
+        internal void Prediction_Initialize(NetworkManager manager, bool asServer) { }
+
+
+        /// <summary>
+        /// Writes a prediction state.
+        /// </summary>
+        /// <param name="data"></param>
+        internal void WriteState(PooledWriter data)
         {
-            if (asServer)
+#if !DEVELOPMENT
+            //Do not send states to clientHost.
+            if (IsLocalClient)
+                return;
+#endif
+
+            TimeManager timeManager = NetworkManager.TimeManager;
+            TransportManager transportManager = NetworkManager.TransportManager;
+            uint ticksBehind = (IsLocalClient) ? 0 : PacketTick.LocalTickDifference(timeManager);
+            /* If it's been a really long while the client could just be setting up
+             * or dropping. Only send if they've communicated within 5 seconds. */
+            if (ticksBehind > (timeManager.TickRate * 5))
+                return;
+
+            int mtu = transportManager.GetLowestMTU((byte)Channel.Unreliable);
+            PooledWriter stateWriter;
+            int writerCount = PredictionStateWriters.Count;
+            /* Conditions to create a new writer are:
+             * - writer does not exist yet.
+             * - data length + currentWriter length > mtu */
+            Channel channel = Channel.Unreliable;
+            if (writerCount > 0)
+                transportManager.CheckSetReliableChannel((data.Length + PredictionStateWriters[writerCount - 1].Length), ref channel);
+            /* If no writers or if channel would be forced reliable.
+             * 
+             * By checking if channel would be reliable this is
+             * essentially asking if (current written + new data) would
+             * exceed mtu. When it would get a new writer to try
+             * and favor unreliable. Emphasis on try, because if some
+             * really unlikely chance the data was really large it would
+             * still send on reliable down the line. */
+            if (writerCount == 0 || channel == Channel.Reliable)
             {
-                int movingAverageCount = (int)Mathf.Max((float)manager.TimeManager.TickRate * 0.25f, 3f);
-                _replicateQueueAverage = new MovingAverage(movingAverageCount);
+                stateWriter = WriterPool.Retrieve(mtu);
+                PredictionStateWriters.Add(stateWriter);
+                stateWriter.Skip(PredictionManager.STATE_HEADER_RESERVE_LENGTH);
+                /// 2 PacketId.
+                /// 4 Last replicate tick run for connection.
+                /// 4 Length unpacked.
             }
+            else
+            {
+                stateWriter = PredictionStateWriters[writerCount - 1];
+            }
+
+            stateWriter.WriteArraySegment(data.GetArraySegment());
         }
 
-
         /// <summary>
-        /// Adds to the average number of queued replicates.
+        /// Stores prediction writers to be re-used later.
         /// </summary>
-        internal void AddAverageQueueCount(ushort value, uint tick)
+        internal void StorePredictionStateWriters()
         {
-            /* If have not added anything to the averages for several ticks
-             * then reset average. */
-            if ((tick - _lastAverageQueueAddTick) > _replicateQueueAverage.SampleSize)
-                _replicateQueueAverage.Reset();
-            _lastAverageQueueAddTick = tick;
+            for (int i = 0; i < PredictionStateWriters.Count; i++)
+                WriterPool.Store(PredictionStateWriters[i]);
 
-            _replicateQueueAverage.ComputeAverage((float)value);
+            PredictionStateWriters.Clear();
         }
 
+
         /// <summary>
-        /// Returns the highest queue count after resetting it.
+        /// Sets the last tick a NetworkBehaviour replicated with.
         /// </summary>
-        /// <returns></returns>
-        internal ushort GetAndResetAverageQueueCount()
+        /// <param name="setUnordered">True to set unordered value, false to set ordered.</param>
+        internal void SetReplicateTick(uint value, EstimatedTick.OldTickOption oldTickOption = EstimatedTick.OldTickOption.Discard)
         {
-            if (_replicateQueueAverage == null)
-                return 0;
-
-            int avg = (int)(_replicateQueueAverage.Average);
-            if (avg < 0)
-                avg = 0;
-
-            return (ushort)avg;
+            ReplicateTick.Update(value, oldTickOption);
         }
 
-        /// <summary>
-        /// Local tick when the connection last replicated.
-        /// </summary>
-        public uint LocalReplicateTick { get; internal set; }
 
         /// <summary>
         /// Resets NetworkConnection.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         private void Prediction_Reset()
         {
-            GetAndResetAverageQueueCount();
+            StorePredictionStateWriters();
+            ReplicateTick.Reset();
         }
-
-
     }
 
 

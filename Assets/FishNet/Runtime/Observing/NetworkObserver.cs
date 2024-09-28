@@ -4,7 +4,7 @@ using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Transporting;
 using FishNet.Utility.Performance;
-using GameKit.Utilities;
+using GameKit.Dependencies.Utilities;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -61,7 +61,6 @@ namespace FishNet.Observing
         /// 
         /// </summary>
         [Tooltip("True to update visibility for clientHost based on if they are an observer or not.")]
-        [FormerlySerializedAs("_setHostVisibility")]//Remove on 2024/01/01
         [SerializeField]
         private bool _updateHostVisibility = true;
         /// <summary>
@@ -77,7 +76,7 @@ namespace FishNet.Observing
         /// </summary>
         [Tooltip("Conditions connections must met to be added as an observer. Multiple conditions may be used.")]
         [SerializeField]
-        internal List<ObserverCondition> _observerConditions = new List<ObserverCondition>();
+        internal List<ObserverCondition> _observerConditions = new();
         /// <summary>
         /// Conditions connections must met to be added as an observer. Multiple conditions may be used.
         /// </summary>
@@ -222,19 +221,13 @@ namespace FishNet.Observing
                          * not overwritten when the condition exist more than
                          * once in the scene. Double edged sword of using scriptable
                          * objects for conditions. */
-                        ObserverCondition ocCopy = _observerConditions[i].Clone();
+                        ObserverCondition ocCopy = Instantiate(_observerConditions[i]);
                         _observerConditions[i] = ocCopy;
 
                         //Condition type.
                         ObserverConditionType oct = ocCopy.GetConditionType();
-
-                        //REMOVE ON 2024/01/01 THIS BLOCK v
-#pragma warning disable CS0618 // Type or member is obsolete
-                        bool timed = ocCopy.Timed() || (oct == ObserverConditionType.Timed);
-#pragma warning restore CS0618 // Type or member is obsolete
-                        if (timed)
+                        if (oct == ObserverConditionType.Timed)
                         {
-                            oct = ObserverConditionType.Timed;
                             sortedConditions.Add(ocCopy);
                         }
                         else
@@ -242,18 +235,6 @@ namespace FishNet.Observing
                             _hasNormalConditions = true;
                             sortedConditions.Insert(nextSortedNormalConditionIndex++, ocCopy);
                         }
-                        //REMOVE ON 2024/01/01 THIS BLOCK ^
-                        //REPLACE WITH THIS BLOCK ..v
-                        //if (oct == ObserverConditionType.Timed)
-                        //{ 
-                        //    oct = ObserverConditionType.Timed;
-                        //    sortedConditions.Add(ocCopy);
-                        //}
-                        //else
-                        //{ 
-                        //    _hasNormalConditions = true;
-                        //    sortedConditions.Insert(nextSortedNormalConditionIndex++, ocCopy);
-                        //}
                         //REPLACE WITH THIS BLOCK ..^
                         if (oct == ObserverConditionType.Timed)
                             _timedConditions.Add(ocCopy);
@@ -307,7 +288,7 @@ namespace FishNet.Observing
         /// Returns ObserverStateChange by comparing conditions for a connection.
         /// </summary>
         /// <returns>True if added to Observers.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        
         internal ObserverStateChange RebuildObservers(NetworkConnection connection, bool timedOnly)
         {
             bool currentlyAdded = (_networkObject.Observers.Contains(connection));
@@ -320,12 +301,9 @@ namespace FishNet.Observing
             if (notOwner)
             {
                 bool parentVisible = true;
-                //if (_networkObject.ParentNetworkObject != null)
-                //    parentVisible = _networkObject.ParentNetworkObject.Observers.Contains(connection);
-                //if (_networkObject.RuntimeParentNetworkObject != null)
-                //    parentVisible &= _networkObject.RuntimeParentNetworkObject.Observers.Contains(connection);
-                if (_networkObject.CurrentParentNetworkObject != null)
-                    parentVisible = _networkObject.CurrentParentNetworkObject.Observers.Contains(connection);
+                if (_networkObject.CurrentParentNetworkBehaviour != null)
+                    parentVisible = _networkObject.CurrentParentNetworkBehaviour.NetworkObject.Observers.Contains(connection);
+
                 /* If parent is visible but was not previously
                  * then unset timedOnly to make sure all conditions
                  * are checked again. This ensures that the _nonTimedMet
