@@ -40,7 +40,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
         if(gameplayManager == null)
             return;
 
-        if(gameplayManager.PlayerManager.kartObjects.All(obj => KartBehavior.LocateManager(obj).PlayerData.raceFinishTime.HasValue) && !ResultsShown) {
+        if(gameplayManager.KartsIRManager.kartObjects.All(obj => KartBehavior.LocateManager(obj).PlayerData.raceFinishTime.HasValue) && !ResultsShown) {
             BLog.Highlight("Showing results cause all players finished");
             ShowResults();
         }
@@ -63,7 +63,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
                 SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
                 return;
             }
-            NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE, sender: CoreManager.LocalConnection, sendOnlyToServer: true);
+            LobbyManager.Instance.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE, sender: CoreManager.LocalConnection, sendOnlyToServer: true);
         }
 	}
 
@@ -75,7 +75,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
 
         SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
         BLog.Highlight("Placements size: " + placements.Count);
-        for(int position = 0; position < gameplayManager.PlayerManager.KartCount; position++) {
+        for(int position = 0; position < gameplayManager.KartsIRManager.KartCount; position++) {
             BLog.Highlight($"Calculating position {position}");
             string playerUUID = null;
             // Find playerUUID from position
@@ -91,7 +91,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
                 continue;
             }
 
-            KartManager manager = gameplayManager.PlayerManager.SearchForKartManager(playerUUID);
+            KartManager manager = gameplayManager.KartsIRManager.SearchForKartManager(playerUUID);
             if(manager == null) {
                 Debug.LogError($"Couldn't locate KartManager from uuid \"{playerUUID}\"");
                 continue;

@@ -1,5 +1,4 @@
 using System.Linq;
-using GameKit.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -26,8 +25,8 @@ public class MenuPlayerController : MenuController
         maxPlayers = CoreManager.IsMultiplayer ? 1 : 4;
 
         // Spawn player menus for ppl already in the player input manager
-        PlayerObjectManager pom = PlayerObjectManager.Instance;
-        if(pom.PlayerObjectCount > 0)
+        PlayerObjectManager pom = PlayerManager.Instance;
+        if(pom.PlayerCount > 0)
             foreach(PlayerObject obj in pom.PlayerObjects) {
                 AddPanel(obj);
             }
@@ -36,27 +35,27 @@ public class MenuPlayerController : MenuController
     protected new void OnDestroy() 
     {
         base.OnDestroy();
-        PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoinedEvent;
+        PlayerManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoinedEvent;
     }
 
     protected new void OnEnable() 
     {
         base.OnEnable();
-        PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoinedEvent;
-        PlayerObjectManager.Instance.PlayerObjectLeftEvent += PlayerObjectManager_PlayerLeftEvent;
+        PlayerManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoinedEvent;
+        PlayerManager.Instance.PlayerObjectLeftEvent += PlayerObjectManager_PlayerLeftEvent;
     }
 
     protected new void OnDisable() 
     {
         base.OnDisable();
-        PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoinedEvent;
-        PlayerObjectManager.Instance.PlayerObjectLeftEvent -= PlayerObjectManager_PlayerLeftEvent;
+        PlayerManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoinedEvent;
+        PlayerManager.Instance.PlayerObjectLeftEvent -= PlayerObjectManager_PlayerLeftEvent;
     }
 
     private void Update() 
     {
         // BLog.Highlight("Should allow joining: " + shouldAllowJoining);
-        PlayerInputManager pim = PlayerObjectManager.Instance.PlayerInputManager;
+        PlayerInputManager pim = PlayerManager.Instance.PlayerInputManager;
         if(!pim.joiningEnabled && shouldAllowJoining)
             pim.EnableJoining();
         else if(pim.joiningEnabled && !shouldAllowJoining)
@@ -104,7 +103,7 @@ public class MenuPlayerController : MenuController
         Destroy(ppc.gameObject);
 
         if(removePlayerInput)
-            PlayerObjectManager.Instance.RemovePlayer(focusedPlayer);
+            PlayerManager.Instance.RemovePlayer(focusedPlayer);
     }
 
     /// <summary>
@@ -118,7 +117,7 @@ public class MenuPlayerController : MenuController
         // Ensure the join message stays at the end and disable once we reach max
         if(playerPanelContainer.transform.childCount > maxPlayers) {
             joinMessage.SetActive(false);
-            PlayerObjectManager.Instance.PlayerInputManager.DisableJoining();
+            PlayerManager.Instance.PlayerInputManager.DisableJoining();
 
             if(maxPlayers == 1) {
                 // Double scale so player's panel fills screen
@@ -144,7 +143,7 @@ public class MenuPlayerController : MenuController
     /** Check if everyone's ready, if so, transition to map select. */
     public void CheckReady() 
     {
-        if(!PlayerObjectManager.Instance.PlayerObjects.All(po => po.data.ready)) return;
+        if(!PlayerManager.Instance.PlayerObjects.All(po => po.data.ready)) return;
 
         shouldAllowJoining = false;
 

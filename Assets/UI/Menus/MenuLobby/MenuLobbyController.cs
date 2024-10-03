@@ -1,4 +1,6 @@
 using System.Collections;
+using EMullen.Networking;
+using EMullen.PlayerMgmt;
 using FishNet;
 using FishNet.Managing;
 using FishNet.Transporting;
@@ -16,7 +18,6 @@ public class MenuLobbyController : MenuController
 
     private MenuLobbyViewController _viewController;
     private NetworkManager networkManager; // The networkmanager that this menu is connected to.
-    private NetworkStateManager networkStateManager;
 
     public int retryTimer;
 
@@ -30,7 +31,6 @@ public class MenuLobbyController : MenuController
             Debug.LogError("MenuLobbyController failed to connect to a NetworkManager.");
             return;
         }
-        networkStateManager = networkManager.GetComponent<NetworkStateManager>();
 
         networkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
         networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
@@ -40,34 +40,34 @@ public class MenuLobbyController : MenuController
         if(CoreManager.IsLocal)
             OpenSubMenu(SUB_MENU_MAP_SELECT);
         else
-            SetFocus(PlayerObjectManager.Instance.PlayerOne);
+            SetFocus(PlayerManager.Instance.PlayerOne);
     }
 
     private void Update() {
-        if(networkStateManager != null && networkStateManager.ClientConnectionState == LocalConnectionState.Stopped && retryTimer == 0) {
-            if(networkStateManager.ClientConnectionState == LocalConnectionState.Stopped && retryTimer == 0) {
+        if(NetworkController.Instance != null && NetworkController.Instance.ClientConnectionState == LocalConnectionState.Stopped && retryTimer == 0) {
+            if(NetworkController.Instance.ClientConnectionState == LocalConnectionState.Stopped && retryTimer == 0) {
                 retryTimer = 5;
                 StartCoroutine(ConnectionRetryTimer());
-                CoreManager.LobbyCommunicator.StartCommunication();
-            } else if(networkStateManager.ClientConnectionState != LocalConnectionState.Stopped && retryTimer >= 0) {
+                LobbyCommunicator.Instance.StartCommunication();
+            } else if(NetworkController.Instance.ClientConnectionState != LocalConnectionState.Stopped && retryTimer >= 0) {
                 retryTimer = -1;
             }
         }
 
-        if(PlayerObjectManager.Instance == null)
+        if(PlayerManager.Instance == null)
             Debug.LogWarning("PlayerObjectManager instance is null!");
 
         // Ensure client has input
-        if(InstanceFinder.IsClient) {
-            if(PlayerObjectManager.Instance.PlayerObjectCount == 0 && !PlayerObjectManager.Instance.InputPromptActive) {
-                PlayerObjectManager.Instance.PromptForInput();
-            } else if(PlayerObjectManager.Instance.PlayerObjectCount > 0 && PlayerObjectManager.Instance.InputPromptActive) {
-                PlayerObjectManager.Instance.ClearInputPrompt();
+        if(InstanceFinder.IsClientStarted) {
+            if(PlayerManager.Instance.PlayerCount == 0 && !PlayerManager.Instance.InputPromptActive) {
+                PlayerManager.Instance.PromptForInput();
+            } else if(PlayerManager.Instance.PlayerCount > 0 && PlayerManager.Instance.InputPromptActive) {
+                PlayerManager.Instance.ClearInputPrompt();
             }
         }
 
         if(DevSettings.IsDevelopment() && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
-            NetSceneController.LobbyManager.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_FORCE_MAP_PICK);
+            LobbyManager.Instance.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_FORCE_MAP_PICK);
     }
 
     private IEnumerator ConnectionRetryTimer() {

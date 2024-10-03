@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using GameKit.Utilities;
 using Steamworks;
 using TMPro;
 using UnityEngine;
@@ -20,7 +19,7 @@ public class KartVisualsManager : KartBehavior
     private void Update() 
     {
         PlayerData playerData = kartManager.PlayerData;
-        PlayerObjectManager pom = PlayerObjectManager.Instance;
+        PlayerObjectManager pom = PlayerManager.Instance;
 
         if(!isModelLoaded && 
            playerData.kartType != KartType.NONE)
@@ -28,7 +27,7 @@ public class KartVisualsManager : KartBehavior
 
         if(!isNameplateLoaded && 
            base.IsClient && kartManager.POIGDelegate == null && // Should load nameplate?
-           pom != null && pom.PlayerObjectCount > 0 && pom.PlayerObjects[0].poigDelegate != null && pom.PlayerObjects[0].poigDelegate.Camera != null)
+           pom != null && pom.PlayerCount > 0 && pom.PlayerObjects[0].poigDelegate != null && pom.PlayerObjects[0].poigDelegate.Camera != null)
             LoadNameplate();
 
         // Unload nameplate since this is the player's own kart
@@ -69,7 +68,7 @@ public class KartVisualsManager : KartBehavior
         Billboard npb = nameplate.GetComponentInChildren<Billboard>();
 
         npt.text = kartManager.PlayerData.name;
-        npb.focusCamera = PlayerObjectManager.Instance.PlayerObjects[0].poigDelegate.Camera;
+        npb.focusCamera = PlayerManager.Instance.PlayerObjects[0].poigDelegate.Camera;
 
         isNameplateLoaded = true;
     }

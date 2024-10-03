@@ -16,7 +16,6 @@
     "com.unity.transport": "1.4.1",
     "com.unity.ugui": "1.0.0",
     "com.unity.visualscripting": "1.8.0",
-    "net.emullen.bootstrapper": "https://github.com/east-01/net.emullen.bootstrapper.git",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",

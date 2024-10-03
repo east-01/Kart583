@@ -184,9 +184,9 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {
+        "com.unity.modules.audio": "1.0.0",
         "com.unity.modules.director": "1.0.0",
         "com.unity.modules.animation": "1.0.0",
-        "com.unity.modules.audio": "1.0.0",
         "com.unity.modules.particlesystem": "1.0.0"
       },
       "url": "https://packages.unity.com"
@@ -196,8 +196,8 @@
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.collections": "1.2.4",
         "com.unity.burst": "1.6.6",
+        "com.unity.collections": "1.2.4",
         "com.unity.mathematics": "1.2.6"
       },
       "url": "https://packages.unity.com"
@@ -220,13 +220,6 @@
         "com.unity.modules.jsonserialize": "1.0.0"
       },
       "url": "https://packages.unity.com"
-    },
-    "net.emullen.bootstrapper": {
-      "version": "https://github.com/east-01/net.emullen.bootstrapper.git",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "6a5b0f8b0f74801ca1ad4eca692acd54e93a4877"
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

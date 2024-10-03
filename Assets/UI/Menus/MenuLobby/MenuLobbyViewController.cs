@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using FishNet.Transporting;
-using GameKit.Utilities;
 using FishNet.Managing.Scened;
 using FishNet;
 using System;
@@ -80,7 +79,7 @@ public class MenuLobbyViewController : MonoBehaviour
             return;
 
         NetworkStateManager nsm = _controller.ConnectedNetworkManager.GetComponent<NetworkStateManager>();
-        bool isConnected = NetSceneController.Instance != null && NetSceneController.LobbyManager != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started && CoreManager.LobbyCommunicator.LobbyData.HasValue;
+        bool isConnected = NetSceneController.Instance != null && LobbyManager.Instance != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started && CoreManager.LobbyCommunicator.LobbyData.HasValue;
         if(isConnected)
             UpdateConnectedView(nsm);
         else

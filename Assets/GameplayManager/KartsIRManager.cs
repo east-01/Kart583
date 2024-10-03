@@ -3,6 +3,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using EMullen.Core;
+using EMullen.PlayerMgmt;
+using EMullen.SceneMgmt;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
@@ -36,7 +39,7 @@ public class KartsIRManager : NetworkBehaviour
 	/// </summary>
 	public List<GameObject> kartObjects = new(); // This could include bots as well
 	public List<PositionTracker> playerPositions = new();
-	private Dictionary<string, PlayerObject> playerObjectsWaitingForKarts = new();
+	private Dictionary<string, LocalPlayer> localPlayersWaitingForKarts = new();
 
 	public delegate void KartSpawnHandler(NetworkConnection owner, PlayerData data);
     public event KartSpawnHandler KartSpawnedEvent;
@@ -49,14 +52,14 @@ public class KartsIRManager : NetworkBehaviour
 
 		KartSpawnedEvent += KartManager_KartSpawned;
 		SceneController.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToScene;
-		// PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerObjectJoined;
+		// PlayerManager.Instance.LocalPlayerJoinedEvent += PlayerManager_LocalPlayerJoinedEvent;
 	}
 
     void Start() 
 	{
 		// if(CoreManager.IsLocal) {
-		// 	BLog.Log($"Local instance spawning {PlayerObjectManager.Instance.GetPlayerObjects().Count} player(s).", LogChannel.GameplayManager, 1);
-		// 	PlayerObjectManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
+		// 	BLog.Log($"Local instance spawning {PlayerManager.Instance.GetPlayerObjects().Count} player(s).", gameplayManager.LogSettings, 1);
+		// 	PlayerManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
 		// }
 	}
 
@@ -64,13 +67,13 @@ public class KartsIRManager : NetworkBehaviour
 	{
 		KartSpawnedEvent -= KartManager_KartSpawned;
 		SceneController.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToScene;
-		// PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerObjectJoined;
+		// PlayerManager.Instance.LocalPlayerJoinedEvent -= PlayerManager_LocalPlayerJoinedEvent;
 	}
 #endregion
 
 	void Update()
     {
-		if(!base.IsServer)
+		if(!IsServerInitialized)
 			return;
 
 		playerPositions = playerPositions.OrderByDescending(o=>o.RaceCompletion).ToList();
@@ -91,41 +94,52 @@ public class KartsIRManager : NetworkBehaviour
 			return;
 
 		print("client added to map scene, spawning player objects");
-		PlayerObjectManager.Instance.PlayerObjects.ForEach(po => SpawnPlayer(po));
+		PlayerManager.Instance.LocalPlayers.ToList().ForEach(po => SpawnPlayer(po));
     }
 
-	private void PlayerObjectManager_PlayerObjectJoined(PlayerObject newObject) 
+	private void PlayerManager_LocalPlayerJoinedEvent(LocalPlayer player) 
 	{	
 		if(gameplayManager == null || !gameplayManager.HasLobby)
 			return;
-		SpawnPlayer(newObject);
+		SpawnPlayer(player);
 	}
 #endregion
 
 #region Kart Spawning
 	[ServerRpc(RequireOwnership = false)]
-    public void ServerRpcSpawnKart(NetworkConnection owner, PlayerData data) { SpawnKart(owner, data); }
+    public void ServerRpcSpawnKart(NetworkConnection owner, string uid) { SpawnKart(owner, uid); }
 
     /// <summary>
 	/// Spawns a kart and add it to the game. Returns the KartManager from the new kart.
 	/// </summary>
 	[Server]
-	KartManager SpawnKart(NetworkConnection owner, PlayerData data) 
+	KartManager SpawnKart(NetworkConnection owner, string uid) 
 	{	
 		if(KartCount >= 8) {
 			Debug.LogError("Tried to add a new kart even though there is already 8 (or more) karts.");
             return null;
         }
-
-		if(data.uuid == "") {
-			Debug.LogError("Tried to spawn a kart with empty guid, this is not allowed");
+		
+		if(!PlayerDataRegistry.Instance.Contains(uid)) {
+			Debug.LogError($"Can't spawn kart, uid \"{uid}\" isn't in registry.");
 			return null;
 		}
 
-		if(data.kartType == KartType.NONE) {
-			data.kartType = SelectRandomKartType();
-			Debug.LogWarning($"Tried to spawn a kart without a kartType included. Random type {data.kartType} selected.");
+        // PlayerData management
+		PlayerData data = PlayerDataRegistry.Instance.GetPlayerData(uid);
+
+		if(!data.HasData<RaceData>())
+			data.SetData<RaceData>(new());
+
+		RaceData raceData = data.GetData<RaceData>();
+
+		if(raceData.kartType == KartType.NONE) {
+			raceData.kartType = SelectRandomKartType();
+			Debug.LogWarning($"Tried to spawn a kart without a kartType included. Random type {raceData.kartType} selected.");
 		}
+
+		raceData.ready = false;
+		data.SetData(raceData);
 
 		GameObject newKart = Instantiate(kartPrefab);
 		KartManager newKartManager = KartBehavior.LocateManager(newKart);
@@ -136,14 +150,10 @@ public class KartsIRManager : NetworkBehaviour
 
 		newKart.transform.forward = spawnForward;
 		newKart.transform.position = spawnPos;
-		newKart.name = KartNamePrefix + data.name;
+		newKart.name = KartNamePrefix + data.GetData<PlayerDisplayData>().name;
 
 		// Spawn for server
-		base.ServerManager.Spawn(newKart, owner, gameplayManager.GameLobby.MapScene.Value);
-		// newKart.GetComponent<NetworkObject>().SetParent(kartLevelManager.KartContainer.GetComponent<EmptyNetworkBehaviour>());
-
-        // PlayerData management
-		data.ready = false;
+		base.ServerManager.Spawn(newKart, owner, gameplayManager.KartLobby.MapScene.Value);
 
 		newKartManager.PlayerData = data;
 
@@ -167,23 +177,36 @@ public class KartsIRManager : NetworkBehaviour
 	///   PlayerObjectInGame object and connects all elements to the newly spawned kart.
 	/// </summary>
 	[Client]
-	public void SpawnPlayer(PlayerObject player)
+	public void SpawnPlayer(LocalPlayer player)
 	{
-		string uuid = player.data.uuid;
-		if(playerObjectsWaitingForKarts.ContainsKey(uuid)) {
+		if(!PlayerDataRegistry.Instance.Contains(player.UID)) {
+			Debug.LogError($"Can't spawn player, uid \"{player.UID}\" isn't in registry.");
+			return;
+		}
+
+		if(localPlayersWaitingForKarts.ContainsKey(player.UID)) {
 			Debug.LogError("Can't spawn player, they are already in the playerObjectsWaitingForKarts dictionary.");
 			return;
 		}
-		player.data.ready = false;
-		playerObjectsWaitingForKarts.Add(uuid, player);		
-		BLog.Log($"Spawning player \"{player.data.Summary}\"", LogChannel.GameplayManager, 0);
-		ServerRpcSpawnKart(base.LocalConnection, player.data);
+
+		PlayerData data = PlayerDataRegistry.Instance.GetPlayerData(player.UID);
+
+		if(!data.HasData<RaceData>())
+			data.SetData<RaceData>(new());
+
+		RaceData raceData = data.GetData<RaceData>();
+		raceData.ready = false;
+		data.SetData(raceData);
+
+		localPlayersWaitingForKarts.Add(player.UID, player);		
+		BLog.Log($"Spawning player \"{player.UID}\"", gameplayManager.LogSettings, 0);
+		ServerRpcSpawnKart(LocalConnection, player.UID);
 	}
 
 	public void KartManager_KartSpawned(NetworkConnection conn, PlayerData data) 
 	{		
-		bool shouldAttemptToConnectPlayerObject = conn == base.LocalConnection && playerObjectsWaitingForKarts.ContainsKey(data.uuid);
-		BLog.Log($"Recieved kart spawn event for \"{data.Summary}\", will attempt to connect: {shouldAttemptToConnectPlayerObject}", LogChannel.GameplayManager, 1);
+		bool shouldAttemptToConnectPlayerObject = conn == LocalConnection && localPlayersWaitingForKarts.ContainsKey(data.GetUID());
+		BLog.Log($"Recieved kart spawn event for \"{data.GetUID()}\", will attempt to connect: {shouldAttemptToConnectPlayerObject}", gameplayManager.LogSettings, 1);
 		StartCoroutine(KartSearchCoroutine(data, shouldAttemptToConnectPlayerObject));
 	}
 
@@ -200,7 +223,7 @@ public class KartsIRManager : NetworkBehaviour
 				yield return new WaitForSeconds(0.1f);
 		}
 		if(!connected)
-			Debug.LogError($"Failed to connect player data to kart. Data: {data.Summary}");
+			Debug.LogError($"Failed to connect player data to kart. Data: {data.GetUID()}");
 	}
 
 	/// <summary>
@@ -209,7 +232,7 @@ public class KartsIRManager : NetworkBehaviour
 	/// <returns>Success status</returns>
 	private bool ConnectToKart(PlayerData data, bool attemptToConnectPlayerObject) 
 	{
-		BLog.Log($"Attempting to connect kart \"{data.Summary}\", connecting to player object: {attemptToConnectPlayerObject}", LogChannel.GameplayManager, 1);
+		BLog.Log($"Attempting to connect kart \"{data.GetUID()}\", connecting to player object: {attemptToConnectPlayerObject}", gameplayManager.LogSettings, 1);
 		// Find the kart that was spawned add it to the KartObjects array
 		KartManager pkm = SearchForKartManager(data);
 		if(pkm == null) 
@@ -222,10 +245,10 @@ public class KartsIRManager : NetworkBehaviour
 		if(!attemptToConnectPlayerObject)
 			return true;
 		
-		PlayerObject player = playerObjectsWaitingForKarts[data.uuid];
+		LocalPlayer player = localPlayersWaitingForKarts[data.GetUID()];
 		
-		if(!playerObjectsWaitingForKarts.ContainsKey(data.uuid)) {
-			Debug.LogError($"Couldn't find a PlayerObject waiting for kart with data {data.Summary}");
+		if(!localPlayersWaitingForKarts.ContainsKey(data.GetUID())) {
+			Debug.LogError($"Couldn't find a PlayerObject waiting for kart with data {data.GetUID()}");
 			return false;
 		}
 
@@ -234,7 +257,7 @@ public class KartsIRManager : NetworkBehaviour
 		POIGDelegate poigDelegate = poig.GetComponent<POIGDelegate>();
 
 		poigDelegate.owner = player;
-		player.poigDelegate = poigDelegate;
+		player.SetPOIGDelegate(poigDelegate);
 		pkm.GetKartVisualsManager().LoadNameplate();
 
 		// Make connections for PlayerInput
@@ -245,11 +268,11 @@ public class KartsIRManager : NetworkBehaviour
 
 		poigDelegate.HUD.GetComponent<PlayerHUDCanvas>().subject = pkm;
 
-		player.input.camera = pcam;
-		player.input.uiInputModule = null; // Destroy menu player input module
+		player.Input.camera = pcam;
+		player.Input.uiInputModule = null; // Destroy menu player input module
 
 		// Connect player kart manager to player object
-		pkm.UseHumanDriver(player.input);
+		pkm.UseHumanDriver(player.Input);
 		pkm.POIGDelegate = poigDelegate;
 		print("set poigdelegate as " + poigDelegate);
 
@@ -263,6 +286,8 @@ public class KartsIRManager : NetworkBehaviour
 	[Server]
 	public void SpawnBot() 
 	{		
+		
+
         PlayerData bdata = new() {
 			uuid = Guid.NewGuid().ToString(),
             name = SelectUniqueRandomBotName(),
@@ -290,7 +315,7 @@ public class KartsIRManager : NetworkBehaviour
 	/// </summary>
 	public KartManager SearchForKartManager(PlayerData data) 
 	{
-		return SearchForKartManager(data.uuid);
+		return SearchForKartManager(data.GetUID());
 	}
 
 	/// <summary>
@@ -298,7 +323,7 @@ public class KartsIRManager : NetworkBehaviour
 	/// </summary>
 	public KartManager SearchForKartManager(string playerUUID) {
 		foreach(KartManager km in FindObjectsOfType<KartManager>()) {
-			if(km.PlayerData.uuid == playerUUID)
+			if(km.Playerdata.GetUID() == playerUUID)
 				return km;
 		}
 		return null;
@@ -339,7 +364,7 @@ public class KartsIRManager : NetworkBehaviour
 
     public bool AllPlayersReady { get {
 		bool allPlayersReady = true;
-		foreach(GameObject obj in gameplayManager.PlayerManager.kartObjects) {
+		foreach(GameObject obj in gameplayManager.KartsIRManager.kartObjects) {
 			if(!KartBehavior.LocateManager(obj).PlayerData.ready) {
 				allPlayersReady = false;
 				break;

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EMullen.Core;
+using EMullen.PlayerMgmt;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using Unity.VisualScripting;
@@ -20,10 +22,9 @@ public class RaceManager : NetworkBehaviour
     private GameplayManager gameplayManager;
     private KartLevelManager kartLevelManager;
 
-    [SyncVar(OnChange = nameof(RacePhaseChange), SendRate = 0f)] 
-    private RacePhase phase; 
+    private SyncVar<RacePhase> phase; 
+    public RacePhase Phase => phase.Value;
 
-    [SyncObject]
     private readonly SyncTimer raceTime = new();
     public float RaceTime => raceTime.Remaining;
     public float RaceTimeElapsed => raceTime.Elapsed;
@@ -41,7 +42,7 @@ public class RaceManager : NetworkBehaviour
 #region Events
     public delegate void RacePhaseChangeHandler(RacePhase previousPhase, RacePhase currentPhase);
     /// <summary>
-    /// Event call for when the race phase is changed. Called 
+    /// Event call for when the race phase.Value is changed. Called 
     /// </summary>
     public event RacePhaseChangeHandler RacePhaseChanged;
 #endregion
@@ -49,7 +50,6 @@ public class RaceManager : NetworkBehaviour
     /// <summary>
     /// Stores raceFinishTime first in RaceCompleted(), then gets position and point data in PopulatePlacements()
     /// </summary>
-    [SyncObject] 
     private readonly SyncDictionary<string, RacePlacementData> placements = new();
 
     private void Awake()
@@ -59,28 +59,35 @@ public class RaceManager : NetworkBehaviour
 
         raceTime.StopTimer(true);
 
-        if(base.IsClientOnly)
+        phase.OnChange += RacePhaseChange;
+
+        if(base.IsClientOnlyInitialized)
             return;
 
         // Initialize phases
-        /*if(PlayerObjectManager.Instance == null) {
+        /*if(PlayerManager.Instance == null) {
             waitingForPlayerInput = true; // TODO: This is really dumb: we should only be waiting for player input on clients
             Debug.LogWarning("This is really dumb: we should only be waiting for player input on clients");
-        } else */if(gameplayManager.GameLobby == null) {
-            phase = RacePhase.WAITING_FOR_LOBBY;
+        } else */if(gameplayManager.KartLobby == null) {
+            phase.Value  = RacePhase.WAITING_FOR_LOBBY;
         } else {
             InitializeWithLobby();
         }
 
     }
 
+    private void OnDestroy() 
+    {
+
+    }
+
     public void InitializeWithLobby() {
-        if(gameplayManager.GameLobby.PlayerCount == 0) {
-            phase = RacePhase.LATE_JOIN;
-        } else if(gameplayManager.PlayerManager.HumanPlayerCount < gameplayManager.GameLobby.PlayerCount) {
-            phase = RacePhase.WAITING_FOR_PLAYERS;
+        if(gameplayManager.KartLobby.PlayerCount == 0) {
+            phase.Value  = RacePhase.LATE_JOIN;
+        } else if(gameplayManager.KartsIRManager.HumanPlayerCount < gameplayManager.KartLobby.PlayerCount) {
+            phase.Value  = RacePhase.WAITING_FOR_PLAYERS;
         } else {
-            phase = RacePhase.COUNTDOWN;
+            phase.Value  = RacePhase.COUNTDOWN;
             PrepareRace();
         }
     }
@@ -92,14 +99,14 @@ public class RaceManager : NetworkBehaviour
     {
         raceTime.Update(Time.deltaTime);
 
-        if(!base.IsServer)
+        if(!base.IsServerInitialized)
             return;
 
-        // We'll attempt to escalate the race phase each Update()
+        // We'll attempt to escalate the race phase.Value each Update()
         // Only allowed to escalate once per frame
-        switch(phase) {
+        switch(phase.Value ) {
             case RacePhase.WAITING_FOR_LOBBY:
-                if(gameplayManager.GameLobby != null)
+                if(gameplayManager.KartLobby != null)
                     InitializeWithLobby();
                 break;
             case RacePhase.LATE_JOIN:
@@ -108,38 +115,38 @@ public class RaceManager : NetworkBehaviour
                 // TODO: Add a timer that kicks the player if they don't ready up by said time
                 // bool introAnimComplete = !kartLevelManager.HasRaceCamera || !kartLevelManager.RaceCamera.Animating;
                 // TODO: Add intro anim back in
-                KartsIRManager playerManager = gameplayManager.PlayerManager;
-                bool allPlayersReady = playerManager.AllPlayersReady && playerManager.HumanPlayerCount == gameplayManager.GameLobby.PlayerCount;
-                bool allBotsReady = gameplayManager.PlayerManager.BotPlayerCount == gameplayManager.PlayerManager.BotsToSpawn;
+                KartsIRManager playerManager = gameplayManager.KartsIRManager;
+                bool allPlayersReady = playerManager.AllPlayersReady && playerManager.HumanPlayerCount == gameplayManager.KartLobby.PlayerCount;
+                bool allBotsReady = gameplayManager.KartsIRManager.BotPlayerCount == gameplayManager.KartsIRManager.BotsToSpawn;
                 bool needToSpawnBots = gameplayManager.RaceManager.Settings.Bots && playerManager.BotPlayerCount == 0 && playerManager.BotsToSpawn > 0;
                 // Two tracks if we're spawning bots or not
                 if(needToSpawnBots) {
                     if(allPlayersReady) {
                         playerManager.SpawnBots();
                     } else if(allBotsReady) {
-                        phase = RacePhase.COUNTDOWN;
+                        phase.Value  = RacePhase.COUNTDOWN;
                     }
                 } else {
                     if(allPlayersReady)
-                        phase = RacePhase.COUNTDOWN;
+                        phase.Value  = RacePhase.COUNTDOWN;
                 }
                 break;
             case RacePhase.COUNTDOWN:
                 break;
             case RacePhase.RACING:
                 bool allHumanPlayersFinished = true;
-                foreach(GameObject kartObj in gameplayManager.PlayerManager.kartObjects) {
+                foreach(GameObject kartObj in gameplayManager.KartsIRManager.kartObjects) {
                     KartManager km = KartBehavior.LocateManager(kartObj);
                     if(!km.IsHuman)
                         continue;
-                    if(km.GetPositionTracker().RaceCompletion < 1 || !placements.ContainsKey(km.PlayerData.uuid)) {
+                    if(km.GetPositionTracker().RaceCompletion < 1 || !placements.ContainsKey(km.OwnerUID)) {
                         allHumanPlayersFinished = false;
                         break;
                     }
                 }
                 if(allHumanPlayersFinished) {
                     FinalizePlacements(); // Populate placements here so that we can ensure the results are ready once clients need to show results.
-                    phase = RacePhase.FINISHED;
+                    phase.Value  = RacePhase.FINISHED;
                 }
                 break;
             case RacePhase.FINISHED:
@@ -151,15 +158,15 @@ public class RaceManager : NetworkBehaviour
     private void RacePhaseChange(RacePhase prev, RacePhase current, bool asServer) {
 
         // Getting double-calls from the syncvar, this just makes sure we block a double call in a host instance.
-        if(base.IsHost && !asServer)
+        if(base.IsHostInitialized && !asServer)
             return;
 
-        BLog.Log($"Race phase changed to {current}", LogChannel.GameplayManager);
+        BLog.Log($"Race phase.Value changed to {current}", gameplayManager.LogSettings);
 
-        // Call phase change event
+        // Call phase.Value change event
         RacePhaseChanged?.Invoke(prev, current);
 
-        PlayerInputManager pim = PlayerObjectManager.Instance.PlayerInputManager;
+        PlayerInputManager pim = PlayerManager.Instance.PlayerInputManager;
 
         switch(current) {
             case RacePhase.LATE_JOIN:
@@ -173,7 +180,7 @@ public class RaceManager : NetworkBehaviour
             case RacePhase.COUNTDOWN:
                 if(asServer) {
                     if(DevSettings.Settings.OverrideRaceProgressAtStart)
-                        phase = RacePhase.RACING;
+                        phase.Value  = RacePhase.RACING;
                     else
                         raceTime.StartTimer(Settings.startDelay, true);
                         
@@ -199,11 +206,11 @@ public class RaceManager : NetworkBehaviour
         if(!asServer)
             return;
         if(op == SyncTimerOperation.Finished) {
-            if(phase == RacePhase.COUNTDOWN)
-                phase = RacePhase.RACING;
-            else if(phase == RacePhase.RACING) {
+            if(phase.Value  == RacePhase.COUNTDOWN)
+                phase.Value  = RacePhase.RACING;
+            else if(phase.Value == RacePhase.RACING) {
                 FinalizePlacements();
-                phase = RacePhase.FINISHED;
+                phase.Value = RacePhase.FINISHED;
             }
         } //else if(op == SyncTimerOperation.Start)
             // simulatedTimer = next;
@@ -212,7 +219,7 @@ public class RaceManager : NetworkBehaviour
     public override void OnStartClient() 
     {
         base.OnStartClient();
-        RacePhaseChange(RacePhase.LATE_JOIN, phase, false);
+        RacePhaseChange(RacePhase.LATE_JOIN, phase.Value, false);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -225,12 +232,12 @@ public class RaceManager : NetworkBehaviour
     /// </summary>
     public void PassLateJoin() 
     {
-        if(!base.IsServer) {
+        if(!base.IsServerInitialized) {
             ServerRpcPassLateJoin();
             return;
         }
-        if(phase == RacePhase.LATE_JOIN)
-            phase = RacePhase.WAITING_FOR_PLAYERS;
+        if(phase.Value == RacePhase.LATE_JOIN)
+            phase.Value = RacePhase.WAITING_FOR_PLAYERS;
     }
 
     /// <summary>
@@ -240,20 +247,20 @@ public class RaceManager : NetworkBehaviour
     [ObserversRpc]
     public void PrepareRace() 
     {
-        BLog.Log("Preparing race", LogChannel.GameplayManager, 3);
+        BLog.Log("Preparing race", gameplayManager.LogSettings, 3);
 
         // Enable player cameras and splitscreen, ensure we're on Gameplay control map
-        PlayerObjectManager.Instance.PlayerObjects.ForEach(po => {
-            po.input.enabled = true;
-            po.input.SwitchCurrentActionMap("Gameplay");
-            if(po.input.camera != null) {
-                po.input.camera.enabled = true;
-                if(po.PlayerIndex == 0 && !CoreManager.IsServerOnly) 
-                    po.input.camera.GetComponent<AudioListener>().enabled = true;
+        PlayerManager.Instance.LocalPlayers.ToList().ForEach(lp => {
+            lp.Input.enabled = true;
+            lp.Input.SwitchCurrentActionMap("Gameplay");
+            if(lp.Input.camera != null) {
+                lp.Input.camera.enabled = true;
+                if(lp.Input.playerIndex == 0 && !CoreManager.IsServerOnly) 
+                    lp.Input.camera.GetComponent<AudioListener>().enabled = true;
             }
         });
 
-        PlayerObjectManager.Instance.PlayerInputManager.splitScreen = true;
+        PlayerManager.Instance.PlayerInputManager.splitScreen = true;
 
         // Disable main camera audio listener so we get player 0's camera audio
         CoreManager.Instance.GetComponent<AudioListener>().enabled = false;
@@ -265,7 +272,7 @@ public class RaceManager : NetworkBehaviour
     /// </summary>
     public void CompletedRace(PlayerData data, float raceCompletion) 
     {
-        if(base.IsClientOnly) {
+        if(IsClientInitialized) {
             ServerRpcCompletedRace(data, raceCompletion);
             return;
         }
@@ -280,12 +287,8 @@ public class RaceManager : NetworkBehaviour
         };
 
         // Add to placements
-        if(!placements.ContainsKey(data.uuid))
-            placements.Add(data.uuid, rpd);
-
-        // Overwrite the official PlayerData record on the Player's KartManager to correctly
-        //   transmit finish time.
-        gameplayManager.PlayerManager.SearchForKartManager(data).PlayerData = data;
+        if(!placements.ContainsKey(data.GetUID()))
+            placements.Add(data.GetUID(), rpd);
     }
     /// <summary> Server RPC calling RaceManager#CompletedRace </summary>
     [ServerRpc(RequireOwnership = false)]
@@ -295,9 +298,9 @@ public class RaceManager : NetworkBehaviour
     public void FinalizePlacements() 
     {
         // Ensure everyone is in the placements array
-        foreach(GameObject kartObject in gameplayManager.PlayerManager.kartObjects) {
+        foreach(GameObject kartObject in gameplayManager.KartsIRManager.kartObjects) {
             KartManager kartManager = KartBehavior.LocateManager(kartObject);
-            CompletedRace(kartManager.PlayerData, kartManager.GetPositionTracker().RaceCompletion);
+            CompletedRace(PlayerDataRegistry.Instance.GetPlayerData(kartManager.OwnerUID), kartManager.GetPositionTracker().RaceCompletion);
         }
 
         Dictionary<string, RacePlacementData> sortedPlacements = placements.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
@@ -311,8 +314,7 @@ public class RaceManager : NetworkBehaviour
         }
     }
 
-    public RacePhase Phase { get { return phase; } }
-    public bool CanMove { get { return (phase == RacePhase.RACING || phase == RacePhase.FINISHED) && RaceTime >= 0; } }
+    public bool CanMove { get { return (phase.Value == RacePhase.RACING || phase.Value == RacePhase.FINISHED) && RaceTime >= 0; } }
 
     public SyncDictionary<string, RacePlacementData> GetPlacements() { return placements; }
 

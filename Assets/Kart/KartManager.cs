@@ -1,4 +1,5 @@
 using System;
+using EMullen.PlayerMgmt;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -18,20 +19,10 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	}
 	public bool HasPOIGDelegate { get { return poigDelegate != null; } }
 
-	[SerializeField, SyncVar(OnChange = nameof(PlayerDataChanged))] 
-	private PlayerData data;
-	public PlayerData PlayerData { 
-		get => data;
-		set {
-			if(base.IsClientOnly) {
-				ServerRpcSetPlayerData(value);
-			} else {
-				this.data = value;
-			}
-		}
-	}
+	private SyncVar<string> ownerUID = new();
+	public string OwnerUID => ownerUID.Value;
 	[ServerRpc(RequireOwnership = false)]
-	public void ServerRpcSetPlayerData(PlayerData value) => PlayerData = value;
+	public void ServerRpcSetOwnerUID(string ownerUID) => PlayerData = value;
 	[ServerRpc]
 	public void ServerRpcSetReady(bool readyStatus) => data.ready = readyStatus;
 
@@ -70,7 +61,7 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	/// Connect the PlayerInput to the HumanDriver script in the kart's brain, the PlayerInput
 	///   field will be connected to the HumanDriver script for player control.
 	/// </summary>
-	public void UseHumanDriver(PlayerInput input) 
+	public void UseHumanDriver(string ownerUID, PlayerInput input) 
 	{
 		if(base.IsOwner || CoreManager.IsLocal) {
 			botPath.enabled = false;
@@ -96,8 +87,10 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	/// <summary>
 	/// Use the BotDriver script in the kart's brain, it will automatically race normally.
 	/// </summary>
-	public void UseBotDriver() 
+	public void UseBotDriver(string ownerUID) 
 	{
+		this.ownerUID.Value = ownerUID;
+
 		botPath.enabled = true;
 		botDriver.enabled = true;
 		botItemManager.enabled = true;

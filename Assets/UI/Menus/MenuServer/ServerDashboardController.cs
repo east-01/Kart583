@@ -35,7 +35,7 @@ public class ServerDashboardController : MenuController
             text += message + "\n";
         }
 
-        LobbyManager lm = NetSceneController.LobbyManager;
+        LobbyManager lm = LobbyManager.Instance;
 
         AddLine($"Clients: {lm.ClientManager.Clients.Count}");
         AddLine($"Lobbies: {lm.LobbyCount}");

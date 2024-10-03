@@ -13,7 +13,7 @@ public class IGScreenMenuController : MenuController
 
 	private void Update() 
 	{
-		// bool shouldShowResultsMenu = PlayerObjectManager.Instance.Players.ForEach().Any(x => x.)
+		// bool shouldShowResultsMenu = PlayerManager.Instance.Players.ForEach().Any(x => x.)
 		if(!CoreManager.LobbyCommunicator.InLobby)
 			return;
 

@@ -81,7 +81,7 @@ public class DevSettingsWindow : EditorWindow
             settings.HaveStandalonePlayerRunAsServer = EditorGUILayout.Toggle("Player as server", settings.HaveStandalonePlayerRunAsServer);
             CreateNote("When a standalone player is built, it will automatically run as a server.");
             settings.ManualLobbyPlayerWaitSwitch = EditorGUILayout.Toggle("Manual lobby switch", settings.ManualLobbyPlayerWaitSwitch);
-            CreateNote($"When enabled the gamelobby will wait until {GameLobby.FORCE_MAP_PICK_KEY} is pressed to pick map.");
+            CreateNote($"When enabled the gamelobby will wait until {KartLobby.FORCE_MAP_PICK_KEY} is pressed to pick map.");
 
             GUILayout.Space(10);
 

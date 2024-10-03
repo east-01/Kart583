@@ -107,12 +107,12 @@ public abstract class MenuController : MonoBehaviour
 
     protected void OnEnable() 
     {
-        PlayerObjectManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoined;
+        PlayerManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoined;
     }
 
     protected void OnDestroy() 
     {
-        PlayerObjectManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoined;
+        PlayerManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoined;
         if(focusedPlayer != null)
             RemoveFocus();
     }
@@ -125,8 +125,8 @@ public abstract class MenuController : MonoBehaviour
 
     protected void LateUpdate() 
     {
-        if(focusedPlayer == null && autoFocusOnPlayerOne && PlayerObjectManager.Instance != null && PlayerObjectManager.Instance.PlayerOne != null)
-            SetFocus(PlayerObjectManager.Instance.PlayerOne);
+        if(focusedPlayer == null && autoFocusOnPlayerOne && PlayerManager.Instance != null && PlayerManager.Instance.PlayerOne != null)
+            SetFocus(PlayerManager.Instance.PlayerOne);
 
         if(focusedPlayer != null && EventSystem.currentSelectedGameObject == null && firstSelect != null && focusedPlayer.input.currentControlScheme != "KeyboardMouse")
             EventSystem.SetSelectedGameObject(firstSelect.gameObject);
@@ -140,7 +140,7 @@ public abstract class MenuController : MonoBehaviour
     {
         /* Passing focus */
         if(focusedPlayer != null) {
-            if(focusedPlayer.data.uuid == playerObj.data.uuid) {
+            if(focusedPlayer.data.GetUID() == playerObj.data.GetUID()) {
                 BLog.Log($"{this}: Maintaining focus on {playerObj.PlayerIndex}", LogChannel.MenuController, 4);
                 return;
             } else {
@@ -266,8 +266,8 @@ public abstract class MenuController : MonoBehaviour
 
         if(focus != null)
             SetFocus(focus);
-        else if(autoFocusOnPlayerOne && PlayerObjectManager.Instance.PlayerOne != null)
-            SetFocus(PlayerObjectManager.Instance.PlayerOne);
+        else if(autoFocusOnPlayerOne && PlayerManager.Instance.PlayerOne != null)
+            SetFocus(PlayerManager.Instance.PlayerOne);
         else
             RemoveFocus();
 

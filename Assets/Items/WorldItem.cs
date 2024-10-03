@@ -60,7 +60,7 @@ public abstract class WorldItem : NetworkBehaviour, GameplayManagerBehavior
 			return;
 		}
 
-		OwnerKartManager = gameplayManager.PlayerManager.SearchForKartManager(spawnData.ownerUUID);
+		OwnerKartManager = gameplayManager.KartsIRManager.SearchForKartManager(spawnData.ownerUUID);
         if(!hasPopulatedOwner) {
             Debug.LogError($"ActivateItem failed to find owner from UUID \"{spawnData.ownerUUID}\"");
             return;
@@ -174,7 +174,7 @@ public abstract class WorldItem : NetworkBehaviour, GameplayManagerBehavior
 				Debug.LogError("A collider with a \"Kart\" tag hit an item but it didn't have a KartManager!");
 				return;
 			}
-            ItemHit(otherKM.PlayerData.uuid);
+            ItemHit(otherKM.Playerdata.GetUID());
 			Destroy();
         } else if(other.tag == "Item") {
             // Hit a different item, destroy both

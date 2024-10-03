@@ -23,7 +23,7 @@ public class MenuMapController : MenuController
     public void ClickedMapIcon(KartLevel level) 
     {   
         if(CoreManager.IsLocal) {
-            GameLobby localLobby = NetSceneController.LobbyManager.GetLobby(CoreManager.LobbyCommunicator.LobbyID);
+            GameLobby localLobby = LobbyManager.Instance.GetLobby(CoreManager.LobbyCommunicator.LobbyID);
             localLobby.SetLevel(level);
         } else {
             // TODO: Map voting

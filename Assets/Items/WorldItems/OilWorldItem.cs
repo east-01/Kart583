@@ -22,7 +22,7 @@ public class OilWorldItem : WorldItem
 
     protected override void Internal_ItemHit(string hitPlayerUUID)
     {
-        KartManager hitKM = gameplayManager.PlayerManager.SearchForKartManager(hitPlayerUUID);
+        KartManager hitKM = gameplayManager.KartsIRManager.SearchForKartManager(hitPlayerUUID);
         if(hitKM == null) {
             Debug.LogError($"Internal_ItemHit could not locate KartManager from uuid \"{hitPlayerUUID}\"");
             return;
