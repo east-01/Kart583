@@ -1,8 +1,12 @@
 using System.Linq;
+using EMullen.MenuController;
+using EMullen.Networking;
+using EMullen.PlayerMgmt;
+using GameKit.Dependencies.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/** The PlayerMenuController will interface between the PlayerObjectManager and
+/** The PlayerMenuController will interface between the LocalPlayerManager and
       the child PlayerPanelControllers */
 public class MenuPlayerController : MenuController
 {
@@ -25,9 +29,9 @@ public class MenuPlayerController : MenuController
         maxPlayers = CoreManager.IsMultiplayer ? 1 : 4;
 
         // Spawn player menus for ppl already in the player input manager
-        PlayerObjectManager pom = PlayerManager.Instance;
-        if(pom.PlayerCount > 0)
-            foreach(PlayerObject obj in pom.PlayerObjects) {
+        PlayerManager pm = PlayerManager.Instance;
+        if(pm.PlayerCount > 0)
+            foreach(LocalPlayer obj in pm.LocalPlayers) {
                 AddPanel(obj);
             }
     }
@@ -35,21 +39,21 @@ public class MenuPlayerController : MenuController
     protected new void OnDestroy() 
     {
         base.OnDestroy();
-        PlayerManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoinedEvent;
+        PlayerManager.Instance.LocalPlayerJoinedEvent -= LocalPlayerManager_PlayerJoinedEvent;
     }
 
     protected new void OnEnable() 
     {
         base.OnEnable();
-        PlayerManager.Instance.PlayerObjectJoinedEvent += PlayerObjectManager_PlayerJoinedEvent;
-        PlayerManager.Instance.PlayerObjectLeftEvent += PlayerObjectManager_PlayerLeftEvent;
+        PlayerManager.Instance.LocalPlayerJoinedEvent += LocalPlayerManager_PlayerJoinedEvent;
+        PlayerManager.Instance.LocalPlayerLeftEvent += LocalPlayerManager_PlayerLeftEvent;
     }
 
     protected new void OnDisable() 
     {
         base.OnDisable();
-        PlayerManager.Instance.PlayerObjectJoinedEvent -= PlayerObjectManager_PlayerJoinedEvent;
-        PlayerManager.Instance.PlayerObjectLeftEvent -= PlayerObjectManager_PlayerLeftEvent;
+        PlayerManager.Instance.LocalPlayerJoinedEvent -= LocalPlayerManager_PlayerJoinedEvent;
+        PlayerManager.Instance.LocalPlayerLeftEvent -= LocalPlayerManager_PlayerLeftEvent;
     }
 
     private void Update() 
@@ -63,19 +67,19 @@ public class MenuPlayerController : MenuController
     }
 
 #region Panel management
-    private void AddPanel(PlayerObject obj) 
+    private void AddPanel(LocalPlayer lp) 
     {
         // Spawn player panel
         GameObject playerPanel = Instantiate(playerPanelPrefab, playerPanelContainer.transform);
         PlayerPanelController playerPanelController = playerPanel.GetComponent<PlayerPanelController>();
-        playerPanelController.Open(obj);
+        playerPanelController.Open(lp);
 
         UpdatePanels();
     }
 
-    public void RemovePanel(PlayerObject obj, bool removePlayerInput = true) 
+    public void RemovePanel(LocalPlayer obj, bool removePlayerInput = true) 
     {
-        if(obj.PlayerIndex == 0) {
+        if(obj.Input.playerIndex == 0) {
             SendMenuBack();
             return;
         }
@@ -88,18 +92,18 @@ public class MenuPlayerController : MenuController
             if(ppc == null)
                 continue;
 
-            if(ppc.FocusedPlayerIncludingChildren.PlayerIndex == obj.PlayerIndex) {
+            if(ppc.FocusedPlayerIncludingChildren.Input.playerIndex == obj.Input.playerIndex) {
                 RemovePanel(ppc, removePlayerInput);
                 return; // Call return so error message isn't shown
             }
         }
 
-        Debug.LogError("Failed to find target panel for PlayerObject " + obj);
+        Debug.LogError("Failed to find target panel for LocalPlayer " + obj);
     }
 
     public void RemovePanel(PlayerPanelController ppc, bool removePlayerInput = true) 
     {
-        PlayerObject focusedPlayer = ppc.FocusedPlayerIncludingChildren;
+        LocalPlayer focusedPlayer = ppc.FocusedPlayerIncludingChildren;
         Destroy(ppc.gameObject);
 
         if(removePlayerInput)
@@ -129,12 +133,12 @@ public class MenuPlayerController : MenuController
 #endregion
 
 #region Event handlers
-    private void PlayerObjectManager_PlayerJoinedEvent(PlayerObject obj) 
+    private void LocalPlayerManager_PlayerJoinedEvent(LocalPlayer obj) 
     {
         AddPanel(obj);
     }
 
-    private void PlayerObjectManager_PlayerLeftEvent(PlayerObject obj) 
+    private void LocalPlayerManager_PlayerLeftEvent(LocalPlayer obj) 
     {
 
     }   
@@ -143,11 +147,11 @@ public class MenuPlayerController : MenuController
     /** Check if everyone's ready, if so, transition to map select. */
     public void CheckReady() 
     {
-        if(!PlayerManager.Instance.PlayerObjects.All(po => po.data.ready)) return;
+        if(!PlayerManager.Instance.LocalPlayers.All(po => po.GetPlayerData().IsReady())) return;
 
         shouldAllowJoining = false;
 
-        CoreManager.LobbyCommunicator.StartCommunication();
+        LobbyCommunicator.Instance.StartCommunication();
         CoreManager.TransitionManager.LoadScene(SceneNames.MENU_LOBBY);
     }
 
@@ -162,7 +166,7 @@ public class MenuPlayerController : MenuController
             if(ppc == null)
                 continue;
             
-            if(ppc.FocusedPlayerIncludingChildren.PlayerIndex == 0)
+            if(ppc.FocusedPlayerIncludingChildren.Input.playerIndex == 0)
                 continue;
 
             RemovePanel(ppc, true);

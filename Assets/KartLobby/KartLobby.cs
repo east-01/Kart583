@@ -11,7 +11,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
-public class KartLobby : EMullen.Networking.Lobby.KartLobby 
+public class KartLobby : GameLobby 
 {
     public static readonly float PLAYER_WAIT_TIME = 20;
     public static readonly float ROUND_END_TIME = 15;
@@ -71,8 +71,8 @@ public class KartLobby : EMullen.Networking.Lobby.KartLobby
         }
 
         SyncDictionary<string, RacePlacementData> placements = gameplayManager.RaceManager.GetPlacements();
-        for(int i = 0; i < playerUIDs.Count; i++) {
-            string uid = playerUIDs[i];
+        for(int i = 0; i < Players.Count; i++) {
+            string uid = Players[i];
             PlayerData data = PlayerDataRegistry.Instance.GetPlayerData(uid);
             if(!placements.ContainsKey(data.GetUID())) {
                 Debug.LogWarning($"Tried to award points to \"{uid}\" but they aren't in the placements dictionary.");
@@ -263,5 +263,5 @@ public abstract class KartLobbyState : LobbyState
 {
     protected KartLobby kartLobby => gameLobby as KartLobby;
 
-    protected KartLobbyState(EMullen.Networking.Lobby.KartLobby gameLobby) : base(gameLobby) {}
+    protected KartLobbyState(KartLobby kartLobby) : base(kartLobby) {}
 }

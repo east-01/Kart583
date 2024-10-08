@@ -1,3 +1,5 @@
+using EMullen.MenuController;
+using EMullen.Networking;
 using UnityEngine;
 
 /// <summary>
@@ -14,12 +16,12 @@ public class IGScreenMenuController : MenuController
 	private void Update() 
 	{
 		// bool shouldShowResultsMenu = PlayerManager.Instance.Players.ForEach().Any(x => x.)
-		if(!CoreManager.LobbyCommunicator.InLobby)
+		if(!LobbyCommunicator.Instance.InLobby)
 			return;
 
 		// TODO: This code only really needs to run when any of the local players' data changes.
 		// TODO: shouldShowResults menu should be based off of all local players completing race so we can see pending players.
-		bool shouldShowResultsMenu = CoreManager.LobbyCommunicator.LobbyData.Value.state == LobbyState.POST_RACE;
+		bool shouldShowResultsMenu = LobbyCommunicator.Instance.LobbyData.Value.stateTypeString == nameof(PostRaceState);
 		if(shouldShowResultsMenu && !ResultsMenuController.IsOpen) {
 			OpenSubMenu(RESULTS_MENU_ID);
 		} else if(!shouldShowResultsMenu && ResultsMenuController.IsOpen) {

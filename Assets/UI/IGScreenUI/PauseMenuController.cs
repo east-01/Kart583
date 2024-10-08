@@ -1,5 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using EMullen.MenuController;
+using EMullen.Networking;
+using EMullen.PlayerMgmt;
+using EMullen.SceneMgmt;
 using UnityEngine;
 
 public class PauseMenuController : MenuController
@@ -16,7 +20,7 @@ public class PauseMenuController : MenuController
 
     public void OptionsPressed() 
     {
-        PlayerObject cachedFocus = focusedPlayer;
+        LocalPlayer cachedFocus = focusedPlayer;
         Close();
         CoreManager.OptionsMenuController.SetParentMenuController(this);
         CoreManager.OptionsMenuController.Open(cachedFocus);
@@ -24,7 +28,7 @@ public class PauseMenuController : MenuController
 
     public void QuitPressed() 
     {
-        CoreManager.LobbyCommunicator.StopCommunication();
+        LobbyCommunicator.Instance.StopCommunication();
         SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
     }
 

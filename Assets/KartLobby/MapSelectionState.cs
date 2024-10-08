@@ -38,6 +38,4 @@ public class MapSelectionState : KartLobbyState
         }
         return null;
     }
-
-    public override string GetID() => "MapSelectionState";
 }

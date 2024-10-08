@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using EMullen.MenuController;
+using EMullen.Networking;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -23,7 +25,7 @@ public class MenuMapController : MenuController
     public void ClickedMapIcon(KartLevel level) 
     {   
         if(CoreManager.IsLocal) {
-            GameLobby localLobby = LobbyManager.Instance.GetLobby(CoreManager.LobbyCommunicator.LobbyID);
+            KartLobby localLobby = LobbyManager.Instance.GetLobby(LobbyCommunicator.Instance.LobbyID) as KartLobby;
             localLobby.SetLevel(level);
         } else {
             // TODO: Map voting

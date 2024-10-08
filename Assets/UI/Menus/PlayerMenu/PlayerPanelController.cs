@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using EMullen.MenuController;
+using EMullen.PlayerMgmt;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -39,18 +41,27 @@ public class PlayerPanelController : MenuController
     public void UpdateBuildPhase() 
     {
         // Get the sub menus current focus, if its null (this happens when the menu is first opened) set the current focus as this menus focus
-        PlayerObject currentFocus = FocusedPlayerIncludingChildren;
+        LocalPlayer currentFocus = FocusedPlayerIncludingChildren;
         if(currentFocus == null)
             currentFocus = FocusedPlayer;
 
+        if(!PlayerDataRegistry.Instance.Contains(currentFocus.UID)) {
+            Debug.LogError("Can't update build phase, the focused player's uid isn't in the PlayerDataRegistry.");
+            return;
+        }
+
+        PlayerData data = PlayerDataRegistry.Instance.GetPlayerData(currentFocus.UID);
+        PlayerDisplayData displayData = data.GetData<PlayerDisplayData>();
+        RaceData raceData = data.GetData<RaceData>();
+
         // Check player data and enable the corresponding phase
-        if(currentFocus.data.name.Length == 0) {
+        if(displayData.name.Length == 0) {
             phase = PlayerBuildPhase.NAME_SELECT;
-        } else if(currentFocus.data.hexColor == null) {
+        } else if(displayData.hexColor == null) {
             phase = PlayerBuildPhase.COLOR_SELECT;
-        } else if(currentFocus.data.kartType == KartType.NONE) {
+        } else if(raceData.kartType == KartType.NONE) {
             phase = PlayerBuildPhase.VEHICLE_SELECT;
-        } else if(!currentFocus.data.ready) {
+        } else if(!raceData.ready) {
             phase = PlayerBuildPhase.WAITING_FOR_READY;
         } else {
             phase = PlayerBuildPhase.READY;
@@ -60,28 +71,37 @@ public class PlayerPanelController : MenuController
 
     public void RegressBuildPhase() 
     {
-        PlayerObject focus = FocusedPlayerIncludingChildren;
+        LocalPlayer focus = FocusedPlayerIncludingChildren;
+
+        if(!PlayerDataRegistry.Instance.Contains(focus.UID)) {
+            Debug.LogError("Can't regress build phase, the focused player's uid isn't in the PlayerDataRegistry.");
+            return;
+        }
+
+        PlayerData data = PlayerDataRegistry.Instance.GetPlayerData(focus.UID);
+        PlayerDisplayData displayData = data.GetData<PlayerDisplayData>();
+        RaceData raceData = data.GetData<RaceData>();
 
         void RemoveSelf() 
         {
             MenuPlayerController mpc = FindObjectOfType<MenuPlayerController>();
-            mpc.RemovePanel(focus, focus.PlayerIndex != 0);
+            mpc.RemovePanel(focus, focus.Input.playerIndex != 0);
         }
 
-        if(focus.data.ready) {
-            focus.data.ready = false;
-        } else if(focus.data.kartType != KartType.NONE) {
-            focus.data.kartType = KartType.NONE;
-        } else if(focus.data.hexColor != null) {
-            focus.data.hexColor = null;
-        } else if(focus.data.name.Length > 0) {
-            if(focus.input.currentControlScheme == "Gamepad") {
+        if(raceData.ready) {
+            raceData.ready = false;
+        } else if(raceData.kartType != KartType.NONE) {
+            raceData.kartType = KartType.NONE;
+        } else if(displayData.hexColor != null) {
+            displayData.hexColor = null;
+        } else if(displayData.name.Length > 0) {
+            if(focus.Input.currentControlScheme == "Gamepad") {
                 RemoveSelf();
                 return;
             }
 
-            focus.data.name = "";
-        } else if(focus.data.name == "") {
+            displayData.name = "";
+        } else if(displayData.name == "") {
             RemoveSelf();
             return;
         }
@@ -95,16 +115,32 @@ public class PlayerPanelController : MenuController
             return;
     }
 
-    public new void Open(PlayerObject focusedPlayer = null) 
+    public new void Open(LocalPlayer focusedPlayer = null) 
     { 
         base.Open(focusedPlayer);
 
         // Reset ready state so we don't automatically ready up the player when they open
-        this.focusedPlayer.data.ready = false;
+        if(!focusedPlayer.HasPlayerData()) {
+            Debug.LogError("Can't open PlayerPanelController they have no playerdata.");
+            return;
+        }
+
+        PlayerData data = focusedPlayer.GetPlayerData();
+
+        if(!data.HasData<RaceData>())
+            data.SetData<RaceData>(new());
+
+        RaceData rd = data.GetData<RaceData>();
+        rd.ready = false;
+        data.SetData(rd);
 
         // Visuals
-        titleText.text = this.focusedPlayer.data.name;
-        SetPanelColor(focusedPlayer.data.hexColor);
+        if(!data.HasData<PlayerDisplayData>())
+            data.SetData<PlayerDisplayData>(new());
+
+        PlayerDisplayData pdd = data.GetData<PlayerDisplayData>();
+        titleText.text = pdd.name;
+        SetPanelColor(pdd.hexColor);
 
         UpdateBuildPhase();
     }

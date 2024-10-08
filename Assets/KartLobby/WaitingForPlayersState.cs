@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class WaitingForPlayersState : KartLobbyState
 {
-
     public WaitingForPlayersState(KartLobby gameLobby) : base(gameLobby)
     {
 
@@ -31,5 +30,4 @@ public class WaitingForPlayersState : KartLobbyState
         return null;
     }
 
-    public override string GetID() => "WaitingForPlayersState";
 }

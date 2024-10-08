@@ -612,16 +612,8 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
+  logSettings: {fileID: 0}
   poigDelegate: {fileID: 0}
-  data:
-    uuid: 
-    name: 
-    kartType: 0
-    ready: 0
-    hexColor: 
-    points: 0
-  isHuman: 0
-  ownershipChanged: 0
 --- !u!114 &8556894197583946043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -825,8 +817,6 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 3383173762062893252}
   _networkObjectCache: {fileID: 3383173762062893252}
   heldItemImage: {fileID: 8537382284469897725}
-  slotItem: 0
-  heldItem: 0
 --- !u!114 &1348276822467886517
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -845,7 +835,6 @@ MonoBehaviour:
   waypointIndex: 0
   segmentCompletion: 0
   lapCompletion: 0
-  raceCompletion: 0
   lapNumber: 0
   racePos: 0
   hasStartedRace: 0
@@ -906,40 +895,37 @@ MonoBehaviour:
   <IsNested>k__BackingField: 0
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
-  _networkBehaviours:
-  - {fileID: 4518181260819848706}
-  - {fileID: 8556894197583946043}
-  - {fileID: 572464524133991983}
-  - {fileID: 1601468767175154010}
-  - {fileID: 66933459765028041}
-  - {fileID: 6922919158708807750}
-  - {fileID: 7931651294960783234}
-  - {fileID: 351521495102920665}
-  - {fileID: 1348276822467886517}
-  - {fileID: 783342837203693960}
-  - {fileID: 318379147591700670}
-  - {fileID: 6826620649756495999}
-  - {fileID: 5576040711175175114}
-  - {fileID: 9101915779885251598}
-  - {fileID: 7733809655012709343}
-  - {fileID: 761985607284333580}
-  - {fileID: 3487345005974195579}
-  <ParentNetworkObject>k__BackingField: {fileID: 0}
-  <ChildNetworkObjects>k__BackingField: []
-  SerializedTransformProperties:
-    Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 1}
-    LocalScale: {x: 1, y: 1, z: 1}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours: []
+  <InitializedParentNetworkBehaviour>k__BackingField: {fileID: 0}
+  <InitializedNestedNetworkObjects>k__BackingField: []
   _isNetworked: 1
+  _isSpawnable: 1
   _isGlobal: 0
   _initializeOrder: 0
   _defaultDespawnType: 0
   NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
   <PrefabId>k__BackingField: 0
   <SpawnableCollectionId>k__BackingField: 0
-  _scenePathHash: 0
+  <AssetPathHash>k__BackingField: 6893727836515035446
   <SceneId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 32348030843385506
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 1}
+    LocalScale: {x: 1, y: 1, z: 1}
 --- !u!114 &6826620649756495999
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -965,10 +951,8 @@ MonoBehaviour:
   _extrapolation: 2
   _enableTeleport: 1
   _teleportThreshold: 5
-  _scaleThreshold: 1
   _clientAuthoritative: 1
   _sendToOwner: 1
-  _enableNetworkLod: 1
   _interval: 1
   _synchronizePosition: 1
   _positionSnapping:

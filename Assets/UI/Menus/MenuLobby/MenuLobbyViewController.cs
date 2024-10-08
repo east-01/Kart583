@@ -6,6 +6,12 @@ using FishNet.Transporting;
 using FishNet.Managing.Scened;
 using FishNet;
 using System;
+using EMullen.Core;
+using EMullen.Networking;
+using EMullen.Networking.Lobby;
+using EMullen.PlayerMgmt;
+using EMullen.SceneMgmt;
+using GameKit.Dependencies.Utilities;
 
 /// <summary>
 /// Communicates with the MenuLobbyController to display whats going on
@@ -39,33 +45,32 @@ public class MenuLobbyViewController : MonoBehaviour
     private void Start() 
     {
         _controller = GetComponent<MenuLobbyController>();       
-        BLog.Log("MenuLobbyViewController#Start: Script started, scene handle is: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().handle, LogChannel.SceneDelegate, 0); 
 
         UpdateView();
     }
 
     private void OnEnable() 
     {
-        CoreManager.LobbyCommunicator.LobbyUpdatedEvent += LobbyCommunicator_LobbyUpdatedEvent; 
+        LobbyCommunicator.Instance.LobbyUpdatedEvent += LobbyCommunicator_LobbyUpdatedEvent; 
         UpdateView();
     }
 
-    private void OnDisable() => CoreManager.LobbyCommunicator.LobbyUpdatedEvent -= LobbyCommunicator_LobbyUpdatedEvent;
+    private void OnDisable() => LobbyCommunicator.Instance.LobbyUpdatedEvent -= LobbyCommunicator_LobbyUpdatedEvent;
 
     private void Update() 
     {
-        if(!CoreManager.LobbyCommunicator.LobbyData.HasValue)
+        if(!LobbyCommunicator.Instance.LobbyData.HasValue)
             return;
 
-        LobbyData currentData = CoreManager.LobbyCommunicator.LobbyData.Value;
+        LobbyData currentData = LobbyCommunicator.Instance.LobbyData.Value;
 
         // Update player timeout
-        if(currentData.state == LobbyState.WAITING_FOR_PLAYERS) {
+        if(currentData.stateTypeString == nameof(WaitingForPlayersState)) {
             if(playerWaitTimeLeft > 0) {
                 playerWaitTimeLeft -= Time.deltaTime;
                 lobbyStatusText.text = $"Waiting for players ({Mathf.FloorToInt(playerWaitTimeLeft)})";
-            } else if((GameLobby.PLAYER_WAIT_TIME - currentData.timeInState) > 0) {
-                playerWaitTimeLeft = GameLobby.PLAYER_WAIT_TIME - currentData.timeInState;
+            } else if((KartLobby.PLAYER_WAIT_TIME - currentData.timeInState) > 0) {
+                playerWaitTimeLeft = KartLobby.PLAYER_WAIT_TIME - currentData.timeInState;
             } else {
                 playerWaitTimeLeft = -1;
             }
@@ -78,69 +83,69 @@ public class MenuLobbyViewController : MonoBehaviour
         if(_controller == null || _controller.ConnectedNetworkManager == null)
             return;
 
-        NetworkStateManager nsm = _controller.ConnectedNetworkManager.GetComponent<NetworkStateManager>();
-        bool isConnected = NetSceneController.Instance != null && LobbyManager.Instance != null && nsm != null && nsm.ClientConnectionState == LocalConnectionState.Started && CoreManager.LobbyCommunicator.LobbyData.HasValue;
+        NetworkController nc = NetworkController.Instance;
+        bool isConnected = nc != null && LobbyManager.Instance != null && nc.ClientConnectionState == LocalConnectionState.Started && LobbyCommunicator.Instance.LobbyData.HasValue;
         if(isConnected)
-            UpdateConnectedView(nsm);
+            UpdateConnectedView(nc);
         else
-            UpdateDisconnectedView(nsm);
+            UpdateDisconnectedView(nc);
     }
 
-    public void UpdateConnectedView(NetworkStateManager nsm) 
+    public void UpdateConnectedView(NetworkController nc) 
     {
         connectedViewContainer.SetActive(true);
         disconnectedViewContainer.SetActive(false);
 
-        BLog.Log($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {CoreManager.LobbyCommunicator.LobbyData.HasValue})", LogChannel.SceneDelegate, 0); 
+        BLog.Log($"MenuLobbyViewController#UpdateView: Updating view (current data has value: {LobbyCommunicator.Instance.LobbyData.HasValue})", SceneController.Instance.logSettings, 0); 
 
         // Menu reset
         lobbyStatusText.text = "-";
         playerListGroup.DestroyChildren();
 
-        if(!CoreManager.LobbyCommunicator.LobbyData.HasValue)
+        if(!LobbyCommunicator.Instance.LobbyData.HasValue)
             return;
-        LobbyData lobbyData = CoreManager.LobbyCommunicator.LobbyData.Value;
+        LobbyData lobbyData = LobbyCommunicator.Instance.LobbyData.Value;
 
-        BLog.Log($"MenuLobbyViewController#UpdateView: Player name count {lobbyData.players.Count}", LogChannel.SceneDelegate, 0);
+        BLog.Log($"MenuLobbyViewController#UpdateView: Player name count {lobbyData.playerUIDs.Count}", SceneController.Instance.logSettings, 0);
 
-        List<PlayerData> players = lobbyData.players;
+        List<string> playerUIDs = lobbyData.playerUIDs;
 
         // Status text
-        switch(lobbyData.state) {
-            case LobbyState.WAITING_FOR_PLAYERS:
+        switch(lobbyData.stateTypeString) {
+            case nameof(WaitingForPlayersState):
                 lobbyStatusText.text = $"Waiting for players";
                 break;
-            case LobbyState.MAP_SELECTION:
+            case nameof(MapSelectionState):
                 lobbyStatusText.text = $"Picking map";
 
                 if(CoreManager.IsLocal)
                     _controller.OpenSubMenu(MenuLobbyController.SUB_MENU_MAP_SELECT);
                 break;
-            case LobbyState.RACING:
+            case nameof(RacingState):
                 lobbyStatusText.text = "At the track";
                 break;
         }
 
         // Player list
-        players.ForEach(playerData => {
+        playerUIDs.ForEach(playerUID => {
             GameObject newNamePlate = Instantiate(playerNamePlatePrefab, playerListGroup);
-            newNamePlate.GetComponent<LobbyPlayerNamePlateController>().ShowPlayerData(playerData);
+            newNamePlate.GetComponent<LobbyPlayerNamePlateController>().ShowPlayerData(playerUID);
         });
 
         RectTransform playerListTransform = playerListGroup.gameObject.GetComponent<RectTransform>();
-        playerListTransform.sizeDelta = new(playerListTransform.sizeDelta.x, players.Count*118.75f);
+        playerListTransform.sizeDelta = new(playerListTransform.sizeDelta.x, playerUIDs.Count*118.75f);
     }
 
-    public void UpdateDisconnectedView(NetworkStateManager nsm) 
+    public void UpdateDisconnectedView(NetworkController nc) 
     {
         connectedViewContainer.SetActive(false);
         disconnectedViewContainer.SetActive(true);
 
         // Status text
-        if(nsm == null)
+        if(nc == null)
             disconnectedStatusText.text = "Initializing";
         else
-            switch(nsm.ClientConnectionState) {
+            switch(nc.ClientConnectionState) {
                 case LocalConnectionState.Stopped:
                     disconnectedStatusText.text = $"No connection.";
                     break;
@@ -156,9 +161,9 @@ public class MenuLobbyViewController : MonoBehaviour
 
     public void LobbyCommunicator_LobbyUpdatedEvent(string lobbyID, LobbyData newData, LobbyUpdateReason reason) 
     {
-        BLog.Log("MenuLobbyViewController#LobbyManager_LobbyUpdated: Recieved update event", LogChannel.SceneDelegate, 0); 
+        BLog.Log("MenuLobbyViewController#LobbyManager_LobbyUpdated: Recieved update event", SceneController.Instance.logSettings, 0); 
 
-        if(newData.state != LobbyState.WAITING_FOR_PLAYERS)
+        if(newData.stateTypeString != nameof(WaitingForPlayersState))
             playerWaitTimeLeft = -1;
 
         UpdateView();

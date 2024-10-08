@@ -1,4 +1,5 @@
 using EMullen.PlayerMgmt;
+using UnityEngine;
 
 public class RaceData : PlayerDataClass
 {
@@ -19,4 +20,16 @@ public class RaceData : PlayerDataClass
     public RaceData() {}
 
     public string Summary => $"[RaceData type: {kartType} ready: {ready}]";
+}
+
+public static class RaceDataExtensions 
+{
+    public static bool IsReady(this PlayerData pd) 
+    {
+        if(!pd.HasData<RaceData>()) {
+            Debug.LogWarning("Player does not have RaceData but we're trying to check if they're ready.");
+            return false;
+        }
+        return pd.GetData<RaceData>().ready;
+    }
 }

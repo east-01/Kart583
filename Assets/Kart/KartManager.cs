@@ -1,4 +1,5 @@
 using System;
+using EMullen.Core;
 using EMullen.PlayerMgmt;
 using FishNet.Connection;
 using FishNet.Object;
@@ -11,6 +12,10 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 {
 	private GameplayManager gameplayManager;
 
+	[SerializeField]
+	private BLogChannel logSettings;
+	public BLogChannel LogSettings => logSettings;
+
 	[SerializeField] 
 	private POIGDelegate poigDelegate;
 	public POIGDelegate POIGDelegate { 
@@ -19,19 +24,16 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	}
 	public bool HasPOIGDelegate { get { return poigDelegate != null; } }
 
-	private SyncVar<string> ownerUID = new();
+	private readonly SyncVar<string> ownerUID = new();
 	public string OwnerUID => ownerUID.Value;
 	[ServerRpc(RequireOwnership = false)]
-	public void ServerRpcSetOwnerUID(string ownerUID) => PlayerData = value;
-	[ServerRpc]
-	public void ServerRpcSetReady(bool readyStatus) => data.ready = readyStatus;
+	public void ServerRpcSetOwnerUID(string ownerUID) => this.ownerUID.Value = ownerUID;
 
-	[SyncVar] 
-	private bool isHuman;
-	public bool IsHuman => isHuman;
-	public bool IsBot => !isHuman;
+	private readonly SyncVar<bool> isHuman = new();
+	public bool IsHuman => isHuman.Value;
+	public bool IsBot => !isHuman.Value;
 	[ServerRpc]
-	public void ServerRpcSetIsHuman(bool isHuman) => this.isHuman = isHuman;	
+	public void ServerRpcSetIsHuman(bool isHuman) => this.isHuman.Value = isHuman;	
 
 	new protected void Awake() 
 	{
@@ -47,14 +49,14 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
     public override void OnOwnershipClient(NetworkConnection prevOwner)
     {
 		// Sync enabled status with our ownership status
-		kartCtrl.enabled = base.IsOwner || base.IsServer;
+		kartCtrl.enabled = IsOwner || IsServerInitialized;
 		// kartItemManager: Stays enabled so we can sync item wielding between players
 		// posTracker: Stays enabled, updates server on race position (TODO: Make this a server-side calculation it will be exploited)
 		// kartEffectManager: Stays enabled
 
 		// Bot/Human driver scripts are determined in UseHumanDriver and UseBotDriver
 
-		GetComponent<Rigidbody>().isKinematic = !(base.IsOwner || base.IsServer);
+		GetComponent<Rigidbody>().isKinematic = !(IsOwner || IsServerInitialized);
     }
 
 	/// <summary>
@@ -74,14 +76,18 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 			return;
 		}
 
-		if(base.IsClient && !base.IsHost) {
+		if(IsClientInitialized && !IsHostInitialized) {
+			ServerRpcSetOwnerUID(ownerUID);
 			ServerRpcSetIsHuman(true);
-			ServerRpcSetReady(true);
-		} else if(base.IsServer) {
-			isHuman = true;
-			data.ready = true;
+		} else if(base.IsServerInitialized) {
+			this.ownerUID.Value = ownerUID;
+			isHuman.Value = true;
 		} else
 			throw new InvalidOperationException("Tried to ready human driver without being a client.");
+
+		PlayerData pd = PlayerDataRegistry.Instance.GetPlayerData(ownerUID);
+		RaceData raceData = pd.GetData<RaceData>();
+		raceData.ready = true;
 	}
 
 	/// <summary>
@@ -96,18 +102,17 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 		botItemManager.enabled = true;
 		humanDriver.enabled = false;
 
-		if(!base.IsServer) { // Used when the player finishes race and switches to bot controller
+		if(!IsServerInitialized) { // Used when the player finishes race and switches to bot controller
+			ServerRpcSetOwnerUID(ownerUID);
 			ServerRpcSetIsHuman(false);
-			ServerRpcSetReady(true);
 		} else {
-			isHuman = false;
-			data.ready = true;
+			this.ownerUID.Value = ownerUID;
+			isHuman.Value = false;
 		}
-	}
 
-	private void PlayerDataChanged(PlayerData prev, PlayerData current, bool asServer) 
-	{
-		gameObject.name = KartsIRManager.KartNamePrefix + data.name;
+		PlayerData pd = PlayerDataRegistry.Instance.GetPlayerData(ownerUID);
+		RaceData raceData = pd.GetData<RaceData>();
+		raceData.ready = true;
 	}
 
 	/// <summary>
@@ -119,5 +124,21 @@ public class KartManager : KartBehavior, GameplayManagerBehavior
 	public static bool IsKartGameObject(GameObject obj) 
 	{
 		return obj.GetComponent<KartManager>() != null;
+	}
+}
+
+public static class KartManagerExtensions 
+{
+	public static PlayerData GetPlayerData(this KartManager manager) 
+	{
+		if(PlayerDataRegistry.Instance == null) {
+			Debug.LogError("Can't get player data, player data registry is null");
+			return null;
+		}
+		if(!PlayerDataRegistry.Instance.Contains(manager.OwnerUID)) {
+			Debug.LogError($"Can't get player data, player data registry doesn't contain owner uid \"{manager.OwnerUID}\"");
+			return null;
+		}
+		return PlayerDataRegistry.Instance.GetPlayerData(manager.OwnerUID);
 	}
 }

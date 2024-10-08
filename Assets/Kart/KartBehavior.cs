@@ -1,4 +1,5 @@
 using System;
+using EMullen.PlayerMgmt;
 using FishNet.Connection;
 using FishNet.Object;
 using Unity.VisualScripting;
@@ -110,6 +111,6 @@ public class KartBehavior : NetworkBehaviour
     public BotPath GetBotPath() { return botPath; }
     public HumanDriver GetHumanDriver() { return humanDriver; }
 
-    public PlayerObject OwnerPlayerObject { get { return kartManager.POIGDelegate.owner; } }
+    public LocalPlayer OwnerLocalPlayer { get { return kartManager.POIGDelegate.owner; } }
 
 }

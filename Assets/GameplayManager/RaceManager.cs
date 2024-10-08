@@ -22,7 +22,7 @@ public class RaceManager : NetworkBehaviour
     private GameplayManager gameplayManager;
     private KartLevelManager kartLevelManager;
 
-    private SyncVar<RacePhase> phase; 
+    private readonly SyncVar<RacePhase> phase = new(); 
     public RacePhase Phase => phase.Value;
 
     private readonly SyncTimer raceTime = new();
@@ -45,6 +45,8 @@ public class RaceManager : NetworkBehaviour
     /// Event call for when the race phase.Value is changed. Called 
     /// </summary>
     public event RacePhaseChangeHandler RacePhaseChanged;
+
+    public delegate void LapCountChanged(string playerUID, int prev, int curr);
 #endregion
 
     /// <summary>
@@ -270,10 +272,10 @@ public class RaceManager : NetworkBehaviour
     /// <summary>
     /// Notify the server that this player has completed the race
     /// </summary>
-    public void CompletedRace(PlayerData data, float raceCompletion) 
+    public void CompletedRace(string playerUID, float raceCompletion) 
     {
         if(IsClientInitialized) {
-            ServerRpcCompletedRace(data, raceCompletion);
+            ServerRpcCompletedRace(playerUID, raceCompletion);
             return;
         }
 
@@ -287,12 +289,12 @@ public class RaceManager : NetworkBehaviour
         };
 
         // Add to placements
-        if(!placements.ContainsKey(data.GetUID()))
-            placements.Add(data.GetUID(), rpd);
+        if(!placements.ContainsKey(playerUID))
+            placements.Add(playerUID, rpd);
     }
     /// <summary> Server RPC calling RaceManager#CompletedRace </summary>
     [ServerRpc(RequireOwnership = false)]
-    public void ServerRpcCompletedRace(PlayerData data, float raceCompletion) { CompletedRace(data, raceCompletion); }
+    public void ServerRpcCompletedRace(string playerUID, float raceCompletion) { CompletedRace(playerUID, raceCompletion); }
 
     [Server]
     public void FinalizePlacements() 
@@ -300,7 +302,7 @@ public class RaceManager : NetworkBehaviour
         // Ensure everyone is in the placements array
         foreach(GameObject kartObject in gameplayManager.KartsIRManager.kartObjects) {
             KartManager kartManager = KartBehavior.LocateManager(kartObject);
-            CompletedRace(PlayerDataRegistry.Instance.GetPlayerData(kartManager.OwnerUID), kartManager.GetPositionTracker().RaceCompletion);
+            CompletedRace(kartManager.OwnerUID, kartManager.GetPositionTracker().RaceCompletion);
         }
 
         Dictionary<string, RacePlacementData> sortedPlacements = placements.OrderBy(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);

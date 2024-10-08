@@ -155,8 +155,6 @@ public class KartsIRManager : NetworkBehaviour
 		// Spawn for server
 		base.ServerManager.Spawn(newKart, owner, gameplayManager.KartLobby.MapScene.Value);
 
-		newKartManager.PlayerData = data;
-
 		// Run event
 		ObserversRpcCallSpawnEvent(owner, data);
 
@@ -272,7 +270,7 @@ public class KartsIRManager : NetworkBehaviour
 		player.Input.uiInputModule = null; // Destroy menu player input module
 
 		// Connect player kart manager to player object
-		pkm.UseHumanDriver(player.Input);
+		pkm.UseHumanDriver(player.UID, player.Input);
 		pkm.POIGDelegate = poigDelegate;
 		print("set poigdelegate as " + poigDelegate);
 
@@ -287,14 +285,10 @@ public class KartsIRManager : NetworkBehaviour
 	public void SpawnBot() 
 	{		
 		
+		PlayerData botData = new(new IdentifierData());
 
-        PlayerData bdata = new() {
-			uuid = Guid.NewGuid().ToString(),
-            name = SelectUniqueRandomBotName(),
-			kartType = SelectRandomKartType()
-        };
-		KartManager bkm = SpawnKart(null, bdata);
-		bkm.UseBotDriver();
+		KartManager bkm = SpawnKart(null, botData.GetUID());
+		bkm.UseBotDriver(botData.GetUID());
 	}
 
 	[Server]
@@ -323,7 +317,7 @@ public class KartsIRManager : NetworkBehaviour
 	/// </summary>
 	public KartManager SearchForKartManager(string playerUUID) {
 		foreach(KartManager km in FindObjectsOfType<KartManager>()) {
-			if(km.Playerdata.GetUID() == playerUUID)
+			if(km.OwnerUID == playerUUID)
 				return km;
 		}
 		return null;
@@ -334,7 +328,9 @@ public class KartsIRManager : NetworkBehaviour
 	/// </summary>
 	public bool IsNameUnique(string name) {
 		foreach(GameObject go in kartObjects) {
-			if(KartBehavior.LocateManager(go).PlayerData.name == name)
+			KartManager km = KartBehavior.LocateManager(go);
+			PlayerData pd = PlayerDataRegistry.Instance.GetPlayerData(km.OwnerUID);
+			if(pd.GetData<PlayerDisplayData>().name == name)
 				return false;		
 		}
 		return true;
@@ -365,7 +361,9 @@ public class KartsIRManager : NetworkBehaviour
     public bool AllPlayersReady { get {
 		bool allPlayersReady = true;
 		foreach(GameObject obj in gameplayManager.KartsIRManager.kartObjects) {
-			if(!KartBehavior.LocateManager(obj).PlayerData.ready) {
+			KartManager km = KartBehavior.LocateManager(obj);
+			PlayerData pd = PlayerDataRegistry.Instance.GetPlayerData(km.OwnerUID);
+			if(!pd.GetData<RaceData>().ready) {
 				allPlayersReady = false;
 				break;
 			}

@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 using FishNet.Connection;
 using FishNet.Object.Synchronizing;
 using TMPro;
+using EMullen.Core;
 
 /** Keeps track of a Kart's position on a track */
 public class PositionTracker : KartBehavior, IComparable<PositionTracker>, GameplayManagerBehavior
@@ -19,19 +20,27 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     public int waypointIndex;
     public float segmentCompletion;
     public float lapCompletion;
-    [SyncVar]
-    private float raceCompletion;
+    private readonly SyncVar<float> raceCompletion = new();
     public float RaceCompletion {
-        get { return raceCompletion; }
+        get { return raceCompletion.Value; }
         set {
-            if(base.IsServer) 
-                raceCompletion = value;
+            if(base.IsServerInitialized) 
+                raceCompletion.Value = value;
             else if(base.IsOwner)
                 ServerRpcSetRaceCompletion(value);
         }
     }
+    [ServerRpc]
+    private void ServerRpcSetRaceCompletion(float raceCompletion) => this.RaceCompletion = raceCompletion;
+    
     public int lapNumber;
     public int racePos;
+    /// <summary>
+    /// Call for the server's RaceManager to tell client what our race position is
+    /// </summary>
+    [TargetRpc]
+    public void TargetRpcSetRacePosition(NetworkConnection client, int racePosition) => this.racePos = racePosition;
+
     public bool hasStartedRace;
     private bool hasFinishedRace; // A boolean tracking if we've notified the server of finishing
 
@@ -58,7 +67,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
     private void RaceManager_RacePhaseChanged(RacePhase previousPhase, RacePhase currentPhase)
     {
-        BLog.Log($"PositionTracker recieved race phase change to {currentPhase}", LogChannel.KartManager, 2);
+        BLog.Log($"PositionTracker recieved race phase change to {currentPhase}", kartManager.LogSettings, 2);
         if(currentPhase == RacePhase.RACING) {        
             if(DevSettings.Settings.OverrideRaceProgressAtStart)
                 SetRaceProgress(DevSettings.Settings.RaceProgress);
@@ -72,6 +81,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
     void OnTriggerEnter(Collider other) 
     {
         if(other.tag != "Waypoint") return;
+
         int enteredIndex = other.gameObject.transform.GetSiblingIndex();
 
         bool advancedNaturally = enteredIndex == waypointIndex + 1;
@@ -102,7 +112,7 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
         segmentCompletion = GetSegmentCompletion();
         lapCompletion = GetLapCompletion();
-        if(base.IsServer)
+        if(base.IsServerInitialized)
             RaceCompletion = GetRaceCompletion();
         else if(base.IsOwner)
             ServerRpcSetRaceCompletion(GetRaceCompletion());
@@ -132,24 +142,19 @@ public class PositionTracker : KartBehavior, IComparable<PositionTracker>, Gamep
 
     private void RaceFinished() 
     {
-        if(base.IsServer)
-            gameplayManager.RaceManager.CompletedRace(kartManager.PlayerData, raceCompletion);
-        else if(base.IsClient && base.IsOwner)
-            gameplayManager.RaceManager.ServerRpcCompletedRace(kartManager.PlayerData, raceCompletion);
+        if(base.IsServerInitialized)
+            gameplayManager.RaceManager.CompletedRace(kartManager.OwnerUID, raceCompletion.Value);
+        else if(base.IsClientInitialized && base.IsOwner)
+            gameplayManager.RaceManager.ServerRpcCompletedRace(kartManager.OwnerUID, raceCompletion.Value);
 
         if(kartManager.HasPOIGDelegate) {
             kartManager.POIGDelegate.HUD.enabled = false;
         }
     }
 
-    [ServerRpc]
-    private void ServerRpcSetRaceCompletion(float raceCompletion) { this.RaceCompletion = raceCompletion; }
+    
 
-    /// <summary>
-    /// Call for the server's RaceManager to tell client what our race position is
-    /// </summary>
-    [TargetRpc]
-    public void TargetRpcSetRacePosition(NetworkConnection client, int racePosition) { this.racePos = racePosition; }
+    
 
     public Waypoints GetWaypoints() { return Waypoints; }
     public Transform GetCurrentWaypoint() { return Waypoints.GetWaypointFromIndex(waypointIndex); }

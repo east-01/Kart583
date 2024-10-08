@@ -1,4 +1,6 @@
 using System.Collections;
+using EMullen.Core;
+using EMullen.MenuController;
 using EMullen.Networking;
 using EMullen.PlayerMgmt;
 using FishNet;
@@ -40,7 +42,7 @@ public class MenuLobbyController : MenuController
         if(CoreManager.IsLocal)
             OpenSubMenu(SUB_MENU_MAP_SELECT);
         else
-            SetFocus(PlayerManager.Instance.PlayerOne);
+            SetFocus(PlayerManager.Instance.LocalPlayers[0]);
     }
 
     private void Update() {
@@ -66,8 +68,8 @@ public class MenuLobbyController : MenuController
             }
         }
 
-        if(DevSettings.IsDevelopment() && Input.GetKeyDown(GameLobby.FORCE_MAP_PICK_KEY))
-            LobbyManager.Instance.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_FORCE_MAP_PICK);
+        if(DevSettings.IsDevelopment() && Input.GetKeyDown(KartLobby.FORCE_MAP_PICK_KEY))
+            LobbyManager.Instance.SendLobbyMessage(LobbyCommunicator.Instance.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_FORCE_MAP_PICK);
     }
 
     private IEnumerator ConnectionRetryTimer() {
@@ -102,7 +104,7 @@ public class MenuLobbyController : MenuController
     protected override void SendMenuBack()
     {
         BLog.Highlight("Menu lobby controller send menyu back");
-        CoreManager.LobbyCommunicator.StopCommunication();
+        LobbyCommunicator.Instance.StopCommunication();
         CoreManager.TransitionManager.LoadScene(SceneNames.MENU_TITLE);
     }
 

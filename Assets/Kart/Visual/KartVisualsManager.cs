@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using EMullen.PlayerMgmt;
 using Steamworks;
 using TMPro;
 using UnityEngine;
@@ -16,29 +18,42 @@ public class KartVisualsManager : KartBehavior
     private bool isModelLoaded = false;
     private bool isNameplateLoaded = false;
     
-    private void Update() 
+    private void OnEnable() 
     {
-        PlayerData playerData = kartManager.PlayerData;
-        PlayerObjectManager pom = PlayerManager.Instance;
+        UpdateVisualsClock();
+    }
+
+    public IEnumerable UpdateVisualsClock() 
+    {
+        while(gameObject.activeSelf) {
+            UpdateVisuals();
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    public void UpdateVisuals() 
+    {
+        PlayerData playerData = PlayerDataRegistry.Instance.GetPlayerData(kartManager.OwnerUID);
+        PlayerManager playerManager = PlayerManager.Instance;
 
         if(!isModelLoaded && 
-           playerData.kartType != KartType.NONE)
+           playerData.GetData<RaceData>().kartType != KartType.NONE)
             LoadKartModel();
 
         if(!isNameplateLoaded && 
-           base.IsClient && kartManager.POIGDelegate == null && // Should load nameplate?
-           pom != null && pom.PlayerCount > 0 && pom.PlayerObjects[0].poigDelegate != null && pom.PlayerObjects[0].poigDelegate.Camera != null)
+           IsClientInitialized && kartManager.POIGDelegate == null && // Should load nameplate?
+           playerManager != null && playerManager.PlayerCount > 0 && playerManager.LocalPlayers[0].GetPOIGDelegate() != null && playerManager.LocalPlayers[0].GetPOIGDelegate().Camera != null)
             LoadNameplate();
 
         // Unload nameplate since this is the player's own kart
         if(isNameplateLoaded && kartManager.POIGDelegate != null)
             nameplate.SetActive(false);
-
     }
 
     public void LoadKartModel() 
     {
-        KartDataPackage kdp = CoreManager.KartAtlas.RetrieveData(kartManager.PlayerData.kartType);
+        PlayerData playerData = PlayerDataRegistry.Instance.GetPlayerData(kartManager.OwnerUID);
+        KartDataPackage kdp = CoreManager.KartAtlas.RetrieveData(playerData.GetData<RaceData>().kartType);
 		kartCtrl.settings = kdp.settings;
 	
         /* New kart model */
@@ -67,8 +82,8 @@ public class KartVisualsManager : KartBehavior
         TMP_Text npt = nameplate.GetComponentInChildren<TMP_Text>();
         Billboard npb = nameplate.GetComponentInChildren<Billboard>();
 
-        npt.text = kartManager.PlayerData.name;
-        npb.focusCamera = PlayerManager.Instance.PlayerObjects[0].poigDelegate.Camera;
+        npt.text = kartManager.GetPlayerData().GetData<PlayerDisplayData>().name;;
+        npb.focusCamera = PlayerManager.Instance.LocalPlayers[0].GetPOIGDelegate().Camera;
 
         isNameplateLoaded = true;
     }

@@ -3,6 +3,7 @@ using EMullen.Core;
 using EMullen.Networking;
 using EMullen.PlayerMgmt;
 using FishNet;
+using GameKit.Dependencies.Utilities;
 using UnityEngine;
 
 public class DevSettingsObject : MonoBehaviour 
@@ -46,7 +47,7 @@ public class DevSettingsObject : MonoBehaviour
                             Debug.LogError("Failed to get KartManager from kartObject");
                             continue;
                         }
-                        if(km == PlayerManager.Instance.PlayerOne.data.GetUID())
+                        if(km.OwnerUID == PlayerManager.Instance.LocalPlayers[0].GetPlayerData().GetUID())
                             return km;
                     }
                     return null;
@@ -64,7 +65,7 @@ public class DevSettingsObject : MonoBehaviour
     public void HandleDeveloperSettings() 
     {
 
-        DevSettings.SettingsPrintout.ForEach(s => BLog.Log(s, LogChannel.DevSettings));
+        DevSettings.SettingsPrintout.ForEach(s => BLog.Log(s, LogSettings));
 
         // If we're automatically running as server we don't want to do anything else, so return
         // The actual start call is in NetworkStateManager#Start
@@ -93,7 +94,7 @@ public class DevSettingsObject : MonoBehaviour
         } else if(DevSettings.Settings.LoadMode == LoadMode.LOAD_MAP_LOCAL) {
             KartLevel mapPick = DevSettings.Settings.OverrideMapPick ? DevSettings.Settings.Map : LevelAtlas.PickRandomLevel();
             if(!DevSettings.Settings.OverrideMapPick) 
-                BLog.Log($"SimulateLoad: loading into local play map but override map pick is off, picked {mapPick} randomly.", LogChannel.DevSettings, 0);
+                BLog.Log($"SimulateLoad: loading into local play map but override map pick is off, picked {mapPick} randomly.", LogSettings, 0);
             string sceneName = CoreManager.LevelAtlas.RetrieveData(mapPick).sceneName;
             CoreManager.TransitionManager.LoadScene(sceneName);
         }

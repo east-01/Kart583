@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using EMullen.PlayerMgmt;
 using UnityEngine;
 using UnityEngine.InputSystem.UI;
 
@@ -14,7 +15,13 @@ public class ColorSelectController : PlayerPanelControllerSubMenu
     /** This method is called by each color select button, fields set in editor. */
     public void SetColor(string hexColor) 
     {
-        focusedPlayer.data.hexColor = hexColor;
+        PlayerData playerData = focusedPlayer.GetPlayerData();
+        if(!playerData.HasData<PlayerDisplayData>())
+            playerData.SetData<PlayerDisplayData>(new());
+        PlayerDisplayData pdd = playerData.GetData<PlayerDisplayData>();
+        pdd.hexColor = hexColor;
+        playerData.SetData(pdd);
+
         PlayerPanelController.SetPanelColor(hexColor);
         PlayerPanelController.UpdateBuildPhase();
     }

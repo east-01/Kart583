@@ -34,7 +34,7 @@ public class HumanDriver : KartBehavior, GameplayManagerBehavior
     private void Update() 
     {
         if(posTracker.RaceCompletion >= 1 && kartManager.IsHuman) {
-            kartManager.UseBotDriver();
+            kartManager.UseBotDriver(kartManager.OwnerUID);
         }
     }
 

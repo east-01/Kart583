@@ -19,18 +19,26 @@ public class KartSelectController : PlayerPanelControllerSubMenu
     [SerializeField] StatRow handlingStats;
 
     /* Runtime fields */
-    private KartType currentName;
+    private KartType currentType;
     private KartSettings highestStats;
+
+    private readonly PlayerControls controlsReference = new();
 
     protected override void Opened() 
     {
         base.Opened();
         highestStats = CoreManager.KartAtlas.HighestStats;
 
-        if(focusedPlayer.data.kartType != KartType.NONE)
-            currentName = focusedPlayer.data.kartType;
+        if(!focusedPlayer.HasPlayerData()) {
+            Debug.LogError("Can't open KartSelectController the focused player does not have PlayerData.");
+            return;
+        }
+
+        RaceData rd = focusedPlayer.GetPlayerData().GetData<RaceData>();
+        if(rd.kartType != KartType.NONE)
+            currentType = rd.kartType;
         else
-            currentName = (KartType)1;
+            currentType = (KartType)1;
 
         UpdateVisuals();
     }
@@ -38,17 +46,19 @@ public class KartSelectController : PlayerPanelControllerSubMenu
     protected override void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) 
     {
         if(context.performed && context.action.name == controlsReference.UI.Navigate.name && Math.Abs(context.ReadValue<Vector2>().x) > 0.05) {
-            currentName = KartNameArithmetic(currentName, (int)Mathf.Sign(context.ReadValue<Vector2>().x));
+            currentType = KartNameArithmetic(currentType, (int)Mathf.Sign(context.ReadValue<Vector2>().x));
             uiElementSounds.PlaySelectSound();
             UpdateVisuals();
         } else if(context.phase == InputActionPhase.Canceled && context.action.name == controlsReference.UI.Submit.name) {
             uiElementSounds.PlayButtonSound();
-            SetKartName(currentName);
+            SetKartName(currentType);
         }
     }
 
     public void SetKartName(KartType kartName) {
-        focusedPlayer.data.kartType = kartName;
+        RaceData rd = focusedPlayer.GetPlayerData().GetData<RaceData>();
+        rd.kartType = kartName;
+        focusedPlayer.GetPlayerData().SetData(rd);
         PlayerPanelController.UpdateBuildPhase();
     }
 
@@ -56,7 +66,7 @@ public class KartSelectController : PlayerPanelControllerSubMenu
     {
         KartAtlas ka = CoreManager.KartAtlas;
         // Update stats
-        KartDataPackage kdp = ka.RetrieveData(currentName);
+        KartDataPackage kdp = ka.RetrieveData(currentType);
         KartSettings currentStats = kdp.settings;
         speedStats.SetValue(currentStats.maxSpeed/highestStats.maxSpeed);
         boostStats.SetValue(currentStats.maxBoost/highestStats.maxBoost);
@@ -66,8 +76,8 @@ public class KartSelectController : PlayerPanelControllerSubMenu
         vehicleNameText.text = kdp.name;
 
         centerPosition.sprite = kdp.image;
-        leftPosition.sprite = ka.RetrieveData(KartNameArithmetic(currentName, -1)).image;
-        rightPosition.sprite = ka.RetrieveData(KartNameArithmetic(currentName, 1)).image;
+        leftPosition.sprite = ka.RetrieveData(KartNameArithmetic(currentType, -1)).image;
+        rightPosition.sprite = ka.RetrieveData(KartNameArithmetic(currentType, 1)).image;
     }
 
     private KartType KartNameArithmetic(KartType current, int offset) {

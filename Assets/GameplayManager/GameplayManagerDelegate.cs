@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using EMullen.SceneMgmt;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -61,7 +62,7 @@ public class GameplayManagerDelegate : MonoBehaviour
         if(NetSceneController.IsReady && !NetSceneController.Instance.IsSceneRegistered(lookupData)) 
             return false;
             
-        GameplayManager toReturn = NetSceneController.Instance.GetSceneElements(lookupData).GameplayManager;
+        GameplayManager toReturn = NetSceneController.Instance.GetSceneElements(lookupData).GetGameplayManager();
 
         if(toReturn == null)
             return false;

@@ -26,6 +26,4 @@ public class PostRaceState : KartLobbyState
         }
         return null;
     }
-
-    public override string GetID() => "PostRaceState";
 }

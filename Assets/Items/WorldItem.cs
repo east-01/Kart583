@@ -137,7 +137,7 @@ public abstract class WorldItem : NetworkBehaviour, GameplayManagerBehavior
 	{
 		ItemDestroyed();
 
-		if(!base.IsServer) {
+		if(!IsServerInitialized) {
 			ServerRpcDestroy();
 			return;
 		}
@@ -165,7 +165,7 @@ public abstract class WorldItem : NetworkBehaviour, GameplayManagerBehavior
 	/** Check for item interactions from a OnTriggerEnter or OnColliderEnter */
 	public void CheckForInteraction(GameObject other) 
 	{
-		if(!base.IsServer)
+		if(!IsServerInitialized)
 			return;
 		if(other.tag == "Kart") {
             // Hit a player, deal damage
@@ -174,7 +174,7 @@ public abstract class WorldItem : NetworkBehaviour, GameplayManagerBehavior
 				Debug.LogError("A collider with a \"Kart\" tag hit an item but it didn't have a KartManager!");
 				return;
 			}
-            ItemHit(otherKM.Playerdata.GetUID());
+            ItemHit(otherKM.OwnerUID);
 			Destroy();
         } else if(other.tag == "Item") {
             // Hit a different item, destroy both

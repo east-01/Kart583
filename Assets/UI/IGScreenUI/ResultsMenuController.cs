@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EMullen.Core;
+using EMullen.MenuController;
+using EMullen.Networking;
+using EMullen.SceneMgmt;
 using FishNet;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -23,6 +27,8 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
     /// </summary>
     private int populatedMenuElements; 
 
+    private readonly PlayerControls controlsReference = new();
+
     protected new void Awake() 
     {        
         base.Awake();
@@ -36,21 +42,6 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
         this.kartLevelManager = gameplayManager.KartLevelManager;
     }
 
-    void Update() {
-        if(gameplayManager == null)
-            return;
-
-        if(gameplayManager.KartsIRManager.kartObjects.All(obj => KartBehavior.LocateManager(obj).PlayerData.raceFinishTime.HasValue) && !ResultsShown) {
-            BLog.Highlight("Showing results cause all players finished");
-            ShowResults();
-        }
-
-        // if(waitingForPlacements && gameplayManager.RaceManager.GetPlacements().Count == gameplayManager.PlayerManager.KartCount) {
-        //     waitingForPlacements = false;
-        //     ShowResults();
-        // }
-    }
-
 	protected override void Child_PlayerInput_ActionTriggered(InputAction.CallbackContext context) 
 	{
 		if(gameplayManager == null)
@@ -59,11 +50,11 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
 		if(context.performed && context.action.name == controlsReference.UI.Submit.name) {
 			if(!gameplayManager.HasLobby) {
                 Debug.LogError("GameplayManager doesn't have lobby, so we can't send them back to it.");
-                CoreManager.LobbyCommunicator.StopCommunication("Lost connection with lobby.");
+                LobbyCommunicator.Instance.StopCommunication("Lost connection with lobby.");
                 SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
                 return;
             }
-            LobbyManager.Instance.SendLobbyMessage(CoreManager.LobbyCommunicator.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE, sender: CoreManager.LocalConnection, sendOnlyToServer: true);
+            LobbyManager.Instance.SendLobbyMessage(LobbyCommunicator.Instance.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE, sender: InstanceFinder.ClientManager.Connection, sendOnlyToServer: true);
         }
 	}
 

@@ -13,14 +13,19 @@ public class LobbyPlayerNamePlateController : MonoBehaviour
     [SerializeField]
     private Image kartImage;
 
-    public void ShowPlayerData(PlayerData data) 
+    public void ShowPlayerData(string playerUID) 
     {
+        if(!PlayerDataRegistry.Instance.Contains(playerUID)) {
+            Debug.LogError($"Can't ShowPlayerData for player uid \"{playerUID}\" they aren't in the PlayerDataRegistry.");
+            return;
+        }
+        PlayerData data = PlayerDataRegistry.Instance.GetPlayerData(playerUID);
         if(!data.HasData<PlayerDisplayData>()) {
-            Debug.LogError($"Can't ShowPlayerData for player uid \"{data.GetUID()}\" they don't have PlayerDisplayData.");
+            Debug.LogError($"Can't ShowPlayerData for player uid \"{playerUID}\" they don't have PlayerDisplayData.");
             return;
         }
         if(!data.HasData<RaceData>()) {
-            Debug.LogError($"Can't ShowPlayerData for player uid \"{data.GetUID()}\" they don't have RaceData.");
+            Debug.LogError($"Can't ShowPlayerData for player uid \"{playerUID}\" they don't have RaceData.");
             return;
         }
         PlayerDisplayData displayData = data.GetData<PlayerDisplayData>();

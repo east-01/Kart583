@@ -25,15 +25,24 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 
 	public Image heldItemImage;
 
-	[SyncVar(OnChange = nameof(ItemsUpdated))]
-	private Item slotItem;
-	[SyncVar(OnChange = nameof(ItemsUpdated))]
-	private Item heldItem;
+	private readonly SyncVar<Item> slotItem = new();
+	public bool HasSlotItem => slotItem.Value != Item.NONE;
+	private readonly SyncVar<Item> heldItem = new();
+	public bool HasHeldItem => heldItem.Value != Item.NONE;
 
 	new protected void Awake() 
 	{
 		base.Awake();
 		CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
+
+		slotItem.OnChange += ItemsUpdated;
+		heldItem.OnChange += ItemsUpdated;
+	}
+
+	private void OnDestroy() 
+	{
+		slotItem.OnChange -= ItemsUpdated;
+		heldItem.OnChange -= ItemsUpdated;
 	}
 
 	void Start() 
@@ -49,19 +58,19 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 
 	public void PerformItemInput(bool pressed) 
 	{		
-		if(!base.IsServer) {
+		if(!IsServerInitialized) {
 			ServerRpcPerformItemInput(pressed);
 			return;
 		}	
 
-		if(pressed && (ItemSlotManager == null || !ItemSlotManager.IsAnimating()) && slotItem != Item.NONE && heldItem == Item.NONE) {
+		if(pressed && (ItemSlotManager == null || !ItemSlotManager.IsAnimating()) && slotItem.Value != Item.NONE && heldItem.Value == Item.NONE) {
 
-			heldItem = slotItem;
-			slotItem = Item.NONE;
+			heldItem.Value = slotItem.Value;
+			slotItem.Value = Item.NONE;
 
-		} else if(!pressed && heldItem != Item.NONE) {
+		} else if(!pressed && heldItem.Value != Item.NONE) {
 
-			GameObject worldItemPrefab = CoreManager.ItemAtlas.RetrieveData(heldItem).worldItemPrefab;
+			GameObject worldItemPrefab = CoreManager.ItemAtlas.RetrieveData(heldItem.Value).worldItemPrefab;
 			String err = null;
 			if(worldItemPrefab == null || worldItemPrefab.GetComponent<WorldItem>() == null)	
 				err = worldItemPrefab == null ? 
@@ -73,12 +82,12 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 
 			// Make request to spawn item
 			gameplayManager.ItemManager.SpawnItem(new ItemSpawnData() {
-				ownerUUID = kartManager.Playerdata.GetUID(),
-				itemType = heldItem,
+				ownerUUID = kartManager.OwnerUID,
+				itemType = heldItem.Value,
 				stickDirection = kartCtrl.TurnInput
 			});
 
-			heldItem = Item.NONE;
+			heldItem.Value = Item.NONE;
 
 		}
 	}
@@ -98,16 +107,16 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 			return false;
 		}
 
-		if(slotItem != Item.NONE) 
+		if(slotItem.Value != Item.NONE) 
 			return false;
 
-		if(!base.IsServer)
+		if(!IsServerInitialized)
 			return false;
 
 		// Eventually this code will change to better give items based off of position
         Item result = CoreManager.ItemAtlas.RollRandom();
 
-		slotItem = result;
+		slotItem.Value = result;
 
 		if(base.Owner.IsValid) 
 			TargetRpcRecieveItem(base.Owner, result);
@@ -144,21 +153,18 @@ public class KartItemManager : KartBehavior, GameplayManagerBehavior
 		if(asServer)
 			return;
 
-		if(heldItem == Item.NONE) {
+		if(heldItem.Value == Item.NONE) {
 			// Clear held item
 			heldItemImage.gameObject.SetActive(false);
 		} else {
 			heldItemImage.gameObject.SetActive(true);
-			heldItemImage.sprite = CoreManager.ItemAtlas.RetrieveData(heldItem).itemIcon;
+			heldItemImage.sprite = CoreManager.ItemAtlas.RetrieveData(heldItem.Value).itemIcon;
 		}
 
-		if(slotItem == Item.NONE && ItemSlotManager != null) {
+		if(slotItem.Value == Item.NONE && ItemSlotManager != null) {
 			ItemSlotManager.DisableChildren();
 		}
 
 	} 
-
-	public bool HasSlotItem { get { return slotItem != Item.NONE; } }
-	public bool HasHeldItem { get { return heldItem != Item.NONE; } }
 
 }

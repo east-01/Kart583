@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using EMullen.PlayerMgmt;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,10 +19,13 @@ public class ReadyMenuController : PlayerPanelControllerSubMenu
     /** This method is called by the ready button */
     public void SetReady() 
     {
-        if(focusedPlayer.PlayerIndex == 0)
-            focusedPlayer.data.SaveToPlayerPrefs(PlayerData.PLAYER_1_DATA);
+        PlayerData playerData = focusedPlayer.GetPlayerData();
+        if(!playerData.HasData<PlayerDisplayData>())
+            playerData.SetData<PlayerDisplayData>(new());
+        RaceData rd = playerData.GetData<RaceData>();
+        rd.ready = true;
+        playerData.SetData(rd);
 
-        focusedPlayer.data.ready = true;
         PlayerPanelController.UpdateBuildPhase();
 
         parentMenu.GetComponentInParent<MenuPlayerController>().CheckReady();
