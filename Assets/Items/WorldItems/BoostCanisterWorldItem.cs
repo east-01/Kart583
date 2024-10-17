@@ -11,7 +11,7 @@ public class BoostCanisterWorldItem : WorldItem
         kc.EngineBoost.SetBoostDecayType(BoostDecayType.NATURAL_PASSIVE);
         kc.EngineBoost.SetBoostToMax();
 
-        CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_BOOST_CANISTER, 1f, transform);
+        AudioManagerMaster.Instance.PlayOneShotSound(AudioFile.FX_ITEM_BOOST_CANISTER, 1f, transform);
 
         Destroy(gameObject);
     }

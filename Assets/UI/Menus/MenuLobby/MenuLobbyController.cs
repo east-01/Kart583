@@ -40,7 +40,7 @@ public class MenuLobbyController : MenuController
         retryTimer = -1;
 
         if(CoreManager.IsLocal)
-            OpenSubMenu(SUB_MENU_MAP_SELECT);
+            GetSubMenu(SUB_MENU_MAP_SELECT).Open(FocusedPlayer);
         else
             SetFocus(PlayerManager.Instance.LocalPlayers[0]);
     }
@@ -101,7 +101,7 @@ public class MenuLobbyController : MenuController
         _viewController.UpdateView();
     }
 
-    protected override void SendMenuBack()
+    public override void SendMenuBack()
     {
         BLog.Highlight("Menu lobby controller send menyu back");
         LobbyCommunicator.Instance.StopCommunication();

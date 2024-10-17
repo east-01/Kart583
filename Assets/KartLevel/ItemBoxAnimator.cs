@@ -53,13 +53,13 @@ public class ItemBoxAnimator : MonoBehaviour
 
 			Show(false);
 			
-			CoreManager.AudioManager.PlayRandomOneShotSound(new AudioFile[] {
+			AudioManagerMaster.Instance.PlayRandomOneShotSound(new AudioFile[] {
 				AudioFile.FX_ITEM_ZAP_1,
 				AudioFile.FX_ITEM_ZAP_2,
 				AudioFile.FX_ITEM_ZAP_3
 			}, 1f, transform);
 
-			CoreManager.AudioManager.PlayRandomOneShotSound(new AudioFile[] {
+			AudioManagerMaster.Instance.PlayRandomOneShotSound(new AudioFile[] {
 				AudioFile.FX_ITEM_GLASS_1,
 				AudioFile.FX_ITEM_GLASS_2,
 				AudioFile.FX_ITEM_GLASS_3

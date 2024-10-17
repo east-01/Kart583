@@ -85,9 +85,9 @@ public class ItemImage : MonoBehaviour, GameplayManagerBehavior
         transform.position = startPosition.position;
 
         if(stopAtCenter)
-            CoreManager.AudioManager.PlaySound(AudioFile.UI_ITEM_SCROLL_FINISH, 1f);
+            AudioManagerMaster.Instance.PlaySound(AudioFile.UI_ITEM_SCROLL_FINISH, 1f);
         else
-            CoreManager.AudioManager.PlaySound(AudioFile.UI_ITEM_SCROLL_NORMAL, 1f);
+            AudioManagerMaster.Instance.PlaySound(AudioFile.UI_ITEM_SCROLL_NORMAL, 1f);
     }
 
 }

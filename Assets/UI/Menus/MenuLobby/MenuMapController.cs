@@ -32,9 +32,6 @@ public class MenuMapController : MenuController
         }
     }
 
-    protected override void SendMenuBack()
-    {
-        parentMenu.SendMenuBackPublic();
-    }
+    public override void SendMenuBack() => ParentMenu.SendMenuBack();
 
 }

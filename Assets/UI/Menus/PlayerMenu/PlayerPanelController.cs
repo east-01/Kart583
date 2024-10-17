@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using EMullen.Core;
 using EMullen.MenuController;
 using EMullen.PlayerMgmt;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
@@ -66,7 +68,7 @@ public class PlayerPanelController : MenuController
         } else {
             phase = PlayerBuildPhase.READY;
         }
-        OpenSubMenu(phaseSubMenu[phase], currentFocus);
+        GetSubMenu(phaseSubMenu[phase]).Open(currentFocus);
     }
 
     public void RegressBuildPhase() 
@@ -111,38 +113,60 @@ public class PlayerPanelController : MenuController
     /** Update the visuals to reflect what the player has selected in playerObj#data */
     public void UpdateVisuals() 
     {  
-        if(focusedPlayer == null)
-            return;
-    }
-
-    public new void Open(LocalPlayer focusedPlayer = null) 
-    { 
-        base.Open(focusedPlayer);
-
-        // Reset ready state so we don't automatically ready up the player when they open
-        if(!focusedPlayer.HasPlayerData()) {
-            Debug.LogError("Can't open PlayerPanelController they have no playerdata.");
+        if(FocusedPlayerIncludingChildren == null) {
+            Debug.LogError("Can't UpdateVisuals, FocusedPlayer is null.");
             return;
         }
 
-        PlayerData data = focusedPlayer.GetPlayerData();
+        PlayerData data = FocusedPlayerIncludingChildren.GetPlayerData();
 
-        if(!data.HasData<RaceData>())
-            data.SetData<RaceData>(new());
-
+        // Reset ready state so we don't automatically ready up the player when they open the panel
         RaceData rd = data.GetData<RaceData>();
         rd.ready = false;
         data.SetData(rd);
 
         // Visuals
-        if(!data.HasData<PlayerDisplayData>())
-            data.SetData<PlayerDisplayData>(new());
-
         PlayerDisplayData pdd = data.GetData<PlayerDisplayData>();
         titleText.text = pdd.name;
         SetPanelColor(pdd.hexColor);
+        BLog.Highlight($"Set name as \"{pdd.name}\" and panel color as \"{pdd.hexColor}\"");
+    }
 
+    public new void Open(LocalPlayer focusedPlayer = null) 
+    { 
+        if(focusedPlayer == null) {
+            Debug.LogError("Can't open PlayerPanelController with a null focus.");
+            return;
+        }
+
+        // Prepare player's data, this has to happen before base.Open
+        PlayerData data = focusedPlayer.GetPlayerData();
+        if(!data.HasData<RaceData>())
+            data.SetData<RaceData>(new());
+        
+        if(!data.HasData<PlayerDisplayData>())
+            data.SetData<PlayerDisplayData>(new());
+
+        base.Open(focusedPlayer);
+
+        if(FocusedPlayer == null) {
+            Debug.LogError("Failed to open PlayerPanel, the FocusedPlayer didn't attach.");
+            return;
+        }
+
+        if(!FocusedPlayer.HasPlayerData()) {
+            Debug.LogError("Can't open PlayerPanelController they have no playerdata.");
+            return;
+        }
+
+        UpdateVisuals();
         UpdateBuildPhase();
+    }
+
+    protected override void Opened() 
+    {
+        base.Opened();
+        // UpdateBuildPhase();
     }
 
     public void SetPanelColor(string color) 
@@ -175,7 +199,7 @@ public class PlayerPanelControllerSubMenu : MenuController
 {
     protected UIElementSounds uiElementSounds;
 
-    public PlayerPanelController PlayerPanelController { get { return parentMenu as PlayerPanelController; } }
+    public PlayerPanelController PlayerPanelController { get { return ParentMenu as PlayerPanelController; } }
 
     protected new void Awake() 
     {
@@ -183,7 +207,7 @@ public class PlayerPanelControllerSubMenu : MenuController
         uiElementSounds = GetComponentInParent<UIElementSounds>();
     }
 
-    protected override void SendMenuBack()
+    public override void SendMenuBack()
     {
         PlayerPanelController.RegressBuildPhase();
         uiElementSounds.PlayBackSound();

@@ -15,8 +15,8 @@ public class MenuTitleController : MenuController
 
     public void ClickedOptions() 
     {
-        CoreManager.OptionsMenuController.SetParentMenuController(this);
-        CoreManager.OptionsMenuController.Open();
+        OptionsMenuController.Instance.ParentMenu = this;
+        OptionsMenuController.Instance.Open();
     }
 
     public void ClickedQuit() 
@@ -24,5 +24,5 @@ public class MenuTitleController : MenuController
         Application.Quit();
     }
 
-    protected override void SendMenuBack() {}
+    public override void SendMenuBack() {}
 }

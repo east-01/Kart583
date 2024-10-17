@@ -19,7 +19,7 @@ public class ReadyMenuController : PlayerPanelControllerSubMenu
     /** This method is called by the ready button */
     public void SetReady() 
     {
-        PlayerData playerData = focusedPlayer.GetPlayerData();
+        PlayerData playerData = FocusedPlayer.GetPlayerData();
         if(!playerData.HasData<PlayerDisplayData>())
             playerData.SetData<PlayerDisplayData>(new());
         RaceData rd = playerData.GetData<RaceData>();
@@ -28,6 +28,6 @@ public class ReadyMenuController : PlayerPanelControllerSubMenu
 
         PlayerPanelController.UpdateBuildPhase();
 
-        parentMenu.GetComponentInParent<MenuPlayerController>().CheckReady();
+        ParentMenu.GetComponentInParent<MenuPlayerController>().CheckReady();
     }
 }

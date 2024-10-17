@@ -20,10 +20,11 @@ public class PauseMenuController : MenuController
 
     public void OptionsPressed() 
     {
-        LocalPlayer cachedFocus = focusedPlayer;
+        LocalPlayer cachedFocus = FocusedPlayer;
         Close();
-        CoreManager.OptionsMenuController.SetParentMenuController(this);
-        CoreManager.OptionsMenuController.Open(cachedFocus);
+
+        OptionsMenuController.Instance.ParentMenu = this;
+        OptionsMenuController.Instance.Open(cachedFocus);
     }
 
     public void QuitPressed() 

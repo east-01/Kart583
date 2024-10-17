@@ -23,7 +23,7 @@ public class GameAudioManager : MonoBehaviour
         gameplayManager.RaceManager.RacePhaseChanged += RaceManager_RacePhaseChanged;
 
         if(ambianceFile != AudioFile.NONE && ambianceSource == null) {
-            ambianceSource = CoreManager.AudioManager.PlaySound(ambianceFile, 0.2f, true);
+            ambianceSource = AudioManagerMaster.Instance.PlaySound(ambianceFile, 0.2f, true);
         }
     }
     
@@ -47,7 +47,7 @@ public class GameAudioManager : MonoBehaviour
         if(currentPhase == RacePhase.RACING && musicFile != AudioFile.NONE) {
             if(ambianceSource != null)
                 ambianceSource.volume /= 2;
-            musicSource = CoreManager.AudioManager.PlaySound(musicFile, 1f, true);
+            musicSource = AudioManagerMaster.Instance.PlaySound(musicFile, 1f, true);
         }
     }
 

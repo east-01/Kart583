@@ -119,7 +119,7 @@ public class MenuLobbyViewController : MonoBehaviour
                 lobbyStatusText.text = $"Picking map";
 
                 if(CoreManager.IsLocal)
-                    _controller.OpenSubMenu(MenuLobbyController.SUB_MENU_MAP_SELECT);
+                    _controller.GetSubMenu(MenuLobbyController.SUB_MENU_MAP_SELECT).Open(_controller.FocusedPlayer);
                 break;
             case nameof(RacingState):
                 lobbyStatusText.text = "At the track";

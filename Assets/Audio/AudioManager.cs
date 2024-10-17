@@ -33,8 +33,10 @@ public class AudioManager : MonoBehaviour
     /// </summary>
     [HideInInspector] public Transform trackingTarget;
 
-    private void Awake() 
+    protected void Awake() 
     {
+        DontDestroyOnLoad(gameObject);
+        
         sources = new(GetComponents<AudioSource>());
     }
 

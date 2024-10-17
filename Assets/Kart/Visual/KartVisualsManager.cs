@@ -98,7 +98,7 @@ public class KartVisualsManager : KartBehavior
     {
         List<Vector3> wheelPositions = kartCtrl.kartModel.WheelPositions;
 
-        CoreManager.AudioManager.PlayOneShotSound(AudioFile.KART_LAND, 0.25f, position);
+        AudioManagerMaster.Instance.PlayOneShotSound(AudioFile.KART_LAND, 0.25f, position);
 
         kartCtrl.kartModel.WheelPositions.ForEach(wheelPos => {
             GameObject particles = Instantiate(landParticlePrefab);

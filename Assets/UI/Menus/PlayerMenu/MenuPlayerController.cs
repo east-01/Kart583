@@ -32,7 +32,8 @@ public class MenuPlayerController : MenuController
         PlayerManager pm = PlayerManager.Instance;
         if(pm.PlayerCount > 0)
             foreach(LocalPlayer obj in pm.LocalPlayers) {
-                AddPanel(obj);
+                if(obj != null)
+                    AddPanel(obj);
             }
     }
 
@@ -147,7 +148,7 @@ public class MenuPlayerController : MenuController
     /** Check if everyone's ready, if so, transition to map select. */
     public void CheckReady() 
     {
-        if(!PlayerManager.Instance.LocalPlayers.All(po => po.GetPlayerData().IsReady())) return;
+        if(!PlayerManager.Instance.LocalPlayers.Where(po => po != null).All(po => po.GetPlayerData().IsReady())) return;
 
         shouldAllowJoining = false;
 
@@ -158,7 +159,7 @@ public class MenuPlayerController : MenuController
     /// <summary>
     /// Called by RemovePanel when the player one panel gets removed
     /// </summary>
-    protected override void SendMenuBack() 
+    public override void SendMenuBack() 
     {
         for(int i = 0; i < playerPanelContainer.transform.childCount; i++) {
             GameObject child = playerPanelContainer.transform.GetChild(i).gameObject;

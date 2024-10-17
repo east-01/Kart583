@@ -39,14 +39,14 @@ public class PersistentAudioWatchdog : MonoBehaviour
             audioListener.enabled = true;
 
         if(audioSource == null && SceneNames.IsMenuScene(scene.name)) {
-            audioSource = CoreManager.AudioManager.PlaySound(AudioFile.ENV_MENU_AMBIANCE, 1f, true);
+            audioSource = AudioManagerMaster.Instance.PlaySound(AudioFile.ENV_MENU_AMBIANCE, 1f, true);
         } else if(audioSource != null && !SceneNames.IsMenuScene(scene.name)) {
             audioSource.Stop();
             audioSource = null;
         }
 
         if(SceneNames.IsMenuScene(scene.name)) {
-            CoreManager.Instance.GetComponent<AudioListener>().enabled = true;
+            AudioManagerMaster.Instance.GetComponent<AudioListener>().enabled = true;
         }
     }
 }

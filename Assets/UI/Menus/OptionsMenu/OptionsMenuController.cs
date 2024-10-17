@@ -14,8 +14,30 @@ using UnityEngine.UI;
 public class OptionsMenuController : MenuController
 {
     
+    public static OptionsMenuController Instance { get; private set; }
+
     public static readonly string GRAPHICS_OPTIONS_MENU_ID = "GraphicsOptions";
     public static readonly string VOLUME_OPTIONS_MENU_ID = "VolumeOptions";
+
+    protected new void Awake() 
+    {
+        if(Instance != null) {
+            Debug.LogError($"Singleton problem for OptionsMenuController deleting gameObject \"{gameObject.name}\"");
+            Destroy(gameObject);
+            return;
+        }
+
+        base.Awake();
+
+        Instance = this;
+        LoadOptions();
+    }
+
+    protected new void OnDestroy() 
+    {
+        base.OnDestroy();
+        SaveOptions();
+    }
 
 #region Save/Load
     public void LoadOptions() 
@@ -35,11 +57,13 @@ public class OptionsMenuController : MenuController
     protected override void Opened()
     {
         base.Opened();
-        OpenSubMenu(GRAPHICS_OPTIONS_MENU_ID);
+        GetSubMenu(GRAPHICS_OPTIONS_MENU_ID).Open(FocusedPlayer);
     }
 
-    public void OpenOptionsSubMenu(string id) => OpenSubMenu(id);
-
+    /// <summary>
+    /// Used by tab buttons to open each sub menu
+    /// </summary>
+    public void OpenOptionsSubMenu(string id) => GetSubMenu(id).Open(FocusedPlayer);
 }
 
 public abstract class OptionsSubMenu : MenuController {
@@ -56,9 +80,9 @@ public abstract class OptionsSubMenu : MenuController {
         base.Closed();
         tabButton.enabled = true;
     }
-    protected override void SendMenuBack()
+    public override void SendMenuBack()
     {
-        parentMenu.SendMenuBackPublic();
+        ParentMenu.SendMenuBack();
     }
 }
 

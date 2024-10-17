@@ -22,19 +22,25 @@ public class KartSelectController : PlayerPanelControllerSubMenu
     private KartType currentType;
     private KartSettings highestStats;
 
-    private readonly PlayerControls controlsReference = new();
+    private PlayerControls controlsReference;
+
+    protected new void Awake() 
+    {
+        base.Awake();
+        controlsReference = new();
+    }
 
     protected override void Opened() 
     {
         base.Opened();
         highestStats = CoreManager.KartAtlas.HighestStats;
 
-        if(!focusedPlayer.HasPlayerData()) {
+        if(!FocusedPlayer.HasPlayerData()) {
             Debug.LogError("Can't open KartSelectController the focused player does not have PlayerData.");
             return;
         }
 
-        RaceData rd = focusedPlayer.GetPlayerData().GetData<RaceData>();
+        RaceData rd = FocusedPlayer.GetPlayerData().GetData<RaceData>();
         if(rd.kartType != KartType.NONE)
             currentType = rd.kartType;
         else
@@ -56,9 +62,9 @@ public class KartSelectController : PlayerPanelControllerSubMenu
     }
 
     public void SetKartName(KartType kartName) {
-        RaceData rd = focusedPlayer.GetPlayerData().GetData<RaceData>();
+        RaceData rd = FocusedPlayer.GetPlayerData().GetData<RaceData>();
         rd.kartType = kartName;
-        focusedPlayer.GetPlayerData().SetData(rd);
+        FocusedPlayer.GetPlayerData().SetData(rd);
         PlayerPanelController.UpdateBuildPhase();
     }
 

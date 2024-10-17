@@ -52,7 +52,7 @@ public class SwapTeleporterWorldItem : WorldItem
         target.transform.SetPositionAndRotation(tempPosition, tempRotation);
         targetPT.waypointIndex = tempWaypoint;
 
-        CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_TELEPORTER, 1f, transform);
+        AudioManagerMaster.Instance.PlayOneShotSound(AudioFile.FX_ITEM_TELEPORTER, 1f, transform);
 
         Destroy(gameObject);
     }

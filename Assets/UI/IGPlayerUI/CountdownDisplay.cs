@@ -66,7 +66,7 @@ public class CountdownDisplay : MonoBehaviour, GameplayManagerBehavior
                 int prevSecond = raceFloor-1;
                 if(currSecond != prevSecond) {
                     if(currSecond >= 0 && currSecond < 3) {
-                        CoreManager.AudioManager.PlaySound(AudioFile.FX_COUNTDOWN, 1f);
+                        AudioManagerMaster.Instance.PlaySound(AudioFile.FX_COUNTDOWN, 1f);
                     }
                 }
             }
@@ -95,7 +95,7 @@ public class CountdownDisplay : MonoBehaviour, GameplayManagerBehavior
     private void RaceManager_RacePhaseChanged(RacePhase previousPhase, RacePhase currentPhase)
     {
         if(currentPhase == RacePhase.RACING) {
-            CoreManager.AudioManager.PlaySound(AudioFile.FX_COUNTDOWN_START, 1f);
+            AudioManagerMaster.Instance.PlaySound(AudioFile.FX_COUNTDOWN_START, 1f);
             goDisplayTime = 1f;
         }
     }

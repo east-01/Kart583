@@ -27,11 +27,13 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
     /// </summary>
     private int populatedMenuElements; 
 
-    private readonly PlayerControls controlsReference = new();
+    private PlayerControls controlsReference;
 
     protected new void Awake() 
     {        
         base.Awake();
+
+        controlsReference = new();
 
         CoreManager.GameplayManagerDelegate.SubscribeForGameplayManager(this);
     }

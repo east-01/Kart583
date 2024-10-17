@@ -68,7 +68,7 @@ public class BoltWorldItem : WorldItem
         // TODO: Play activation animation and sound
         systems.ForEach(pe => pe.Play());
 
-        audioSource = CoreManager.AudioManager.PlayOneShotSound(AudioFile.FX_ITEM_LIGHTNING_BOLT, 1f, transform, true, true);
+        audioSource = AudioManagerMaster.Instance.PlayOneShotSound(AudioFile.FX_ITEM_LIGHTNING_BOLT, 1f, transform, true, true);
     }
 
     protected override void Internal_ItemDestroyed()
@@ -88,7 +88,7 @@ public class BoltWorldItem : WorldItem
         
         hitKM.GetKartController().EngineBase.ApplyStall(3.5f, StallType.LARGE);
 
-        CoreManager.AudioManager.PlayOneShotSound(AudioFile.KART_DAMAGED, 1f, transform);
+        AudioManagerMaster.Instance.PlayOneShotSound(AudioFile.KART_DAMAGED, 1f, transform);
 
         Internal_ItemDestroyed();
     }

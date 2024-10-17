@@ -23,7 +23,7 @@ public class IGScreenMenuController : MenuController
 		// TODO: shouldShowResults menu should be based off of all local players completing race so we can see pending players.
 		bool shouldShowResultsMenu = LobbyCommunicator.Instance.LobbyData.Value.stateTypeString == nameof(PostRaceState);
 		if(shouldShowResultsMenu && !ResultsMenuController.IsOpen) {
-			OpenSubMenu(RESULTS_MENU_ID);
+			GetSubMenu(RESULTS_MENU_ID).Open(FocusedPlayer);
 		} else if(!shouldShowResultsMenu && ResultsMenuController.IsOpen) {
 			ResultsMenuController.Close();
 		}
@@ -32,7 +32,7 @@ public class IGScreenMenuController : MenuController
 	public void SetPauseOpen(bool open) 
 	{
 		if(open) {
-			OpenSubMenu(PAUSE_MENU_ID, focusedPlayer);
+			GetSubMenu(PAUSE_MENU_ID).Open(FocusedPlayer);
 		} else
 			PauseMenuController.Close();
 	}

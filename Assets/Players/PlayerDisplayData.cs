@@ -11,7 +11,7 @@ public class PlayerDisplayData : PlayerDataClass
     /// <summary>
     /// The display name of the player
     /// </summary>
-	public string name;
+	public string name = "";
     /// <summary>
     /// The hex color that the player picked in the player select menu.
     /// </summary>
