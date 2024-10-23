@@ -58,8 +58,8 @@ public class KartsIRManager : NetworkBehaviour
     void Start() 
 	{
 		// if(CoreManager.IsLocal) {
-		// 	BLog.Log($"Local instance spawning {PlayerManager.Instance.GetPlayerObjects().Count} player(s).", gameplayManager.LogSettings, 1);
-		// 	PlayerManager.Instance.GetPlayerObjects().ForEach(po => SpawnPlayer(po));
+		// 	BLog.Log($"Local instance spawning {PlayerManager.Instance.LocalPlayers.Where(lp => lp!=null).Count()} player(s).", gameplayManager.LogSettings, 1);
+		// 	PlayerManager.Instance.LocalPlayers.Where(lp => lp != null).ToList().ForEach(lp => SpawnPlayer(lp));
 		// }
 	}
 
@@ -93,7 +93,7 @@ public class KartsIRManager : NetworkBehaviour
 		if(!SceneNames.IsMapScene(sceneLookupData.Name))
 			return;
 
-		print("client added to map scene, spawning player objects");
+		BLog.Highlight("client added to map scene, spawning player objects");
 		PlayerManager.Instance.LocalPlayers.ToList().ForEach(po => SpawnPlayer(po));
     }
 

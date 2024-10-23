@@ -152,6 +152,7 @@ public class MenuPlayerController : MenuController
 
         shouldAllowJoining = false;
 
+        DBNetworkConfigurator.ConfigureNetwork(false);
         LobbyCommunicator.Instance.StartCommunication();
         CoreManager.TransitionManager.LoadScene(SceneNames.MENU_LOBBY);
     }

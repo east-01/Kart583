@@ -1,3 +1,5 @@
+using EMullen.Networking;
+using EMullen.Networking.Lobby;
 using FishNet;
 using FishNet.Managing;
 using UnityEngine;
@@ -46,10 +48,11 @@ public class CoreManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
         }
 
-        if(!notifiedOfRelease && !DevSettings.IsDevelopment()) {
+        if(!notifiedOfRelease && !DevSettings.IsDevelopment) {
             Debug.Log($"<color=aqua>Running release build {DevSettings.GetVersionString()}</color>");
             notifiedOfRelease = true;
         }
+
 
         gameplayManagerDelegate = GetComponent<GameplayManagerDelegate>();
         transitionManager = GetComponent<TransitionManager>();

@@ -12,6 +12,7 @@ public class GameAudioManager : MonoBehaviour
     [SerializeField] private AudioFile musicFile;
 
     private GameplayManager gameplayManager;
+    private RaceManager raceManager;
 
     private AudioSource ambianceSource;
     private AudioSource musicSource;
@@ -20,8 +21,6 @@ public class GameAudioManager : MonoBehaviour
     {
         gameplayManager = GetComponent<GameplayManager>();
 
-        gameplayManager.RaceManager.RacePhaseChanged += RaceManager_RacePhaseChanged;
-
         if(ambianceFile != AudioFile.NONE && ambianceSource == null) {
             ambianceSource = AudioManagerMaster.Instance.PlaySound(ambianceFile, 0.2f, true);
         }
@@ -29,8 +28,6 @@ public class GameAudioManager : MonoBehaviour
     
     private void OnDisable() 
     {
-        gameplayManager.RaceManager.RacePhaseChanged -= RaceManager_RacePhaseChanged;
-
         if(ambianceSource != null) {
             ambianceSource.Stop();
             ambianceSource = null;
@@ -39,6 +36,17 @@ public class GameAudioManager : MonoBehaviour
         if(musicSource != null) {
             musicSource.Stop();
             musicSource = null;
+        }
+    }
+
+    private void Update()  
+    {
+        if(raceManager == null && gameplayManager.RaceManager != null) {
+            raceManager = gameplayManager.RaceManager;
+            raceManager.RacePhaseChanged += RaceManager_RacePhaseChanged;
+        } else if(raceManager != null && raceManager != gameplayManager.RaceManager) {
+            raceManager.RacePhaseChanged -= RaceManager_RacePhaseChanged;
+            raceManager = null;
         }
     }
 

@@ -68,7 +68,7 @@ public class MenuLobbyController : MenuController
             }
         }
 
-        if(DevSettings.IsDevelopment() && Input.GetKeyDown(KartLobby.FORCE_MAP_PICK_KEY))
+        if(DevSettings.IsDevelopment && Input.GetKeyDown(KartLobby.FORCE_MAP_PICK_KEY))
             LobbyManager.Instance.SendLobbyMessage(LobbyCommunicator.Instance.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_FORCE_MAP_PICK);
     }
 

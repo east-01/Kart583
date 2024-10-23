@@ -44,7 +44,7 @@ public class GameplayManager : NetworkBehaviour
     public KartLevelManager KartLevelManager { get; private set; }
 
     public KartLobby KartLobby { get; private set; }
-    private readonly SyncVar<string> lobbyID = null;
+    private readonly SyncVar<string> lobbyID = new();
     public bool HasLobby => lobbyID.Value != null;
 
     /* Late Lobby start process. */
@@ -59,7 +59,6 @@ public class GameplayManager : NetworkBehaviour
 
     void Awake() 
     {
-
         List<string> problems = new();
         List<string> warnings = new();
 
@@ -180,6 +179,8 @@ public static class GameplayManagerExtensions
     public static Dictionary<SceneLookupData, GameplayManager> cachedGameplayManagers;
 
     public static GameplayManager GetGameplayManager(this SceneElements elements) {
+        if(cachedGameplayManagers == null)
+            cachedGameplayManagers = new();
         if(!cachedGameplayManagers.ContainsKey(elements.LookupData)) {
             cachedGameplayManagers.Add(elements.LookupData, GameplayManagerDelegate.LocateGameplayManager(elements.Scene));
         }

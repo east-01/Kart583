@@ -119,8 +119,8 @@ public class KartLobby : GameLobby
 
     public void SceneDelegate_SceneRegistered(SceneLookupData lookupData) 
     {
-        if(LobbyManager.Instance.GetOwner(lookupData) != null) {
-            Debug.LogError($"Can't claim newly registered scene \"{lookupData}\" because it already has an owner.");
+        if(LobbyManager.Instance.GetOwner(lookupData) != ID) {
+            Debug.LogError($"Can't claim GameplayManager for scene \"{lookupData}\" we are not the owners, \"{LobbyManager.Instance.GetOwner(lookupData)}\" is");
             return;
         }
 
@@ -142,7 +142,7 @@ public class KartLobby : GameLobby
         elements.DeleteOnLastClientRemove = SceneNames.IsMapScene(lookupData.Name);
         NetSceneController.Instance.SetSceneElements(lookupData, elements);
 
-        BLog.Log($"{MessagePrefix}Claimed scene \"{lookupData}\"", LobbyManager.Instance.LogSettingsGameLobby, 0);
+        BLog.Log($"{MessagePrefix}Set scene elements for \"{lookupData}\"", LobbyManager.Instance.LogSettingsGameLobby, 0);
     }
 
     public void SceneDelegate_SceneWillDeregister(SceneLookupData lookupData) 

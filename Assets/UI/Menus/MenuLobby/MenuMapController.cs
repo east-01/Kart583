@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using EMullen.Core;
 using EMullen.MenuController;
 using EMullen.Networking;
+using EMullen.Networking.Lobby;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -25,10 +27,19 @@ public class MenuMapController : MenuController
     public void ClickedMapIcon(KartLevel level) 
     {   
         if(CoreManager.IsLocal) {
-            KartLobby localLobby = LobbyManager.Instance.GetLobby(LobbyCommunicator.Instance.LobbyID) as KartLobby;
-            localLobby.SetLevel(level);
+            string lobbyID = LobbyCommunicator.Instance.LobbyID;
+            BLog.Highlight($"id: \"{lobbyID}\"");
+            GameLobby localLobby = LobbyManager.Instance.GetLobby(LobbyCommunicator.Instance.LobbyID);
+            BLog.Highlight($"local lob: \"{localLobby}\"");
+            if(localLobby is not KartLobby) {
+                Debug.LogError("Can't load level, localLobby is not a KartLobby.");
+                return;
+            }
+            KartLobby localKartLobby = localLobby as KartLobby;
+            localKartLobby.SetLevel(level);
         } else {
             // TODO: Map voting
+            BLog.Highlight("TODO: Map voting");
         }
     }
 

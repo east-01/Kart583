@@ -17,7 +17,7 @@ public class DevSettings
     public int major, minor, revision;
     public ReleaseType releaseType;
     public static string GetVersionString() { return $"{Settings.major}.{Settings.minor}.{Settings.revision}" + (Settings.releaseType == ReleaseType.DEVELOPMENT ? "dev" : ""); }
-    public static bool IsDevelopment() { return Settings.releaseType == ReleaseType.DEVELOPMENT; }
+    public static bool IsDevelopment => Settings.releaseType == ReleaseType.DEVELOPMENT;
 #endregion
 
 #region Developer settings fields
@@ -205,7 +205,7 @@ public class DevSettings
         List<string> printout = new();
 
         string headerMessage = $"Dev settings are " + (Settings.Enable ? "enabled." : "disabled.");
-        if(!DevSettings.IsDevelopment())
+        if(!DevSettings.IsDevelopment)
             headerMessage += " Not in a development version.";
         if(!Settings.Enable)
             headerMessage += " Master enable is turned off";

@@ -1,4 +1,5 @@
 using System;
+using EMullen.Core;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -19,6 +20,7 @@ public class LevelIcon : MonoBehaviour
     private void Awake() 
     {
         MenuMapController[] menuMapControllers = FindObjectsOfType<MenuMapController>();
+        BLog.Highlight("Found " + menuMapControllers.Length);
         if(menuMapControllers.Length != 1) {
             Debug.LogError($"Located more than one MenuMapController ({menuMapControllers.Length})");
             gameObject.SetActive(false);
@@ -30,10 +32,11 @@ public class LevelIcon : MonoBehaviour
 
     /** Load a LevelDataPackage and update visuals. */
     public void Load(LevelDataPackage data) 
-    {
+    { 
         this.data = data;
+        BLog.Highlight($"loaded data: \"{data.Level}\"");
 
-        mapImageObj.GetComponent<Image>().sprite = data.levelImage;
+        mapImageObj.GetComponent<Image>().sprite = data.levelImage; 
         titleText.text = data.levelString;
     }
 

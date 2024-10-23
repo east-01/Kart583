@@ -60,6 +60,10 @@ public class DevSettingsObject : MonoBehaviour
                 }
             }
         }
+
+        if(Input.GetKeyDown(KeyCode.F12)) {
+            
+        }
     }
 
     public void HandleDeveloperSettings() 
