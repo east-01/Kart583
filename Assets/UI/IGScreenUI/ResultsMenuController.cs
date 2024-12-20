@@ -6,6 +6,7 @@ using EMullen.MenuController;
 using EMullen.Networking;
 using EMullen.SceneMgmt;
 using FishNet;
+using FishNet.Managing.Scened;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -53,7 +54,7 @@ public class ResultsMenuController : MenuController, GameplayManagerBehavior
 			if(!gameplayManager.HasLobby) {
                 Debug.LogError("GameplayManager doesn't have lobby, so we can't send them back to it.");
                 LobbyCommunicator.Instance.StopCommunication("Lost connection with lobby.");
-                SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
+                UnityEngine.SceneManagement.SceneManager.LoadScene(SceneNames.MENU_TITLE, UnityEngine.SceneManagement.LoadSceneMode.Single);
                 return;
             }
             LobbyManager.Instance.SendLobbyMessage(LobbyCommunicator.Instance.LobbyID, LobbyMessageType.ACTION, LobbyManager.LME_CMD_REQUEST_LOBBY_MOVE, sender: InstanceFinder.ClientManager.Connection, sendOnlyToServer: true);

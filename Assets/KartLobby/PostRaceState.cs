@@ -18,9 +18,9 @@ public class PostRaceState : KartLobbyState
     public override LobbyState CheckForStateChange()
     {
         bool kickPlayersOut = CoreManager.IsMultiplayer && TimeInState >= KartLobby.ROUND_END_TIME;
-        bool noMapScene = kartLobby.MapSceneData == null || !NetSceneController.Instance.IsSceneRegistered(kartLobby.MapSceneData);
-        bool mapSceneEmpty = NetSceneController.Instance.GetSceneElements(kartLobby.MapSceneData).Clients.Count == 0;
-        if(kickPlayersOut || noMapScene || mapSceneEmpty) {
+        bool noMapScene = kartLobby.MapSceneData == null;
+        // bool mapSceneEmpty = NetSceneController.Instance.GetSceneElements(kartLobby.MapSceneData).Clients.Count == 0;
+        if(kickPlayersOut || noMapScene /*|| mapSceneEmpty*/) {
             kartLobby.MovePlayersToLobby();
             return new WaitingForPlayersState(kartLobby);
         }

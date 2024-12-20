@@ -30,7 +30,7 @@ public class PauseMenuController : MenuController
     public void QuitPressed() 
     {
         LobbyCommunicator.Instance.StopCommunication();
-        SceneController.Instance.LoadScene(new(SceneNames.MENU_TITLE), false);
+        UnityEngine.SceneManagement.SceneManager.LoadScene(SceneNames.MENU_TITLE, UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 
 }

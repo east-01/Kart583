@@ -6,6 +6,7 @@ using System.Linq;
 using EMullen.Core;
 using EMullen.PlayerMgmt;
 using EMullen.SceneMgmt;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Scened;
 using FishNet.Object;
@@ -51,8 +52,10 @@ public class KartsIRManager : NetworkBehaviour
 		kartLevelManager = gameplayManager.KartLevelManager;
 
 		KartSpawnedEvent += KartManager_KartSpawned;
-		SceneController.Instance.ClientAddedToSceneEvent += SceneDelegate_ClientAddedToScene;
+		// SceneController.Instance.LoadedTargetScenes += SceneDelegate_ClientAddedToScene;
+		Debug.LogWarning("TODO: THERE'S NOTHING RESPONSIBLE FOR SPAWNING PLAYERS LOCALLY NOW");
 		// PlayerManager.Instance.LocalPlayerJoinedEvent += PlayerManager_LocalPlayerJoinedEvent;
+		SceneController.Instance.LoadedTargetScenes += SceneController_LoadedTargetScenes;
 	}
 
     void Start() 
@@ -66,8 +69,9 @@ public class KartsIRManager : NetworkBehaviour
 	private void OnDestroy() 
 	{
 		KartSpawnedEvent -= KartManager_KartSpawned;
-		SceneController.Instance.ClientAddedToSceneEvent -= SceneDelegate_ClientAddedToScene;
+		// SceneController.Instance.LoadedTargetScenes -= SceneDelegate_ClientAddedToScene;
 		// PlayerManager.Instance.LocalPlayerJoinedEvent -= PlayerManager_LocalPlayerJoinedEvent;
+		SceneController.Instance.LoadedTargetScenes -= SceneController_LoadedTargetScenes;
 	}
 #endregion
 
@@ -88,14 +92,23 @@ public class KartsIRManager : NetworkBehaviour
     }
 
 #region Events
-    private void SceneDelegate_ClientAddedToScene(NetworkConnection client, SceneLookupData sceneLookupData)
-    {
-		if(!SceneNames.IsMapScene(sceneLookupData.Name))
+    // private void SceneDelegate_ClientAddedToScene(NetworkConnection client, SceneLookupData sceneLookupData)
+    // {
+	// 	if(!SceneNames.IsMapScene(sceneLookupData.Name))
+	// 		return;
+
+	// 	BLog.Highlight("client added to map scene, spawning player objects");
+	// 	PlayerManager.Instance.LocalPlayers.ToList().ForEach(po => SpawnPlayer(po));
+    // }
+	private void SceneController_LoadedTargetScenes(List<SceneLookupData> lookupData, NetworkConnection conn) 
+	{
+		BLog.Highlight("Loaded target scenes: " + (conn == null));
+		// If the connection isn't null, that means this is the server side callback of this event
+		if(conn != null)
 			return;
 
 		BLog.Highlight("client added to map scene, spawning player objects");
-		PlayerManager.Instance.LocalPlayers.ToList().ForEach(po => SpawnPlayer(po));
-    }
+	}
 
 	private void PlayerManager_LocalPlayerJoinedEvent(LocalPlayer player) 
 	{	
@@ -112,9 +125,13 @@ public class KartsIRManager : NetworkBehaviour
     /// <summary>
 	/// Spawns a kart and add it to the game. Returns the KartManager from the new kart.
 	/// </summary>
-	[Server]
 	KartManager SpawnKart(NetworkConnection owner, string uid) 
 	{	
+		if(!InstanceFinder.IsServerStarted) {
+			Debug.LogError("Can't spawn kart, server is not started.");
+			return null;
+		}
+
 		if(KartCount >= 8) {
 			Debug.LogError("Tried to add a new kart even though there is already 8 (or more) karts.");
             return null;
@@ -153,7 +170,7 @@ public class KartsIRManager : NetworkBehaviour
 		newKart.name = KartNamePrefix + data.GetData<PlayerDisplayData>().name;
 
 		// Spawn for server
-		base.ServerManager.Spawn(newKart, owner, gameplayManager.KartLobby.MapScene.Value);
+		InstanceFinder.ServerManager.Spawn(newKart, owner, gameplayManager.KartLobby.MapScene.Value); 
 
 		// Run event
 		ObserversRpcCallSpawnEvent(owner, data);
@@ -174,9 +191,13 @@ public class KartsIRManager : NetworkBehaviour
 	/// Once the server spawns the kart, the client recieves the ConnectPlayerToKart call, and spawns a
 	///   PlayerObjectInGame object and connects all elements to the newly spawned kart.
 	/// </summary>
-	[Client]
 	public void SpawnPlayer(LocalPlayer player)
 	{
+		if(!InstanceFinder.IsClientStarted) {
+			Debug.LogError($"Can't spawn player, client isn't started.");
+			return;
+		}
+
 		if(!PlayerDataRegistry.Instance.Contains(player.UID)) {
 			Debug.LogError($"Can't spawn player, uid \"{player.UID}\" isn't in registry.");
 			return;
@@ -198,7 +219,10 @@ public class KartsIRManager : NetworkBehaviour
 
 		localPlayersWaitingForKarts.Add(player.UID, player);		
 		BLog.Log($"Spawning player \"{player.UID}\"", gameplayManager.LogSettings, 0);
-		ServerRpcSpawnKart(LocalConnection, player.UID);
+		if(InstanceFinder.IsClientOnlyStarted)
+			ServerRpcSpawnKart(LocalConnection, player.UID);
+		else
+			SpawnKart(LocalConnection, player.UID);
 	}
 
 	public void KartManager_KartSpawned(NetworkConnection conn, PlayerData data) 

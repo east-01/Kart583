@@ -42,7 +42,7 @@ public class MenuLobbyController : MenuController
         if(CoreManager.IsLocal)
             GetSubMenu(SUB_MENU_MAP_SELECT).Open(FocusedPlayer);
         else
-            SetFocus(PlayerManager.Instance.LocalPlayers[0]);
+            SetFocus(PlayerManager.Instance.LocalPlayers[0]); 
     }
 
     private void Update() {

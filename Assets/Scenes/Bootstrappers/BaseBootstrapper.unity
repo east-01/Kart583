@@ -637,6 +637,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: LobbyCommunicator
       objectReference: {fileID: 0}
+    - target: {fileID: 2259080555987011842, guid: 744e8d27c59fae14083fa811d5c26a55, type: 3}
+      propertyPath: lobbyManagerPrefab
+      value: 
+      objectReference: {fileID: 4371143201093512911, guid: 302aca579223dce4099ff2f54c702492, type: 3}
     - target: {fileID: 6914735455607476436, guid: 744e8d27c59fae14083fa811d5c26a55, type: 3}
       propertyPath: m_RootOrder
       value: 9

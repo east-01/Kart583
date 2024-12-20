@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using EMullen.Core;
 using EMullen.Networking;
 using EMullen.Networking.Lobby;
@@ -25,11 +27,12 @@ public class KartLobby : GameLobby
 
     public SceneLookupData MapSceneData { get; private set; }
     public Scene? MapScene { get { 
-        if(MapSceneData is null || !NetSceneController.Instance.IsSceneRegistered(MapSceneData))
+        Scene scene = UnityEngine.SceneManagement.SceneManager.GetSceneByName(MapSceneData.Name); 
+        if(!scene.IsValid())
             return null;
-        return NetSceneController.Instance.GetSceneElements(MapSceneData).Scene;
+        return scene;
     } }
-    
+
     public bool CanAutoSelectLevel => CoreManager.IsMultiplayer && !DevSettings.Settings.ManualLobbyPlayerWaitSwitch;
 
     public KartLobby() 
@@ -40,20 +43,16 @@ public class KartLobby : GameLobby
             level = CoreManager.LevelAtlas.SearchEnumBySceneName(activeScene);
         }
 
-        SceneController.Instance.SceneRegisteredEvent += SceneDelegate_SceneRegistered;
-        SceneController.Instance.SceneWillDeregisterEvent += SceneDelegate_SceneWillDeregister;
-        SceneController.Instance.SceneDeregisteredEvent += SceneDelegate_SceneDeregistered;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += SceneManager_SceneLoaded;
     }
 
     ~KartLobby() 
     {
-        SceneController.Instance.SceneRegisteredEvent -= SceneDelegate_SceneRegistered;
-        SceneController.Instance.SceneWillDeregisterEvent -= SceneDelegate_SceneWillDeregister;
-        SceneController.Instance.SceneDeregisteredEvent -= SceneDelegate_SceneDeregistered;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= SceneManager_SceneLoaded;
     }
 
-    public void MovePlayersToLobby() => GLSceneManager.SendAllPlayersToScene(new(SceneNames.MENU_LOBBY), false);
-    public void MovePlayersToMap() => GLSceneManager.SendAllPlayersToScene(MapSceneData);
+    public void MovePlayersToLobby() => GLSceneManager.LoadPlayersScene(new(SceneNames.MENU_LOBBY));
+    public void MovePlayersToMap() => GLSceneManager.LoadPlayersScene(MapSceneData);
 
 #region Administrative
     /// <summary>
@@ -85,6 +84,7 @@ public class KartLobby : GameLobby
     }
 #endregion
 
+#region Scene management
     /// <summary>
     /// Set the level. Will load the corresponding scene on the server.
     /// </summary>
@@ -98,7 +98,23 @@ public class KartLobby : GameLobby
         this.level = level;
 
         SceneLookupData newMapLookupData = new(CoreManager.LevelAtlas.RetrieveData(level).sceneName);
-        NetSceneController.Instance.LoadSceneAsServer(newMapLookupData);
+        LoadSceneAsServer(newMapLookupData);
+    }
+
+    private void LoadSceneAsServer(SceneLookupData lookupData) 
+    {
+        SceneLoadData sld = new SceneLoadData(lookupData);
+        sld.Options.AllowStacking = true;
+        sld.Options.AutomaticallyUnload = false;
+        // if(CoreManager.IsMultiplayer)
+        //     sld.Options.LocalPhysics = LocalPhysicsMode.Physics3D; // https://learn.unity.com/tutorial/multi-scene-physics?uv=2019.4#
+        if(InstanceFinder.IsHostStarted) {
+            sld.ReplaceScenes = ReplaceOption.All;
+            sld.PreferredActiveScene = new PreferredScene(lookupData);
+        }
+
+        InstanceFinder.SceneManager.LoadConnectionScenes(sld);
+        BLog.Log($"Telling server to load scene w/ data name: {lookupData.Name} handle: {lookupData.Handle}", SceneController.Instance.logSettings, 0);
     }
 
     private void RegisterGameplayManager(GameplayManager gm) 
@@ -117,33 +133,22 @@ public class KartLobby : GameLobby
         }
     }
 
-    public void SceneDelegate_SceneRegistered(SceneLookupData lookupData) 
+    private void SceneManager_SceneLoaded(Scene scene, LoadSceneMode sceneMode)
     {
-        if(LobbyManager.Instance.GetOwner(lookupData) != ID) {
-            Debug.LogError($"Can't claim GameplayManager for scene \"{lookupData}\" we are not the owners, \"{LobbyManager.Instance.GetOwner(lookupData)}\" is");
+        if(!SceneNames.IsMapScene(scene.name))
+            return;
+
+        MapSceneData = scene.GetSceneLookupData();
+        GameplayManager gameplayManager = GameplayManagerDelegate.GetGameplayManager(MapSceneData);
+        if(gameplayManager == null) {
+            Debug.LogError("Failed to register gameplayManager, it was null.");
             return;
         }
+        RegisterGameplayManager(gameplayManager);
 
-        SceneElements elements = NetSceneController.Instance.GetSceneElements(lookupData);
-
-        if(SceneNames.IsMapScene(lookupData.Name)) {
-            MapSceneData = lookupData;
-
-            GameplayManager gameplayManager = elements.GetGameplayManager();
-            if(gameplayManager != null) {
-                RegisterGameplayManager(gameplayManager);
-            } else {
-                Debug.LogError("Can't register gameplay manager, it's null.");
-                return;
-            }
-        } else 
-            return;
-
-        elements.DeleteOnLastClientRemove = SceneNames.IsMapScene(lookupData.Name);
-        NetSceneController.Instance.SetSceneElements(lookupData, elements);
-
-        BLog.Log($"{MessagePrefix}Set scene elements for \"{lookupData}\"", LobbyManager.Instance.LogSettingsGameLobby, 0);
+        PlayerManager.Instance.LocalPlayers.Where(lp => lp != null).ToList().ForEach(po => gameplayManager.KartsIRManager.SpawnPlayer(po));		
     }
+#endregion
 
     public void SceneDelegate_SceneWillDeregister(SceneLookupData lookupData) 
     {

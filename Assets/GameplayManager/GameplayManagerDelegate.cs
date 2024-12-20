@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using EMullen.SceneMgmt;
+using FishNet.Managing.Scened;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,6 +13,7 @@ public class GameplayManagerDelegate : MonoBehaviour
 {
 
     private List<GameplayManagerBehavior> waitingForGameplayManagers = new();
+    private static Dictionary<SceneLookupData, GameplayManager> gameplayManagers;
 
     private void Update() 
     {
@@ -19,10 +21,27 @@ public class GameplayManagerDelegate : MonoBehaviour
             return;
         // A copy of the list to iterate through so we can remove elements without throwing errors
         List<GameplayManagerBehavior> listCopy = new(waitingForGameplayManagers);
-        foreach(GameplayManagerBehavior gmb in listCopy) {
-            if(GetGameplayManager(gmb))
-                waitingForGameplayManagers.Remove(gmb);
+        listCopy.ForEach(gmb => LoadGameplayManager(gmb, out bool loadStatus));
+    }
+
+    public static GameplayManager GetGameplayManager(SceneLookupData lookupData) {
+
+        // Create dictionary if its null
+        gameplayManagers ??= new();
+
+        // Locate and store the GameplayManager if it isn't stored.
+        if(!gameplayManagers.ContainsKey(lookupData)) {
+            Scene scene = UnityEngine.SceneManagement.SceneManager.GetSceneByName(lookupData.Name);
+            GameplayManager gameplayManager = LocateGameplayManager(scene);
+            if(gameplayManager == null) {
+                Debug.LogError($"Can't GetGameplayManager for SceneLookupData \"{lookupData}\" it wasn't located.");
+                return null;
+            }
+
+            gameplayManagers.Add(lookupData, gameplayManager);
         }
+
+        return gameplayManagers[lookupData];
     }
 
     /// <summary>
@@ -40,42 +59,57 @@ public class GameplayManagerDelegate : MonoBehaviour
 
     /// <summary>
     /// Checks for a GameplayManager in the same scene as the provided GameplayManagerBehavior script.
-    /// If one is found, return true and the GameplayManagerLoaded interface method gets called.
+    /// If one is found, the GameplayManager will be stored in the gameplayManagers dictionary and
+    ///   the GameplayManagerLoaded interface method gets called.
+    /// Use out loadStatus to see if the GameplayManager was successfully loaded or not.
     /// </summary>
-    public bool GetGameplayManager(GameplayManagerBehavior gameplayManagerBehavior) 
+    public void LoadGameplayManager(GameplayManagerBehavior gameplayManagerBehavior, out bool loadStatus) 
     {
+        loadStatus = false;
         if(gameplayManagerBehavior is not MonoBehaviour) {
             Debug.LogError("A GameplayManagerBehavior interface is on a script that isn't a Monobehavior!");
-            return false;
+            return;
         }
-         MonoBehaviour monoGMB = gameplayManagerBehavior as MonoBehaviour;
+        MonoBehaviour monoGMB = gameplayManagerBehavior as MonoBehaviour;
         if(monoGMB == null) {
             waitingForGameplayManagers.Remove(gameplayManagerBehavior);
-            return false;
+            return;
         }
         Scene objectsScene = monoGMB.gameObject.scene;
-        FishNet.Managing.Scened.SceneLookupData lookupData = new(objectsScene.handle, objectsScene.name);
-        if(SceneController.Instance == null)
-            return false;
-        if(NetSceneController.Instance == null)
-            return false;
-        if(NetSceneController.IsReady && !NetSceneController.Instance.IsSceneRegistered(lookupData)) 
-            return false;
-            
-        GameplayManager toReturn = NetSceneController.Instance.GetSceneElements(lookupData).GetGameplayManager();
+        SceneLookupData lookupData = objectsScene.GetSceneLookupData();
 
-        if(toReturn == null)
-            return false;
+        // Create dictionary if its null
+        gameplayManagers ??= new();
+        
+        if(gameplayManagers.ContainsKey(lookupData)) {
+            Debug.LogWarning("Already loaded gameplayManager but people are still requesting loads for it."); 
+            return;
+        }
 
-        gameplayManagerBehavior.GameplayManagerLoaded(toReturn);
-        return true;
+        GameplayManager loadedGameplayManager = LocateGameplayManager(objectsScene);
+
+        // Check if the locate call returned something
+        if(loadedGameplayManager == null)
+            return;
+
+        // We successfully loaded a GameplayManager, add it to the dictionary
+        gameplayManagers.Add(lookupData, loadedGameplayManager);
+        gameplayManagerBehavior.GameplayManagerLoaded(loadedGameplayManager);
+
+        // If the gameplay manager was waiting, remove it from the wait list
+        if(waitingForGameplayManagers.Contains(gameplayManagerBehavior))
+            waitingForGameplayManagers.Remove(gameplayManagerBehavior);
+
+        loadStatus = true;
     }
 
     public void SubscribeForGameplayManager(GameplayManagerBehavior gameplayManagerBehavior) 
     {
         // If we can get the GameplayManager right away do it so we don't have to waste time waiting for the next Update() call.
-        if(GetGameplayManager(gameplayManagerBehavior))
+        LoadGameplayManager(gameplayManagerBehavior, out bool loadStatus);
+        if(loadStatus)
             return;
+
         waitingForGameplayManagers.Add(gameplayManagerBehavior);
     }
 

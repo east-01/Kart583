@@ -80,6 +80,7 @@ public class MenuLobbyViewController : MonoBehaviour
 #region Updating view
     public void UpdateView() 
     {
+        BLog.Highlight("Lobby communicator has data: " + LobbyCommunicator.Instance.LobbyData.HasValue);
         if(_controller == null || _controller.ConnectedNetworkManager == null)
             return;
 

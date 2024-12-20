@@ -12,6 +12,7 @@ public class DBNetworkConfigurator : MonoBehaviour {
     [SerializeField]
     private BLogChannel logSettings;
 
+    public static bool StandaloneServer { get; private set; }
     private bool configuredLobbyManager = false;
 
     private void Awake() 
@@ -55,15 +56,15 @@ public class DBNetworkConfigurator : MonoBehaviour {
         if(CoreManager.IsLocal) {
             x = 2;
             debugOut += "host";
-            SceneController.Instance.StandaloneServer = false;
+            StandaloneServer = false;
         } else if(runAsServer) {
             x = 0;
             debugOut += "server";
-            SceneController.Instance.StandaloneServer = true;
+            StandaloneServer = true;
         } else {
             x = 1;
             debugOut += "client";
-            SceneController.Instance.StandaloneServer = false;
+            StandaloneServer = false;
         }
 
         BLog.Log(debugOut, Instance.logSettings);

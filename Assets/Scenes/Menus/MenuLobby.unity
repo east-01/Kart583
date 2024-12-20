@@ -2373,7 +2373,7 @@ MonoBehaviour:
   inputSystemUIInputModule: {fileID: 0}
   usedISUIM: 
   eventSystem: {fileID: 0}
-  retryTimer: 0
+  retryTimer: 5
 --- !u!114 &2010510417
 MonoBehaviour:
   m_ObjectHideFlags: 0
